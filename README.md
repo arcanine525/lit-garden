@@ -238,7 +238,7 @@ sequenceDiagram
         API->>DB: Ghi nhận file và hoàn tất bản nộp
         API-->>Browser: Đã nộp khi trạng thái đã được xác nhận
     else Ghi thất bại hoặc kết quả chưa xác định
-        API-->>Browser: Chưa xác nhận nộp; giữ nháp và cho thử lại
+        API-->>Browser: Chưa xác nhận nộp#59; giữ nháp và cho thử lại
     end
 ```
 
