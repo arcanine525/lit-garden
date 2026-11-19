@@ -1,0 +1,134 @@
+{
+  "checks": [
+    {
+      "property": "--ink",
+      "expected": "#29493b",
+      "actual": "#29493b",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "property": "--muted",
+      "expected": "#738174",
+      "actual": "#738174",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "property": "--green",
+      "expected": "#39745b",
+      "actual": "#39745b",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "property": "--blue",
+      "expected": "#567bba",
+      "actual": "#567bba",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "property": "--cream",
+      "expected": "#faf9f1",
+      "actual": "#faf9f1",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "property": "--line",
+      "expected": "#e2e8da",
+      "actual": "#e2e8da",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "property": "--pink",
+      "expected": "#f7e9e7",
+      "actual": "#f7e9e7",
+      "pass": true,
+      "evidence": "global-extraction.json"
+    },
+    {
+      "selector": ".sidebar",
+      "property": "width",
+      "expected": "235px",
+      "actual": "235px",
+      "pass": true,
+      "evidence": "teacher-home-1440.json"
+    },
+    {
+      "selector": ".sidebar",
+      "property": "width",
+      "expected": "205px",
+      "actual": "205px",
+      "pass": true,
+      "evidence": "teacher-home-768.json"
+    },
+    {
+      "selector": ".topbar",
+      "property": "height",
+      "expected": "66px",
+      "actual": "66px",
+      "pass": true,
+      "evidence": "teacher-home-390.json"
+    },
+    {
+      "selector": ".content",
+      "property": "padding",
+      "expected": "28px 38px 45px",
+      "actual": "28px 38px 45px",
+      "pass": true,
+      "evidence": "teacher-home-1440.json"
+    },
+    {
+      "selector": ".content",
+      "property": "padding",
+      "expected": "18px 16px 85px",
+      "actual": "18px 16px 85px",
+      "pass": true,
+      "evidence": "teacher-home-390.json"
+    },
+    {
+      "selector": ".garden-slogan",
+      "property": "font-size",
+      "expected": "30.5539px",
+      "actual": "30.5539px",
+      "pass": true,
+      "evidence": "teacher-home-1440.json"
+    },
+    {
+      "selector": ".garden-slogan",
+      "property": "font-size",
+      "expected": "16px",
+      "actual": "16px",
+      "pass": true,
+      "evidence": "teacher-home-768.json"
+    },
+    {
+      "selector": ".garden-slogan",
+      "property": "font-size",
+      "expected": "16.416px",
+      "actual": "16.416px",
+      "pass": true,
+      "evidence": "teacher-home-390.json"
+    },
+    {
+      "selector": ".essay-editor.rich-editor",
+      "property": "min-height",
+      "expected": "300px",
+      "actual": "300px",
+      "pass": true,
+      "evidence": "student-write-1440.json"
+    },
+    {
+      "selector": ".essay-editor.rich-editor",
+      "property": "padding",
+      "expected": "16px",
+      "actual": "16px",
+      "pass": true,
+      "evidence": "student-write-1440.json"
+    }
+  ],
+  "allPassed": true
+}

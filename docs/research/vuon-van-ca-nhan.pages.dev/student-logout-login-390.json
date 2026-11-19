@@ -1,0 +1,1104 @@
+{
+  "url": "https://vuon-van-ca-nhan.pages.dev/",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "scrollWidth": 390,
+  "text": "Một khu vườn nhỏ,\nnhiều trang viết\nđang chờ.\n✿\nVườn Văn\nKhông gian sáng tạo và kết nối\nVào khu vườn của mình\nTên đăng nhập hoặc email giáo viên\nMật khẩu\nĐăng nhập\n\nHọc sinh dùng tài khoản do giáo viên cấp. Quên mật khẩu: liên hệ giáo viên phụ trách.\n\nXem bản trải nghiệm, không đăng nhập ↗",
+  "elements": [
+    {
+      "tag": "BODY",
+      "id": "",
+      "cls": "",
+      "text": "Một khu vườn nhỏ,\nnhiều trang viết\nđang chờ.\n✿\nVườn Văn\nKhông gian sáng tạo và kết nối\nVào khu vườn của mình\nTên đăng nhập hoặc email giáo viên\nMật kh",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "390px",
+        "height": "844px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgb(250, 249, 241)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "MAIN",
+      "id": "live",
+      "cls": "",
+      "text": "Một khu vườn nhỏ,\nnhiều trang viết\nđang chờ.\n✿\nVườn Văn\nKhông gian sáng tạo và kết nối\nVào khu vườn của mình\nTên đăng nhập hoặc email giáo viên\nMật kh",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "390px",
+        "height": "844px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "cls": "login-wrap",
+      "text": "Một khu vườn nhỏ,\nnhiều trang viết\nđang chờ.\n✿\nVườn Văn\nKhông gian sáng tạo và kết nối\nVào khu vườn của mình\nTên đăng nhập hoặc email giáo viên\nMật kh",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 844
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "390px",
+        "height": "844px",
+        "max-width": "none",
+        "min-height": "844px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgb(246, 247, 233)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "1fr 1fr",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "cls": "login-art",
+      "text": "Một khu vườn nhỏ,\nnhiều trang viết\nđang chờ.",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 390,
+        "height": 210
+      },
+      "css": {
+        "display": "block",
+        "position": "relative",
+        "width": "390px",
+        "height": "210px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "url(\"https://vuon-van-ca-nhan.pages.dev/vuon-trong-trang-sach.webp\")",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "H1",
+      "id": "",
+      "cls": "",
+      "text": "Một khu vườn nhỏ,\nnhiều trang viết\nđang chờ.",
+      "rect": {
+        "x": 25,
+        "y": 61,
+        "width": 253.09375,
+        "height": 117
+      },
+      "css": {
+        "display": "block",
+        "position": "absolute",
+        "width": "253.094px",
+        "height": "117px",
+        "max-width": "400px",
+        "min-height": "0px",
+        "font-family": "Lora, Georgia, serif",
+        "font-size": "30px",
+        "font-weight": "700",
+        "line-height": "39px",
+        "letter-spacing": "-1px",
+        "color": "rgb(255, 255, 255)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px 0px 12px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(255, 255, 255)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "1"
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "cls": "login-box",
+      "text": "✿\nVườn Văn\nKhông gian sáng tạo và kết nối\nVào khu vườn của mình\nTên đăng nhập hoặc email giáo viên\nMật khẩu\nĐăng nhập\n\nHọc sinh dùng tài khoản do giáo",
+      "rect": {
+        "x": 0,
+        "y": 210,
+        "width": 390,
+        "height": 546.21875
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "390px",
+        "height": "546.219px",
+        "max-width": "430px",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "30px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "DIV",
+      "id": "",
+      "cls": "brand",
+      "text": "✿\nVườn Văn\nKhông gian sáng tạo và kết nối",
+      "rect": {
+        "x": 30,
+        "y": 240,
+        "width": 330,
+        "height": 135.59375
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "135.594px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px 0px 30px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "SPAN",
+      "id": "",
+      "cls": "flower",
+      "text": "✿",
+      "rect": {
+        "x": 30,
+        "y": 235,
+        "width": 28.921875,
+        "height": 44
+      },
+      "css": {
+        "display": "inline",
+        "position": "static",
+        "width": "auto",
+        "height": "auto",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "35px",
+        "font-weight": "400",
+        "line-height": "35px",
+        "letter-spacing": "normal",
+        "color": "rgb(86, 123, 186)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(86, 123, 186)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "STRONG",
+      "id": "",
+      "cls": "",
+      "text": "Vườn Văn",
+      "rect": {
+        "x": 30,
+        "y": 286.09375,
+        "width": 330,
+        "height": 34
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "34px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "Lora, Georgia, serif",
+        "font-size": "27px",
+        "font-weight": "600",
+        "line-height": "normal",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "9px 0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "SMALL",
+      "id": "",
+      "cls": "",
+      "text": "Không gian sáng tạo và kết nối",
+      "rect": {
+        "x": 30,
+        "y": 329.09375,
+        "width": 330,
+        "height": 16.5
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "16.5px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "10px",
+        "font-weight": "400",
+        "line-height": "16.5px",
+        "letter-spacing": "0.1px",
+        "color": "rgb(115, 129, 116)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(115, 129, 116)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "H2",
+      "id": "",
+      "cls": "",
+      "text": "Vào khu vườn của mình",
+      "rect": {
+        "x": 30,
+        "y": 375.59375,
+        "width": 330,
+        "height": 31.1875
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "31.1875px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "Lora, Georgia, serif",
+        "font-size": "24px",
+        "font-weight": "700",
+        "line-height": "31.2px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px 0px 12px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "FORM",
+      "id": "login",
+      "cls": "",
+      "text": "Tên đăng nhập hoặc email giáo viên\nMật khẩu\nĐăng nhập",
+      "rect": {
+        "x": 30,
+        "y": 418.78125,
+        "width": 330,
+        "height": 213.75
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "213.75px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "14px",
+        "font-weight": "400",
+        "line-height": "23.1px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "LABEL",
+      "id": "",
+      "cls": "",
+      "text": "Tên đăng nhập hoặc email giáo viên",
+      "rect": {
+        "x": 30,
+        "y": 418.78125,
+        "width": 330,
+        "height": 72.875
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "72.875px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "line-height": "21.45px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px 0px 14px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "INPUT",
+      "id": "",
+      "cls": "",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 446.21875,
+        "width": 330,
+        "height": 45.4375
+      },
+      "css": {
+        "display": "inline-block",
+        "position": "static",
+        "width": "330px",
+        "height": "45.4375px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "line-height": "21.45px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgb(255, 254, 251)",
+        "background-image": "none",
+        "padding": "11px 12px",
+        "margin": "6px 0px 0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "1px solid rgb(214, 223, 207)",
+        "border-radius": "10px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "LABEL",
+      "id": "",
+      "cls": "",
+      "text": "Mật khẩu",
+      "rect": {
+        "x": 30,
+        "y": 505.65625,
+        "width": 330,
+        "height": 72.875
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "72.875px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "line-height": "21.45px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px 0px 14px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(41, 73, 59)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "INPUT",
+      "id": "",
+      "cls": "",
+      "text": "",
+      "rect": {
+        "x": 30,
+        "y": 533.09375,
+        "width": 330,
+        "height": 45.4375
+      },
+      "css": {
+        "display": "inline-block",
+        "position": "static",
+        "width": "330px",
+        "height": "45.4375px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "13px",
+        "font-weight": "600",
+        "line-height": "21.45px",
+        "letter-spacing": "normal",
+        "color": "rgb(41, 73, 59)",
+        "background-color": "rgb(255, 254, 251)",
+        "background-image": "none",
+        "padding": "11px 12px",
+        "margin": "6px 0px 0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "1px solid rgb(214, 223, 207)",
+        "border-radius": "10px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "BUTTON",
+      "id": "",
+      "cls": "btn",
+      "text": "Đăng nhập",
+      "rect": {
+        "x": 30,
+        "y": 592.53125,
+        "width": 98.625,
+        "height": 40
+      },
+      "css": {
+        "display": "inline-flex",
+        "position": "static",
+        "width": "98.625px",
+        "height": "40px",
+        "max-width": "none",
+        "min-height": "40px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "12px",
+        "font-weight": "500",
+        "line-height": "19.8px",
+        "letter-spacing": "normal",
+        "color": "rgb(255, 255, 255)",
+        "background-color": "rgb(57, 116, 91)",
+        "background-image": "none",
+        "padding": "10px 17px",
+        "margin": "0px",
+        "gap": "8px",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(255, 255, 255)",
+        "border-radius": "10px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "P",
+      "id": "",
+      "cls": "footnote",
+      "text": "Học sinh dùng tài khoản do giáo viên cấp. Quên mật khẩu: liên hệ giáo viên phụ trách.",
+      "rect": {
+        "x": 30,
+        "y": 652.53125,
+        "width": 330,
+        "height": 39.59375
+      },
+      "css": {
+        "display": "block",
+        "position": "static",
+        "width": "330px",
+        "height": "39.5938px",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "11px",
+        "font-weight": "400",
+        "line-height": "19.8px",
+        "letter-spacing": "normal",
+        "color": "rgb(115, 129, 116)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "20px 0px 11px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(115, 129, 116)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    },
+    {
+      "tag": "A",
+      "id": "",
+      "cls": "link",
+      "text": "Xem bản trải nghiệm, không đăng nhập ↗",
+      "rect": {
+        "x": 30,
+        "y": 707.125,
+        "width": 245.640625,
+        "height": 15
+      },
+      "css": {
+        "display": "inline",
+        "position": "static",
+        "width": "auto",
+        "height": "auto",
+        "max-width": "none",
+        "min-height": "0px",
+        "font-family": "\"Be Vietnam Pro\", Arial, sans-serif",
+        "font-size": "12px",
+        "font-weight": "500",
+        "line-height": "19.8px",
+        "letter-spacing": "normal",
+        "color": "rgb(57, 116, 91)",
+        "background-color": "rgba(0, 0, 0, 0)",
+        "background-image": "none",
+        "padding": "0px",
+        "margin": "0px",
+        "gap": "normal",
+        "grid-template-columns": "none",
+        "border": "0px none rgb(57, 116, 91)",
+        "border-radius": "0px",
+        "box-shadow": "none",
+        "transition": "all",
+        "transform": "none",
+        "opacity": "1",
+        "z-index": "auto"
+      }
+    }
+  ],
+  "assets": [],
+  "fonts": [
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Be Vietnam Pro",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "400"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "500"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "600"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "unloaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    },
+    {
+      "family": "Lora",
+      "status": "loaded",
+      "weight": "700"
+    }
+  ],
+  "capture": {
+    "date": "2026-11-19T15:32:00.923Z",
+    "browser": "157.0.8103.79",
+    "dpr": 1,
+    "locale": "vi-VN",
+    "timezone": "Asia/Ho_Chi_Minh",
+    "scrollX": 0,
+    "scrollY": 0
+  }
+}

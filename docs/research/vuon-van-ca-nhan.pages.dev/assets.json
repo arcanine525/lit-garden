@@ -1,0 +1,181 @@
+{
+  "origin": "https://vuon-van-ca-nhan.pages.dev/",
+  "surveyDate": "2026-11-19",
+  "files": [
+    {
+      "file": "source/app.js",
+      "bytes": 30820,
+      "sha256": "54ba5945eb1bad22e68264d6b571b4d033a5b851a3a25d444d59b6a9fb84f117"
+    },
+    {
+      "file": "source/bulk.js",
+      "bytes": 7841,
+      "sha256": "2e41e61bc7429179c812d067fcef5d72496b3cc1425b1e2661c1b4c62c5f42c9"
+    },
+    {
+      "file": "source/demo.html",
+      "bytes": 663,
+      "sha256": "cee2dc8c96c7f97f14490b5805f60f42e0c6e56514122c275fe4228c00a190c9"
+    },
+    {
+      "file": "source/exports.js",
+      "bytes": 7693,
+      "sha256": "9cebde492a0863a8e6833985ac460596365cf6cf814835b825a55e3b24571da0"
+    },
+    {
+      "file": "source/font-manifest.json",
+      "bytes": 1902,
+      "sha256": "f1c6a06e498416ac35119a41b5a94746c9f4b632607ced50db635debe7011104"
+    },
+    {
+      "file": "source/fonts/26bad053b5ab.ttf",
+      "bytes": 132320,
+      "sha256": "9bfe70fd1d70600c523d7ef66c8a024187270f115570d82baf97df7f05e6c2aa"
+    },
+    {
+      "file": "source/fonts/33605a421732.ttf",
+      "bytes": 132124,
+      "sha256": "ac3145cd8846b6ab3522ac0579a4f5378271f6a93896cb800d27f301fa9f7758"
+    },
+    {
+      "file": "source/fonts/38243ff7d8ad.ttf",
+      "bytes": 126228,
+      "sha256": "aef76cd15b8c9faa1ff21951bb71963a774aa381526c557e5a52f38d430c4650"
+    },
+    {
+      "file": "source/fonts/4279e4f05735.ttf",
+      "bytes": 120228,
+      "sha256": "4ad53eac036092be79a34b5fa0aa32d0ebb3c7e5df4bc058764f5614fbf148a0"
+    },
+    {
+      "file": "source/fonts/69399165ebd8.ttf",
+      "bytes": 123064,
+      "sha256": "cbf437bf71c8536a7aaed632dce2583ea5ec97c07efffc625c31991d1027ba3b"
+    },
+    {
+      "file": "source/fonts/7b56c437cef0.ttf",
+      "bytes": 137328,
+      "sha256": "26243fda8cd938cc2734f46d20d7464822d89378c7f375e187e39f9ed3f20907"
+    },
+    {
+      "file": "source/fonts/8a8a17b3b2f2.ttf",
+      "bytes": 138352,
+      "sha256": "467b540c3c722fc6b1eb483cbf18db45bcb54ab3cdafe07ceb90a55dfb03f779"
+    },
+    {
+      "file": "source/fonts/9c2c504c5bf6.ttf",
+      "bytes": 132672,
+      "sha256": "36120862013ba0d8059ee03b3f6155d6420cabbf0743ccf5542f22ef918c20a2"
+    },
+    {
+      "file": "source/fonts/b23c9df63bf4.ttf",
+      "bytes": 138428,
+      "sha256": "cd5b4501440e73a403012b14e38b48628ef7a4b9545c79d3cfbd6a7ecd44833e"
+    },
+    {
+      "file": "source/fonts/c4d4b5820105.ttf",
+      "bytes": 138288,
+      "sha256": "648252b8a79d5f6974baed600eb8bad4646466a0733446706288ca528a4313cb"
+    },
+    {
+      "file": "source/fonts/c65aeb016181.ttf",
+      "bytes": 122644,
+      "sha256": "557a1c42a7f8eb83f84255d475017b1235c1101b899367f974a1cbfa19cd7c3d"
+    },
+    {
+      "file": "source/fonts/c8f8c7f5ed53.ttf",
+      "bytes": 132188,
+      "sha256": "1d37d1e34c77be80f0119754ad78df9aad30d5b1c78132a4cbdac0fe567f5d4f"
+    },
+    {
+      "file": "source/fonts-local.css",
+      "bytes": 1924,
+      "sha256": "3f5c4c8fe7f09bb3e9d073fd91c61817546cce1fbf16ced56a1bfca8cacc1e26"
+    },
+    {
+      "file": "source/fonts.css",
+      "bytes": 2576,
+      "sha256": "c6184b12cf75521b8d74d96940f8dfcb931190d97162e58ddee1ce5f06fd6996"
+    },
+    {
+      "file": "source/garden-flower.webp",
+      "bytes": 2658068,
+      "sha256": "65e26aaa483f93869c2f48f13ca37b5d4df33951d55e935415effc10941098ac",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "file": "source/garden-fruit.webp",
+      "bytes": 2861848,
+      "sha256": "ac01399e8afe8888eefd2dbe7e635346924a05a50658495257dc1164e457a871",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "file": "source/garden-sprout.webp",
+      "bytes": 2488566,
+      "sha256": "d3764998d92e6d4e3df3749b2415e44d712dcff185112c7e83baf65628699f83",
+      "width": 1122,
+      "height": 1402
+    },
+    {
+      "file": "source/garden.js",
+      "bytes": 2619,
+      "sha256": "a714887d729f1f5c603792da90705b21140ac41a60db1ed4cae1fbca64ac5a11"
+    },
+    {
+      "file": "source/index.html",
+      "bytes": 635,
+      "sha256": "7f0de82de001e8769ebe7a99baa10b9a3e7dcc78d533d6eda98b0dcf8d56cb0a"
+    },
+    {
+      "file": "source/khu-vuon-trong-lo-muc.webp",
+      "bytes": 224164,
+      "sha256": "552844d11ef45b87fd71652c2b052dcd899d68e256272ca90232bb3f3609c3d9",
+      "width": 960,
+      "height": 640
+    },
+    {
+      "file": "source/live.js",
+      "bytes": 32122,
+      "sha256": "7d148d820dffe4b0695930b4d526042e4ff8b2c5026a38f08beb3a54c98849e8"
+    },
+    {
+      "file": "source/mau-hoc-sinh.csv",
+      "bytes": 171,
+      "sha256": "ed38646f1a319484da550fec5d707e898a86c9947edd24f504ba9dca89d39d47"
+    },
+    {
+      "file": "source/rich.js",
+      "bytes": 4830,
+      "sha256": "3b92605dd300c7974b82c6d262c2bd1517b3ec81e11ca7e3120abc805ec76a1f"
+    },
+    {
+      "file": "source/rubrics.js",
+      "bytes": 21344,
+      "sha256": "b9aa9e41c7facae8246eb604c37474f85e42d353393b0c8926b2a5913eb092aa"
+    },
+    {
+      "file": "source/shelf.js",
+      "bytes": 10524,
+      "sha256": "2eee08884e63476254f46f4387f00d7023113bb4f3042cb0aaa4232832723d86"
+    },
+    {
+      "file": "source/style.css",
+      "bytes": 20837,
+      "sha256": "b49e68182ecec814f35433a38afdafa932f5f650aef883dc3ad6b7e09b2c812b"
+    },
+    {
+      "file": "source/vuon-trong-trang-sach.webp",
+      "bytes": 688744,
+      "sha256": "3d6459053845028ccb16d1d4184d5899075d0f3fde78abccd572cabd1392e0e6",
+      "width": 1536,
+      "height": 1024
+    },
+    {
+      "file": "source/workbench.js",
+      "bytes": 11217,
+      "sha256": "a0301596529a45a6a786a66b2fd3f8e6cf51818fe460ed438a174a88a82704f3"
+    }
+  ]
+}

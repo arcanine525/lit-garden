@@ -1,0 +1,37 @@
+{
+  "surveyDate": "2026-11-19",
+  "referenceScreenshots": 82,
+  "verifiedTokens": 17,
+  "missingMarkdownLinks": 0,
+  "credentialOccurrences": 0,
+  "businessWriteRequestsObserved": 0,
+  "observedPostPaths": [
+    "/api/login",
+    "/api/logout"
+  ],
+  "pixelDiffUtilityChecks": [
+    {
+      "case": "identical",
+      "expectedExit": 0,
+      "actualExit": 0,
+      "passed": true
+    },
+    {
+      "case": "different",
+      "expectedExit": 1,
+      "actualExit": 1,
+      "passed": true
+    },
+    {
+      "case": "size-mismatch",
+      "expectedExit": 2,
+      "actualExit": 2,
+      "passed": true
+    }
+  ],
+  "cloneFidelityMeasured": false,
+  "notes": [
+    "Synthetic utility checks validate exit codes only; they do not measure a clone.",
+    "No frontend clone implemented in this task."
+  ]
+}

@@ -1,0 +1,1150 @@
+[
+  {
+    "name": "demo-ai-unavailable-1440",
+    "scope": "Demo",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1391
+    ],
+    "overflow": false,
+    "sha256": "c720a9c14b36db69cff1c426b23d3e392ef99f12c29e121404d049d46234deae"
+  },
+  {
+    "name": "demo-edit-assignment-1440",
+    "scope": "Demo",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1263
+    ],
+    "overflow": false,
+    "sha256": "964f9d8badf4e9d359c9b943e9d152e40543b4568845e42ece3036bfc3bdaaba"
+  },
+  {
+    "name": "demo-home-1440",
+    "scope": "Demo",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1297
+    ],
+    "overflow": false,
+    "sha256": "d553a7a629192dffa26fbec61dbcc967ac957b7c1be591901f8f6d89af846241"
+  },
+  {
+    "name": "demo-review-1440",
+    "scope": "Demo",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1555
+    ],
+    "overflow": false,
+    "sha256": "aafe4b86eb5083fa98683b2e42f2d68db9fc67b7696dbda9d5e27f532378a95d"
+  },
+  {
+    "name": "demo-student-write-1440",
+    "scope": "Demo",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1391
+    ],
+    "overflow": false,
+    "sha256": "3fdfe8f4c3fff874b8847cc27c40a7861982b165a0fc84d3516b3e64cf389b85"
+  },
+  {
+    "name": "demo-version-dialog-1440",
+    "scope": "Demo",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1555
+    ],
+    "overflow": false,
+    "sha256": "66c8f924dd01c04f3758984bff0a16f74de6145b675b4655f268fe5d325e873a"
+  },
+  {
+    "name": "login-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "253714a2c6f91f95a2161e495f9161dcc1d2df000be923f923fc3b288f545b89"
+  },
+  {
+    "name": "login-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "3d56e9456fb5377482c77041e914764ef041cd0fe4c6c7e695c5b69951f2a64f"
+  },
+  {
+    "name": "login-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "4d7871136caebb44ad919e557517ebcffc681b1c2cf2e3af6c61160556c37ecf"
+  },
+  {
+    "name": "login-focus-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "be99cbe1cca8e05ff4cb624aa52cffe72c6ab774ffb2709310d6e7e3f25c8166"
+  },
+  {
+    "name": "student-assignments-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "c6c966706b2d9b39fb46eb6feccdfc9f9b7131cd2066bea8fb349482aa36e214"
+  },
+  {
+    "name": "student-assignments-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "717d1357e65933e7d41351040c42312bea5600b7bd74e55c8a3c4f29e26ccc29"
+  },
+  {
+    "name": "student-assignments-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "d7b8cb69bea72799e892f82e6db164d421ec9e8d80be8e3ab9bbe2e7a6b83ace"
+  },
+  {
+    "name": "student-garden-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1099
+    ],
+    "overflow": false,
+    "sha256": "eb3fafa9ce906c5688f8c9d878a5834beb12f7858e6ea0819282a6ba334435a1"
+  },
+  {
+    "name": "student-garden-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      1126
+    ],
+    "overflow": false,
+    "sha256": "e8d9af070d556e95e073f76079fa02dc86206d0443b33764c14be24a234bb70d"
+  },
+  {
+    "name": "student-garden-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "5946e1c8dcdd35d008ddf48c7c59599c9e6bdb3343391749ffd9e94cf57adfda"
+  },
+  {
+    "name": "student-garden-flower-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1099
+    ],
+    "overflow": false,
+    "sha256": "d81dce6db90de36d62e9778cc28c31141fa13069576b9a5223f7b24b2a194fba"
+  },
+  {
+    "name": "student-garden-fruit-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1048
+    ],
+    "overflow": false,
+    "sha256": "8dc11858538485fb34e5bce139d6a3d36b62a42954ef9215ee906076df00c923"
+  },
+  {
+    "name": "student-garden-sprout-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1048
+    ],
+    "overflow": false,
+    "sha256": "eb2a8b57786c48bab8314347b1e829432beb8f1cde97cc330bd15f61a6d198bf"
+  },
+  {
+    "name": "student-home-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1071
+    ],
+    "overflow": false,
+    "sha256": "0a7b844d68f2182411e4d54c56a3d65f7cb7faafc640d33c0ad16769c8c0a80f"
+  },
+  {
+    "name": "student-home-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      1359
+    ],
+    "overflow": false,
+    "sha256": "5b3a3b8d3b72c3cb925c43d327fbf79b0df5d2c22c3e2a80c13d91854dc59821"
+  },
+  {
+    "name": "student-home-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1044
+    ],
+    "overflow": false,
+    "sha256": "f0d48b93b46f367ecfadf0efb7c4d3935ae65ebca4141089510980178caf52d6"
+  },
+  {
+    "name": "student-library-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "a6b8613180e5a28d8102dc217bd3e7706cdb1adca9a0938fda57387b788e424d"
+  },
+  {
+    "name": "student-library-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "b6f29550e68d33d6b8cb621ce6a644eff498fc2d46a7fdc7912e15d06cd7ea46"
+  },
+  {
+    "name": "student-library-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "5d49f1035202721dafe903dbb5f7ca54ddb7f3a62daaadb9df2767ab32f90dee"
+  },
+  {
+    "name": "student-library-favorites-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "9e6a6a50a0fe2191a684d66d11d0dbbd86b8bcadcfff59e62e769e3fdeb9b148"
+  },
+  {
+    "name": "student-logout-login-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "3d56e9456fb5377482c77041e914764ef041cd0fe4c6c7e695c5b69951f2a64f"
+  },
+  {
+    "name": "student-rubrics-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "6c9276b1196bc1486d729a1da6391bbdfe26f89918d5d026f95fefae8e021ec6"
+  },
+  {
+    "name": "student-rubrics-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      861
+    ],
+    "overflow": false,
+    "sha256": "8bb4fecf7526b914f11358f02b0fb6bdd2e8cbdffe0adb672300a23e13ef5507"
+  },
+  {
+    "name": "student-rubrics-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "44afe12a45f4c49d3401663494e294eca6459479935123242599d070a39a0f34"
+  },
+  {
+    "name": "student-write-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1330
+    ],
+    "overflow": false,
+    "sha256": "741469e4f79e2a4a2dfa8b0e8de5ab9d218e3a182250a0b3345b1b5e6794b844"
+  },
+  {
+    "name": "student-write-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      1800
+    ],
+    "overflow": false,
+    "sha256": "2da4c437c16f7796ea2d4abac8ab021038a612aac8471b209992d9768f1b3462"
+  },
+  {
+    "name": "student-write-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1769
+    ],
+    "overflow": false,
+    "sha256": "623a58542aee78aca0fc61adaea7dfcda86f04aef2d9b1925b7e61e5c4cece01"
+  },
+  {
+    "name": "student-write-clock-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1480
+    ],
+    "overflow": false,
+    "sha256": "2bbd6fafce2236ee773a2285c8b15181947239168970b5489b12ff0c1cd129bc"
+  },
+  {
+    "name": "student-write-formatted-local-draft-1440",
+    "scope": "Live · nháp thử local",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1330
+    ],
+    "overflow": false,
+    "sha256": "27f2d10291c318880b210660029da79f07429bca266116af1a63fff033a832e2"
+  },
+  {
+    "name": "teacher-assignment-detail-dialog-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "0afb66e5378ca6e404c52ab905bbd9e676235de31ae2170dd82a0622b4f563ea"
+  },
+  {
+    "name": "teacher-assignments-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "2b01ffc711b498e25109d96673c8d7d374cefb22fbfb2eaedd3bf3c9700a47a6"
+  },
+  {
+    "name": "teacher-assignments-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "36fd086e04f3a48a5438b98ba8218dc0dd7353309b622222e4ab8f6e1190bc8e"
+  },
+  {
+    "name": "teacher-assignments-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "60746a58692f75196ed9a482e0b48f582214b03197483db38741b84ac6c46e3b"
+  },
+  {
+    "name": "teacher-class-detail-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "494e5e92da3f633767e5f449678eebea8fab0837f81e8bf72ca0a35f0357a1d7"
+  },
+  {
+    "name": "teacher-classes-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "50aa6eb5de897b70e93ae0cbcbc9de0d1119db9119d62eb28b7e506b4fe78e0a"
+  },
+  {
+    "name": "teacher-classes-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      849
+    ],
+    "overflow": false,
+    "sha256": "1771fa37f84a7c51144ebf07766e75a182896ecff3716c0f1e66753e79fc5fe1"
+  },
+  {
+    "name": "teacher-classes-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "0aed2cde09fc1398a8bb84219bd4b919f3eb5ea4075493dcb1827eb46a41f328"
+  },
+  {
+    "name": "teacher-create-classes-dialog-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "d894bc123b907e699c9a18bfd63620455492f7a9fecb7a066a45474f6426fdcc"
+  },
+  {
+    "name": "teacher-create-classes-dialog-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      849
+    ],
+    "overflow": false,
+    "sha256": "4468282251b158f94967e7bde69a34e0d50f958f5cfaa02f7806c14ad6b0893d"
+  },
+  {
+    "name": "teacher-create-classes-dialog-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "a5a256b1c3527c9737d92112d924b7ec6d81419fa0a6a6bfb5833a90a55ec842"
+  },
+  {
+    "name": "teacher-create-student-dialog-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "7783b163f8314898dd5c98e48cc703ca605124d7c4b19ad11b13d2725dcd808f"
+  },
+  {
+    "name": "teacher-delete-class-blocked-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "2df161049aebf17b5992367b1b295194cf94bd8dad73a4e267c021efe562eeb8"
+  },
+  {
+    "name": "teacher-delete-class-empty-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "f9757b9e23c524443d1fd7ec31cf05aa9fbe6ba966a7f0f594e1936186e8f256"
+  },
+  {
+    "name": "teacher-edit-class-dialog-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "95d34e6c8c6646d4f442a1bbfef68dd74d97934079288518f64fd26c1a53b485"
+  },
+  {
+    "name": "teacher-grading-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "7bc98f2f5199e565ba3e9419af779b36817af5db36265f5d7eeb695807b237e3"
+  },
+  {
+    "name": "teacher-grading-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "2d16b2842c19f76dc6a407f928a78dfab543bbae17e2ad87674f8233157139d9"
+  },
+  {
+    "name": "teacher-grading-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "9eaccc8752d6d3658f883b9a453c320de4de46232f8fa56aab4a6d5dc25718ec"
+  },
+  {
+    "name": "teacher-home-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1234
+    ],
+    "overflow": false,
+    "sha256": "69386bfa9821a1cc6e0700fc9300fdcad1fe8db0608e4fda04de78521a3664c1"
+  },
+  {
+    "name": "teacher-home-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      1692
+    ],
+    "overflow": false,
+    "sha256": "4cc6edcce76a433c2b745531b94b851acf3c97e69664cde8308c505b40e863d5"
+  },
+  {
+    "name": "teacher-home-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1247
+    ],
+    "overflow": false,
+    "sha256": "5a040545a74de7cb23f566a4cb2c8840a2480f9aed28272d75c80eb7513d1bac"
+  },
+  {
+    "name": "teacher-import-dialog-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "76b61dd4a06e616cbb652cdf7953dab3331e3509e44a14a7f1850697ff1641d7"
+  },
+  {
+    "name": "teacher-import-validation-1440",
+    "scope": "Live · CSV preview local",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "7aff4c6c79452acf5846a4dbf214d6b847f063a1c4f756bb98569e607aeb4b18"
+  },
+  {
+    "name": "teacher-library-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "b3a96de152eeb5a629f12c8746482f544fb1eefdb1d9ea70571a4e82fde1143b"
+  },
+  {
+    "name": "teacher-library-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      844
+    ],
+    "overflow": false,
+    "sha256": "38ff8610b6aa68fc665a58b0fcb89f98a9caa0924a693ec85db4fd873a44c8e6"
+  },
+  {
+    "name": "teacher-library-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "821cfb1b714bc170c1b9a3ab262af37577e6729f6c05f6b87b003c1e7f6f600b"
+  },
+  {
+    "name": "teacher-library-add-file-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1256
+    ],
+    "overflow": false,
+    "sha256": "07c87844b9c209d8152e3b316b59505fc037d65b657155adf6c95ab6c97dab96"
+  },
+  {
+    "name": "teacher-library-add-link-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1279
+    ],
+    "overflow": false,
+    "sha256": "0f1ecb114370dd9a18d2f6f3724081d4a46f4a9d316793bb7bec0768bd997e1b"
+  },
+  {
+    "name": "teacher-logout-login-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "253714a2c6f91f95a2161e495f9161dcc1d2df000be923f923fc3b288f545b89"
+  },
+  {
+    "name": "teacher-new-assignment-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1104
+    ],
+    "overflow": false,
+    "sha256": "85c2f67397baf48851605267f0bf14f40f1aa8d466cae0670ce5e28cc3bf205f"
+  },
+  {
+    "name": "teacher-new-assignment-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      1293
+    ],
+    "overflow": false,
+    "sha256": "2c5afd342dcb3f4612a99531a46667439c2b4bdc799ce87f92eb9d5f5429965d"
+  },
+  {
+    "name": "teacher-new-assignment-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1122
+    ],
+    "overflow": false,
+    "sha256": "be66e49948da7131b5e5d5b440ef6ef104f830b04e2929dac0640862c7c7dbfb"
+  },
+  {
+    "name": "teacher-password-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "939a336a4f3ff16691927f11f1131797685df718fe85374c541426fb805c4d85"
+  },
+  {
+    "name": "teacher-reset-password-dialog-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "e3e7e5d9544cd7b52a4274b68f4a651535a13eaa39c03851bbd93813d7d79909"
+  },
+  {
+    "name": "teacher-review-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1384
+    ],
+    "overflow": false,
+    "sha256": "9ec6cafedd821068886fbdb6b8f410470853046dca11ba7ce61f773cbf026506"
+  },
+  {
+    "name": "teacher-review-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      2019
+    ],
+    "overflow": false,
+    "sha256": "e5c289e80a23b354c6fdd904387d6906392daef84d0df5dd0ce926c4211cbee6"
+  },
+  {
+    "name": "teacher-review-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1982
+    ],
+    "overflow": false,
+    "sha256": "37cc4769629cc0b47b8217d2dbf73b77284e47155b1f22648f1202dbd0e1b06e"
+  },
+  {
+    "name": "teacher-review-comment-editor-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1384
+    ],
+    "overflow": false,
+    "sha256": "63001c2fe8b0cb4d2ac8f8c849f4f14e990a41134dca78de8d044974150e3241"
+  },
+  {
+    "name": "teacher-review-no-selection-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1384
+    ],
+    "overflow": false,
+    "sha256": "22d46b6f58e5bbb2bc90756d85631b4b7222c19012c5cf3459fb9ee313ac8411"
+  },
+  {
+    "name": "teacher-review-reference-scan-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1384
+    ],
+    "overflow": false,
+    "sha256": "5ec50384bb7cb64f46086303baed466d98dd7a77368a18c84ec20c5160b7dc75"
+  },
+  {
+    "name": "teacher-rubric-0-open-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "81c2b908677db1cabe885c4a2bce09deb600f70690f2d70bc6e64e440b6b352d"
+  },
+  {
+    "name": "teacher-rubric-1-open-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "c2274c847adbcaa27a44c262b509ed00d0e7ece76e3e17117762eaca92f826ea"
+  },
+  {
+    "name": "teacher-rubric-2-open-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1074
+    ],
+    "overflow": false,
+    "sha256": "509b20a6fffe93f006d76ad162c6b07389f54c4711f262faa531f02f90b3cb10"
+  },
+  {
+    "name": "teacher-rubric-3-open-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      1074
+    ],
+    "overflow": false,
+    "sha256": "fbc18bb30fdee0921fb001b073e96828d40509576d25bc103f91974f5a1b1d90"
+  },
+  {
+    "name": "teacher-rubrics-1440",
+    "scope": "Live",
+    "viewport": {
+      "width": 1440,
+      "height": 900
+    },
+    "size": [
+      1440,
+      900
+    ],
+    "overflow": false,
+    "sha256": "1186540ae3906a98d891cda6d66dc6c6d9121ef49e7a3d0aab7f3e745498ad30"
+  },
+  {
+    "name": "teacher-rubrics-390",
+    "scope": "Live",
+    "viewport": {
+      "width": 390,
+      "height": 844
+    },
+    "size": [
+      390,
+      861
+    ],
+    "overflow": false,
+    "sha256": "8f53ea5bfb8e6d5c611292546c4c93433f6315da84596129a6ee5ce6970e31b6"
+  },
+  {
+    "name": "teacher-rubrics-768",
+    "scope": "Live",
+    "viewport": {
+      "width": 768,
+      "height": 1024
+    },
+    "size": [
+      768,
+      1024
+    ],
+    "overflow": false,
+    "sha256": "6bf3f0f446564866d4159ce77d48f58f684644852b198c235e53277727fdd6ba"
+  }
+]

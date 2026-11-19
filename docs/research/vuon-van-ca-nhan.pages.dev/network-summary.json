@@ -1,0 +1,308 @@
+[
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/me",
+    "status": 401
+  },
+  {
+    "role": "teacher",
+    "method": "POST",
+    "path": "/api/login",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/me",
+    "status": 401
+  },
+  {
+    "role": "student",
+    "method": "POST",
+    "path": "/api/login",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "demo",
+    "method": "GET",
+    "path": "/api/me",
+    "status": 401
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "public",
+    "method": "GET",
+    "path": "/api/me",
+    "status": 401
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/export-grades",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/library/favorites",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "GET",
+    "path": "/api/submissions-page",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "GET",
+    "path": "/api/data",
+    "status": 200
+  },
+  {
+    "role": "teacher",
+    "method": "POST",
+    "path": "/api/logout",
+    "status": 200
+  },
+  {
+    "role": "student",
+    "method": "POST",
+    "path": "/api/logout",
+    "status": 200
+  }
+]

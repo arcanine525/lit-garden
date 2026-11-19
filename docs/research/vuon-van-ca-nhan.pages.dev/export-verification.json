@@ -1,0 +1,17 @@
+{
+  "csv": {
+    "filename": "Vuon-Van-bang-diem.csv",
+    "header": "﻿\"Mã bài nộp\",\"Lớp\",\"Học sinh\",\"Tên đăng nhập\",\"Đề bài\",\"Rubric\",\"Lần nộp\",\"Ngày nộp\",\"Trạng thái\",\"Thang điểm\",\"Điểm đã trả\",\"1.1. Xác định vấn đề nghị luận (0,25 điểm)\",\"1.2. Triển khai vấn đề (0,75 điểm)\",\"1.3. Sử dụng bằng chứng (0,50 điểm)\",\"2.1. Tổ chức đoạn văn (0,25 điểm)\",\"2.2. Diễn đạt (0,25 điểm)\",\"Nhận xét chung\"",
+    "dataRows": 1
+  },
+  "docx": {
+    "bytes": 4761,
+    "zipSignature": "504b0304",
+    "zipValid": true,
+    "entries": [
+      "[Content_Types].xml",
+      "_rels/.rels",
+      "word/document.xml"
+    ]
+  }
+}
