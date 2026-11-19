@@ -1,0 +1,28 @@
+
+> test:browser
+> playwright test
+
+[WebServer] (node:70087) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] (node:70121) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 6 tests using 1 worker
+
+(node:70123) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:70123) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 tests/editor.spec.js:7:1 › MDXEditor DOM: supported Markdown round-trips and stabilizes across two cycles (754ms)
+  ✓  2 tests/editor.spec.js:25:1 › source gate and rich editing: Vietnamese typing, bold, paste, no underline toolbar (867ms)
+  ✓  3 tests/editor.spec.js:48:1 › student cannot insert images through source, HTML paste, file paste/drop or API (669ms)
+  ✓  4 tests/editor.spec.js:73:1 › private mock image: stable Markdown, rendered image, session-bound expiry, renew, revoked/missing/offline (3.1s)
+  ✓  5 tests/editor.spec.js:98:1 › teacher PNG upload through actual MDXEditor clipboard calls mock adapter and keeps stable reference (451ms)
+  ✓  6 tests/editor.spec.js:106:1 › DOM annotation selection across bold leaves: review-only reload, repeated excerpt, Unicode, changed original (2.1s)
+
+  6 passed (9.5s)
+npm notice
+npm notice New major version of npm available! 11.16.0 -> 12.2.3
+npm notice Changelog: https://github.com/npm/cli/releases/tag/v12.2.3
+npm notice To update run: npm install -g npm@12.2.3
+npm notice

@@ -1,0 +1,55 @@
+{
+  "verifiedAt": "2026-11-19T18:38:29.000625+00:00",
+  "scope": "Local editor spike; Drive/OAuth and application auth are mocked, no live Google calls",
+  "baseline": "976470faefc0ba00145d6a4fe1afb1bad315692f",
+  "environment": {
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "browser": "Chrome 157.0.8103.79",
+    "os": "macOS arm64"
+  },
+  "checks": {
+    "core": {
+      "command": "npm --prefix prototypes/editor test",
+      "passed": 16,
+      "failed": 0
+    },
+    "browser": {
+      "command": "npm --prefix prototypes/editor run test:browser",
+      "passed": 6,
+      "failed": 0
+    },
+    "build": {
+      "command": "npm --prefix prototypes/editor run build",
+      "exitCode": 0,
+      "warnings": [
+        "Radix use client directives ignored by Vite",
+        "Editor chunk exceeds 500 kB"
+      ]
+    },
+    "audit": {
+      "command": "npm --prefix prototypes/editor audit --json",
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    }
+  },
+  "roundTrip": {
+    "defaultSemanticPass": 9,
+    "withHardBreakPluginSemanticPass": 10,
+    "cases": 10,
+    "cyclesPerCase": 2
+  },
+  "notVerifiedLive": [
+    "Drive private-file upload/download and permissions",
+    "Google OAuth and refresh token lifecycle",
+    "Keycloak/PostgreSQL authorization",
+    "Drive review publication/reply concurrency and autosave",
+    "OS clipboard/IME and other browsers"
+  ]
+}

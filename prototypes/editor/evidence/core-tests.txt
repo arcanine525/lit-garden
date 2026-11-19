@@ -1,0 +1,28 @@
+
+> test
+> node --test tests/core.test.js
+
+✔ all supported fixture Markdown validates (9.0645ms)
+✔ student images: inline, reference, HTML, data URL, escaped punctuation cannot bypass AST policy (1.649833ms)
+✔ HTML/MDX, arbitrary extensions and dangerous links are rejected for both roles (1.970542ms)
+✔ teacher images require stable private app references (0.52775ms)
+✔ normalization preserves semantics and projection, while raw integrity hash changes (4.386ms)
+✔ one review Markdown round-trips scores, overall and annotation without submission edits (7.705375ms)
+✔ repeated excerpt uses exact second occurrence, never quote-only search (2.450084ms)
+✔ Unicode NFD, emoji UTF-16 and cross-format selection survive reload (6.505ms)
+✔ wrong submission/version, external edit or deletion fail closed (0.846375ms)
+✔ syntax-only external edits also lock grading; normalization is allowed only BEFORE submit (0.815ms)
+✔ tampered position/context/projection cannot silently reattach repeated text (2.845083ms)
+✔ malformed, duplicate-key YAML and schema errors rejected (1.433667ms)
+✔ draft may omit scores; publication requires complete scores and valid range (0.775458ms)
+✔ draft and immutable publications separated, student only current result per submission (0.904375ms)
+✔ replied annotation immutable, sent messages cannot edit/delete (0.643542ms)
+✔ reply arriving after edited draft save blocks later publication (0.526916ms)
+ℹ tests 16
+ℹ suites 0
+ℹ pass 16
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 156.907292
