@@ -31,6 +31,9 @@ Website được khảo sát: [vuon-van-ca-nhan.pages.dev](https://vuon-van-ca-n
 | [Admin–Drive–Markdown](docs/requirements/ADMIN-DRIVE-MARKDOWN.md) | 24 quyết định, quyền truy cập, luồng lưu nội dung, lỗi và điều kiện nghiệm thu |
 | [Review chức năng](docs/requirements/FEATURES-REVIEW.md) | 42 quyết định bổ sung từ phiên grill FEATURES: vòng đời bài/lớp, chấm, hội thoại, rubric, thư viện và thông báo |
 | [Chi tiết màn hình](docs/design/SCREENS.md) | Bố cục và thông số từng màn hình tham chiếu |
+| [Thiết kế dữ liệu, quyền và Drive](docs/technical/DATA-AUTH-DRIVE-DESIGN.md) | Schema PostgreSQL tham chiếu, auth, lease/fencing, idempotency, toàn vẹn và phục hồi lỗi; chưa là migrations ứng dụng |
+| [Contract editor/review](docs/technical/EDITOR-REVIEW-CONTRACT.md) | Envelope Markdown, API đề xuất và đối chiếu spike editor agent-1 |
+| [Kiểm chứng thiết kế](docs/technical/validation/README.md) | Kịch bản SQL trên PostgreSQL tạm và mô hình crash/retry; phân biệt với tích hợp Drive thật |
 | [Tương tác](docs/design/INTERACTIONS.md) | Hover, focus, dialog, editor, timer và các trạng thái đã khảo sát |
 | [Danh mục bằng chứng](docs/research/vuon-van-ca-nhan.pages.dev/INDEX.md) | Ảnh, DOM, số đo, source, font và asset manifest |
 
@@ -317,7 +320,7 @@ Khi đã có screenshot của bản triển khai, so với ảnh gốc bằng th
 ## Các bước triển khai tiếp theo
 
 1. Kiểm chứng editor: Markdown chuyển đổi hai chiều, ảnh Drive riêng tư và phục hồi annotation từ `.review.md`.
-2. Thiết kế schema metadata, phân quyền, xác thực, quyền chỉnh sửa tạm thời và giao thức nộp/chấm khi Drive lỗi.
+2. Áp dụng [thiết kế metadata–auth–Drive](docs/technical/DATA-AUTH-DRIVE-DESIGN.md) khi scaffold; schema/kịch bản tham chiếu đã có, còn kiểm chứng OAuth/Drive/Keycloak thật và transaction trong ứng dụng.
 3. Scaffold stack, cấu hình môi trường và triển khai luồng tài khoản/lớp/Drive.
 4. Hoàn thiện viết bài, đồng bộ nháp, phiên bản, rubric/nhận xét và thư viện theo từng luồng sử dụng.
 5. Kiểm thử các tình huống lỗi và đo giao diện với bộ baseline.

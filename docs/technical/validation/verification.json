@@ -1,0 +1,43 @@
+{
+  "verified_at": "2026-11-19T18:47:29.399945+00:00",
+  "branch": "design/metadata-drive-protocol",
+  "baseline": "976470faefc0ba00145d6a4fe1afb1bad315692f",
+  "postgres": "PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
+  "database": "garden_design_verified",
+  "sql_schema": "executed successfully in empty database",
+  "sql_scenarios": {
+    "passed": 60,
+    "transaction": "rolled back fixtures"
+  },
+  "python": "Python 3.12.0",
+  "protocol_model": {
+    "passed": 21,
+    "real_drive": false,
+    "real_backend": false
+  },
+  "internal_file_links_checked": 23,
+  "embedded_json_examples_checked": [
+    "garden.submission/1",
+    "garden.review-publication/1"
+  ],
+  "commands": [
+    "docker exec -i lit-garden-agent2-schema-check psql -U postgres -d garden_design_verified -v ON_ERROR_STOP=1 < docs/technical/metadata-reference.sql",
+    "docker exec -i lit-garden-agent2-schema-check psql -U postgres -d garden_design_verified -q -v ON_ERROR_STOP=1 < docs/technical/validation/schema-scenarios.sql",
+    "python3 docs/technical/validation/protocol_model.py"
+  ],
+  "artifact_sha256": {
+    "README.md": "8eaab1127e05563982ac4d908e86492e6c29b0390110d6ee6c075dda7e3acee5",
+    "docs/technical/DATA-AUTH-DRIVE-DESIGN.md": "c9e1378d5f940871118f3b912cb15751ea54d4a7e7b375b97fa583e2b82427cb",
+    "docs/technical/EDITOR-REVIEW-CONTRACT.md": "b3830dfaa464a4260a717226588a06e3d4fe14bfcad6cebacd0253be6a61272f",
+    "docs/technical/metadata-reference.sql": "f6e64a32f7e1ce015003e6bba480ca15e4c10d9607f9e8fd59ec13712c81e557",
+    "docs/technical/validation/README.md": "bc0106f232a775e178c8896fb0182c6ce72c26d1a4b7883212e7e10ba5b223ec",
+    "docs/technical/validation/schema-scenarios.sql": "e5284ce34efedf1bae2b60449d3ee0ea254235dfc7ca145f476b757f10e10ba9",
+    "docs/technical/validation/protocol_model.py": "d06df72ad167ca7651569676c1c9702713f784a64432d0f84c9cb1dcf4c07d24"
+  },
+  "limits": [
+    "No Google OAuth/Drive live calls",
+    "No Keycloak live calls",
+    "No app E2E",
+    "Agent-1 editor results read, not re-executed"
+  ]
+}
