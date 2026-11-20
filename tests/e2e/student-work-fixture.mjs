@@ -116,6 +116,11 @@ export async function withStudentWork(browser, run, options = {}) {
       for (const context of contexts) await context.close();
       const ids = accounts.map(account => account.id);
       await clearFixturePublications(db,ids);
+      for (const table of ['library_featured','library_favorites','library_shares','library_assets']) {
+        await db.query(`DELETE FROM garden.${table} resource USING garden.library_items item
+          WHERE resource.item_id=item.id AND item.teacher_id=ANY($1)`,[ids]);
+      }
+      await db.query('DELETE FROM garden.library_items WHERE teacher_id=ANY($1)',[ids]);
       for (const [table,column] of [
         ['audit_events','actor_id'],['notifications','teacher_id'],['review_drafts','teacher_id'],['submissions','teacher_id'],
         ['student_drafts','teacher_id'],['recipients','teacher_id'],['assignment_deadlines','changed_by'],['assignments','teacher_id'],

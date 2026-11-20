@@ -1,0 +1,11 @@
+.app-panel .library-list { list-style: none; padding: 0; }
+.library-list li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-block: 14px; border-top: 1px solid var(--line); }
+.library-list li > div { min-width: 0; overflow-wrap: anywhere; }
+.library-list p { color: var(--ink-muted); margin: 4px 0 0; }
+.library-editor fieldset label { display: block; }
+.library-editor fieldset label > :is(input,select,textarea) { display: block; }
+.library-share-choice { display: flex; gap: 8px; align-items: center; margin-block: 8px; }
+.library-share-choice input { margin: 0; }
+.library-reader-actions { margin-bottom: 16px; }
+.library-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
+.library-pdf { width: 100%; min-height: 420px; height: 62vh; border: 0; }

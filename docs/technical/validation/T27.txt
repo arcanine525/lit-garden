@@ -1,0 +1,41 @@
+T27 | Private library, class sharing, reader and favorites
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. Migration
+012-library-assets.sql applied and a repeat reported current.
+
+$ npm run test:db
+2 passed, including a fresh install and upgrade.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+23 passed (2.8m), including the final T27 test (9.0s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/library.spec.mjs tests/e2e/editor.spec.mjs
+3 passed (49.5s including runner teardown), including the T27 library test
+(9.3s) and the two T16 editor regressions.
+
+- A teacher uses the rich Markdown editor to add a document containing an
+  authorized image and a normal external hyperlink. A new item is private.
+  The teacher can share with both owned classes. Another teacher's class
+  is rejected, and the API rejects whole external-link items.
+- The application reads UTF-8 TXT and returns its exact downloaded bytes.
+  It serves a valid PDF fixture to the embedded reader and downloads the
+  exact bytes. An HTML file claiming to be PDF is rejected. The provider
+  stores Markdown manifests, PDF/TXT blobs and the managed image with
+  private file permissions. The DB holds object and ACL metadata.
+- An unshared class cannot access the reader, download or image lease by
+  direct URL. After sharing, both classes have access. A lease is bound
+  to its application session. The favorite filter only includes favorites
+  that still pass the current ACL. Removal from a class and revocation of
+  its share block the reader and download and invalidate previously issued
+  image leases. The saved favorite remains metadata after access is lost.
+
+PDF was verified as an inline HTTP response with the expected MIME type
+and byte-for-byte download. A visual comparison of the native PDF viewer
+was outside this test. PostgreSQL and Keycloak were real local services.
+Drive uploads and read-backs crossed the app adapter to the HTTP fake.
+Live Google remains in T13/T34.

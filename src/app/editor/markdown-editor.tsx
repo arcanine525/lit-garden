@@ -12,7 +12,7 @@ import { editorPlugins } from './editor-plugins';
 import { assetBlob } from './asset-client';
 
 export type EditorHandle = { getMarkdown(): string; setMarkdown(markdown: string): boolean };
-export type EditorProps = { initialMarkdown?: string; role: EditorRole; assignmentId?: string;
+export type EditorProps = { initialMarkdown?: string; role: EditorRole; assignmentId?: string; libraryId?: string;
   onMarkdownChange?: (source: string) => void; editorRef?: Ref<EditorHandle>; validate?: boolean; readOnly?: boolean };
 
 const errors: Record<string,string> = {
@@ -33,7 +33,7 @@ const errors: Record<string,string> = {
   DRIVE_UNAVAILABLE: 'Chưa đọc hoặc lưu được ảnh trên Drive. Hãy thử lại.'
 };
 
-export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMarkdownChange, editorRef, validate, readOnly }: EditorProps) {
+export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, libraryId, onMarkdownChange, editorRef, validate, readOnly }: EditorProps) {
   const [initial] = useState(() => {
     try { return { source: prepareMarkdown(initialMarkdown,role), invalid: false }; }
     catch { return { source: initialMarkdown, invalid: true }; }
@@ -56,7 +56,7 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMar
   const previews = useRef(new Map<string, Promise<string>>());
   const live = useRef(false);
   const uploads = useRef(new WeakMap<File,string>());
-  const canInsertImages = role === 'teacher' && !!assignmentId && !readOnly;
+  const canInsertImages = role === 'teacher' && !!(assignmentId || libraryId) && !readOnly;
 
   useEffect(() => {
     const urls = previewUrls.current;
@@ -123,12 +123,12 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMar
     if (uploading) return;
     setUploading(true);
     try {
-      if (!canInsertImages || !assignmentId) throw Error('STUDENT_IMAGE_FORBIDDEN');
+      if (!canInsertImages) throw Error('STUDENT_IMAGE_FORBIDDEN');
       if (!['image/png','image/jpeg','image/webp'].includes(file.type)) throw Error('UNSUPPORTED_IMAGE');
       const key = uploads.current.get(file) ?? crypto.randomUUID();
       uploads.current.set(file,key);
       const response = await fetch('/api/assets',{ method: 'POST', headers: { 'Content-Type': file.type,
-        'X-Garden-Assignment': assignmentId, 'Idempotency-Key': key }, body: file });
+        ...(assignmentId ? { 'X-Garden-Assignment':assignmentId } : { 'X-Garden-Library':libraryId! }), 'Idempotency-Key': key }, body: file });
       const result = await response.json();
       if (!response.ok) throw Error(result.error);
       if (!live.current) return;

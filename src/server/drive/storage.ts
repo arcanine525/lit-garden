@@ -4,7 +4,7 @@ import { connectedDrive } from './connection';
 import { ensureFolder } from './folders';
 import { DriveError, DriveFiles } from './provider';
 
-type FolderKind = 'class' | 'assignment' | 'student' | 'assets';
+type FolderKind = 'class' | 'assignment' | 'student' | 'assets' | 'library' | 'library_item';
 type Address = { classId: string; assignmentId?: string; studentId?: string; assets?: boolean; reviewSubmission?: string };
 export type DriveObject = { id: string; teacher_id: string; operation_id: string; slot: string; slot_index: number;
   drive_file_id: string; parent_drive_id: string; mime_type: string; expected_sha256: string; byte_size: string };
@@ -30,6 +30,25 @@ async function pathFolder(files: DriveFiles, teacher: string, kind: FolderKind, 
   return ensureFolder(files,pin.folder_id,parent,name,kind,resource,true);
 }
 
+async function pinRoot(teacher: string, { row,files }: Awaited<ReturnType<typeof connectedDrive>>) {
+  await ensureFolder(files,row.app_folder_id,row.parent_folder_id,'Vườn Văn','app',teacher,false);
+  const latched = await database().query(`UPDATE garden.drive_connections SET data_started_at=COALESCE(data_started_at,now())
+    WHERE teacher_id=$1 AND generation=$2 AND state='ready'`,[teacher,row.generation]);
+  if (!latched.rowCount) throw new DriveError('DRIVE_SETUP_CHANGED',409);
+}
+
+export async function prepareLibraryWorkspace(teacher: string, item: string) {
+  const connection = await connectedDrive(teacher);
+  const policy = await database().query(`SELECT 1 FROM garden.library_items i JOIN garden.users u ON u.id=i.teacher_id
+    WHERE i.teacher_id=$1 AND i.id=$2 AND u.role='teacher' AND u.status='active' AND i.state IN ('draft','active')`,[teacher,item]);
+  if (!policy.rowCount) throw new DriveError('NOT_FOUND',404);
+  const { row,files } = connection;
+  await pinRoot(teacher,connection);
+  const root = await pathFolder(files,teacher,'library',teacher,row.app_folder_id,'library');
+  const folderId = await pathFolder(files,teacher,'library_item',item,root);
+  return { files,generation:row.generation,folderId,teacher };
+}
+
 export async function prepareWorkspace(teacher: string, { classId, assignmentId, studentId, assets, reviewSubmission }: Address) {
   const { row, files } = await connectedDrive(teacher);
   const target = await database().query<{ recipient: string | null }>(`
@@ -43,10 +62,7 @@ export async function prepareWorkspace(teacher: string, { classId, assignmentId,
       AND ($4::uuid IS NULL OR (r.id IS NOT NULL AND (m.student_id IS NOT NULL OR reviewed.id IS NOT NULL)))
   `, [teacher,classId,assignmentId ?? null,studentId ?? null,reviewSubmission ?? null]);
   if (!target.rowCount) throw new DriveError('FORBIDDEN', 403);
-  await ensureFolder(files,row.app_folder_id,row.parent_folder_id,'Vườn Văn','app',teacher,false);
-  const latched = await database().query(`UPDATE garden.drive_connections SET data_started_at=COALESCE(data_started_at,now())
-    WHERE teacher_id=$1 AND generation=$2 AND state='ready'`, [teacher,row.generation]);
-  if (!latched.rowCount) throw new DriveError('DRIVE_SETUP_CHANGED', 409);
+  await pinRoot(teacher,{ row,files });
   const classFolder = await pathFolder(files,teacher,'class',classId,row.app_folder_id);
   if (!assignmentId) return { files, generation: row.generation, folderId: classFolder, teacher };
   const assignmentFolder = await pathFolder(files,teacher,'assignment',assignmentId,classFolder);

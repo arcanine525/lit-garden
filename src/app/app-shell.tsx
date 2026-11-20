@@ -11,10 +11,10 @@ const nav: Record<Role, Destination[]> = {
     { href: '/rubrics', label: 'Rubric mẫu', name: 'Quản lý rubric mẫu' }],
   teacher: [{ href: '/', label: 'Trang chính' }, { href: '/classes', label: 'Lớp học' },
     { href: '/assignments', label: 'Bài giao' }, { href: '/reviews', label: 'Bàn chấm' },
-    { href: '/editor', label: 'Soạn Markdown' }, { href: '/rubrics', label: 'Rubric', name: 'Rubric chấm bài' },
+    { href: '/editor', label: 'Soạn Markdown' }, { href: '/rubrics', label: 'Rubric', name: 'Rubric chấm bài' }, { href: '/library', label: 'Thư viện' },
     { href: '/drive', label: 'Drive', name: 'Kết nối Google Drive' }],
   student: [{ href: '/', label: 'Trang chính' }, { href: '/classes', label: 'Tham gia lớp' },
-    { href: '/assignments', label: 'Bài được giao' }, { href: '/editor', label: 'Soạn Markdown' },
+    { href: '/assignments', label: 'Bài được giao' }, { href: '/editor', label: 'Soạn Markdown' }, { href: '/library', label: 'Thư viện' },
     { href: '/rubrics', label: 'Rubric', name: 'Rubric chấm bài' }]
 };
 

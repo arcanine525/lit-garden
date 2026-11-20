@@ -93,13 +93,18 @@ export async function validateEditorDraft(actor: string, role: EditorRole, input
 
 async function authorizedAsset(actor: string, asset: string) {
   const { rows } = await database().query<DriveObject>(`
-    SELECT obj.* FROM garden.assignment_assets aa JOIN garden.drive_objects obj ON obj.id=aa.asset_id
-    JOIN garden.assignments a ON a.id=aa.assignment_id
-    JOIN garden.users u ON u.id=$1 AND u.status='active'
-    WHERE aa.asset_id=$2 AND obj.slot='asset' AND obj.lifecycle='referenced' AND obj.mime_type IN ('image/png','image/jpeg','image/webp')
-      AND ((u.role='teacher' AND aa.teacher_id=u.id) OR (u.role='student' AND a.state='published' AND
-        ((aa.document_part IN ('prompt','both') AND garden.can_read_assignment($1,a.id)) OR
-         (aa.document_part IN ('reference','both') AND garden.can_read_reference($1,a.id)))))
+    SELECT obj.* FROM garden.drive_objects obj JOIN garden.users u ON u.id=$1 AND u.status='active'
+    WHERE obj.id=$2 AND obj.slot='asset' AND obj.lifecycle='referenced' AND obj.mime_type IN ('image/png','image/jpeg','image/webp')
+      AND (EXISTS (
+        SELECT 1 FROM garden.assignment_assets aa JOIN garden.assignments a ON a.id=aa.assignment_id
+        WHERE aa.asset_id=obj.id AND ((u.role='teacher' AND aa.teacher_id=u.id) OR (u.role='student' AND a.state='published' AND
+          ((aa.document_part IN ('prompt','both') AND garden.can_read_assignment($1,a.id)) OR
+           (aa.document_part IN ('reference','both') AND garden.can_read_reference($1,a.id)))))
+      ) OR EXISTS (
+        SELECT 1 FROM garden.library_assets la JOIN garden.library_items i ON i.id=la.item_id
+        WHERE la.asset_id=obj.id AND ((u.role='teacher' AND i.teacher_id=u.id AND i.state IN ('draft','active')) OR
+          (u.role='student' AND la.visible AND garden.can_read_library($1,i.id)))
+      ))
   `,[actor,asset]);
   return rows[0];
 }
@@ -115,7 +120,7 @@ export async function issueAssetView(actor: string, sessionDigest: string, asset
   return { url: `/api/assets/${asset}/view?lease=${handle}`, expiresAt: rows[0].expires_at.toISOString() };
 }
 
-export async function viewAssignmentAsset(actor: string, sessionDigest: string, asset: string, handle: string) {
+export async function viewPrivateAsset(actor: string, sessionDigest: string, asset: string, handle: string) {
   const { rows } = await database().query<{ session_digest: string; valid: boolean }>(`
     SELECT session_digest,expires_at>now() AS valid FROM garden.asset_view_leases WHERE asset_id=$1 AND handle_digest=$2
   `,[asset,digest(handle)]);
