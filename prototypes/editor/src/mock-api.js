@@ -1,11 +1,14 @@
 // PROTOTYPE ONLY: deterministic principals, fake Drive bytes, memory only.
 // No Google credentials are loaded or requested.
-import { randomUUID } from 'node:crypto';
-import { validateMarkdown, walk, referenceDefinitions } from './markdown.js';
+import { createHash, randomUUID } from 'node:crypto';
+import { projectMarkdown, sha256, validateMarkdown, walk, referenceDefinitions } from './markdown.js';
+import { createReviewFixture, decodeEnvelope, fixtureDetails, publishReview, openPublication, changeSubmissionMetadata } from './review-adapter.js';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1cAAAAASUVORK5CYII=', 'base64');
 export function mockApi() {
-  const sessions = new Map(), leases = new Map();
+  const sessions = new Map(), leases = new Map(), reviewFixtures = new Map();
   const assets = new Map([['flower', { status: 'available', owner: 'teacher', documentId: 'assignment-1', bytes: png }]]);
+  const fixtureAsset = 'c2fed575-0c3a-47c4-863a-fff392ced1ac';
+  assets.set(fixtureAsset, assets.get('flower'));
   function fail(code, status = 400) { throw Object.assign(Error(code), { status }); }
   function permission(user, asset) {
     if (!user || !['teacher', 'student'].includes(user)) fail('FORBIDDEN', 403);
@@ -43,6 +46,50 @@ export function mockApi() {
           return json({ role, mock: true });
         }
         if (!user) fail('UNAUTHENTICATED', 401);
+        if (url.pathname === '/api/mock/review-fixtures' && req.method === 'POST') {
+          if (user !== 'teacher') fail('TEACHER_ONLY', 403);
+          const ids = { submission: randomUUID(), assignment: randomUUID(), recipient: randomUUID(), rubric: randomUUID() };
+          const files = createReviewFixture(body().markdown, ids);
+          walk(projectMarkdown(decodeEnvelope(files.submission, 'garden.submission/1').markdown).tree, (node) => {
+            if (node.type === 'image') permission(user, assets.get(node.url.split('/').at(-1)));
+          });
+          reviewFixtures.set(ids.submission, { files, original: Buffer.from(files.submission) });
+          return json({ ...await fixtureDetails(files), mock: true }, 201);
+        }
+        const fixtureRoute = /^\/api\/mock\/review-fixtures\/([\w-]+)(?:\/(publication|external-edit|submission-file))?$/.exec(url.pathname);
+        if (fixtureRoute) {
+          if (user !== 'teacher') fail('TEACHER_ONLY', 403);
+          const fixture = reviewFixtures.get(fixtureRoute[1]);
+          if (!fixture) fail('SUBMISSION_MISSING', 404);
+          const action = fixtureRoute[2];
+          if (action === 'external-edit' && req.method === 'POST') {
+            fixture.files.submission = body().restore ? Buffer.from(fixture.original) : changeSubmissionMetadata({ submission: fixture.original });
+            const current = fixture.files.submission;
+            return json({
+              submissionSha256: createHash('sha256').update(current).digest('hex'),
+              projectionSha256: await sha256(projectMarkdown(decodeEnvelope(current, 'garden.submission/1').markdown).text),
+              mock: true
+            });
+          }
+          if (action === 'submission-file' && req.method === 'GET') {
+            res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+            res.setHeader('Content-Disposition', 'attachment; filename="submission.md"');
+            return res.end(fixture.files.submission);
+          }
+          if (action === 'publication' && req.method === 'POST') {
+            const bytes = await publishReview(body().proposal, fixture.files, { publicationId: randomUUID(), overallId: randomUUID() });
+            if (fixture.publication) fail('PUBLICATION_EXISTS', 409);
+            fixture.publication = Buffer.from(bytes);
+            return json({ stored: true, mock: true }, 201);
+          }
+          if (action === 'publication' && req.method === 'GET') {
+            if (!fixture.publication) fail('PUBLICATION_MISSING', 404);
+            const bytes = Buffer.from(fixture.publication);
+            return json({ ...await openPublication(bytes, fixture.files), file: bytes.toString('utf8'), mock: true });
+          }
+          if (!action && req.method === 'GET') return json({ ...await fixtureDetails(fixture.files), mock: true });
+          fail('NOT_FOUND', 404);
+        }
         if (url.pathname === '/api/documents' && req.method === 'POST') {
           if (!['teacher', 'student'].includes(user)) fail('FORBIDDEN', 403);
           const tree = validateMarkdown(body().markdown, user);
@@ -55,7 +102,7 @@ export function mockApi() {
           // Narrow spike: PNG signature. Production needs decoded raster validation,
           // metadata stripping/re-encoding, limits; SVG is deliberately excluded.
           if (req.headers['content-type'] !== 'image/png' || !raw.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10]))) fail('PNG_REQUIRED', 415);
-          const id = `mock-${randomUUID()}`;
+          const id = randomUUID();
           assets.set(id, { status: 'available', owner: user, documentId: 'assignment-1', bytes: raw });
           return json({ reference: `/api/assets/${id}`, mock: true }, 201);
         }

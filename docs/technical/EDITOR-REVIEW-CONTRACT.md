@@ -1,6 +1,6 @@
 # Contract editor, review và Markdown trên Drive
 
-Thiết kế v1 ngày 20/11/2026, đồng hành [DATA-AUTH-DRIVE-DESIGN](DATA-AUTH-DRIVE-DESIGN.md). Chưa là API đã triển khai. Không phụ thuộc vào một editor package cụ thể.
+Thiết kế v1 đồng hành [DATA-AUTH-DRIVE-DESIGN](DATA-AUTH-DRIVE-DESIGN.md). T04 đã kiểm chứng adapter envelope trong stack prototype cục bộ. Các API ứng dụng dưới đây là contract cho các task tích hợp tiếp theo.
 
 ## 1. API ứng dụng
 
@@ -48,7 +48,7 @@ Ví dụ review publication trong cùng `.md`:
 
 ```markdown
 ---
-garden: {"schema":"garden.review-publication/1","id":"20000000-0000-0000-0000-000000000001","submissionId":"10000000-0000-0000-0000-000000000001","submissionSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","rubricSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","textProjection":"vv-render-text-v1","scores":[{"criterionId":"c1","levelId":"l2","value":"1.00"}],"comments":[{"id":"30000000-0000-0000-0000-000000000001","kind":"range","body":"Ý này rõ.","anchor":{"start":0,"end":3,"exact":"Em ","prefix":"","suffix":"chăm","projectionSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},"color":"yellow"}],"overallCommentId":null}
+garden: {"schema":"garden.review-publication/1","id":"20000000-0000-0000-0000-000000000001","submissionId":"10000000-0000-0000-0000-000000000001","version":2,"rubricId":"40000000-0000-0000-0000-000000000001","submissionSha256":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa","rubricSha256":"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb","textProjection":"vv-render-text-v1","scores":[{"criterionId":"c1","levelId":"l2","value":"1.00"}],"comments":[{"id":"30000000-0000-0000-0000-000000000001","kind":"range","body":"Ý này rõ.","anchor":{"start":0,"end":3,"exact":"Em ","prefix":"","suffix":"chăm","projectionSha256":"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"},"color":"yellow"}],"overallCommentId":null}
 ---
 ```
 
@@ -91,10 +91,10 @@ Browser IndexedDB key `{userId,teacherId,streamId}` giữ `{localRevision,baseSe
 | Projection | Dùng chính `vv-render-text-v1` theo thuật toán spike, loại image alt; bỏ proposal `garden-text/1` khác separator để không nhập nhằng offsets. Prefix/suffix tối đa 32 UTF-16 code units, giữ Unicode NFD/emoji. |
 | Hash scope | Spike hash raw Markdown body; production hash toàn file envelope bytes theo DB, projection chỉ body. Adapter tách body và không thay baseline theo hash mới. |
 | Review schema | Spike `vv-review-proposal-v1` → production `garden.review-publication/1`; đổi contentHash → submissionSha256, annotations → comments, thêm rubricSha256 và IDs/context pin server. Migration chỉ importer explicit khi đủ source hash; không xem spike là file production đã phát hành. |
-| Front matter | Cả hai dùng cấu trúc trong `.md`, không sidecar JSON; production grammar `garden` JSON object trong YAML restricted là serialization mới cần fixture parse/round-trip, chưa được spike chứng minh. |
+| Front matter | Cả hai dùng cấu trúc trong `.md`, không sidecar JSON; T04 kiểm chứng `garden` JSON object trong header giới hạn qua encode → ghi bytes → đọc bytes → decode. |
 | Nội dung support | Giữ subset đã test, không mở code/task-list/HTML/MDX/resize ảnh. Source textarea ngoài editor có gate là lựa chọn spike, chưa chứng minh diffSourcePlugin gốc. |
 | Race và visibility | Giữ immutable pubs/current-only student; bổ sung DB lock + pending reply pin trước upload, fencing và operation reconciliation, vượt phạm vi ledger in-memory của spike. |
-| Điểm cần test khi tích hợp | Private Drive thật, OAuth, adapter envelope, hash bytes, source integrity mỗi save/publish, đa process/thiết bị, Keycloak và ACL đầy đủ. |
+| Điểm cần test khi tích hợp | Private Drive thật, OAuth, source integrity trong API ứng dụng mỗi save/publish, đa process/thiết bị, Keycloak và ACL đầy đủ. |
 
 Ví dụ projection chốt: body `Em **chăm** cây.\n` → `Em chăm cây.\n`; bảng mỗi cell có TAB cuối và mỗi row có LF; không trim LF cuối projection. Fixture offsets/Unicode độc lập ở `validation/protocol_model.py` kiểm quy ước UTF-16, chưa chứng minh selection DOM ngoài spike agent-1.
 
@@ -103,3 +103,16 @@ Ví dụ projection chốt: body `Em **chăm** cây.\n` → `Em chăm cây.\n`; 
 Agent1 đã sửa reference link/image bằng adapter sang inline trước khi import/paste; validator, adapter và mock API đều resolve definition đầu tiên. Lỗi import nội bộ phải giữ source và chặn lưu, không dùng getMarkdown fallback làm bằng chứng round-trip. Corpus `utf16-anchor-cases.json` trong validation có cùng bytes với fixture tests của agent1; cả JS tạo/restore anchor và Python slice phải từ chối boundary cắt surrogate.
 
 Đối với student autosave/submit, close/archive/remove/suspend phải reject intent mất quyền ngay trong transaction thu hồi quyền. Reopen/restore không hồi sinh intent; takeover/acquire sau expiry cũng phải giải phóng pending operation epoch cũ ngay, không chờ worker đọc Drive. Reply retry kiểm key trước current publication; pin không được ghi đè bởi key khác, không được clear bởi cancel trễ của operation cũ. Chi tiết transaction tại mục 11 của thiết kế.
+
+## T04 · Lượt ghi và đọc xuyên adapter
+
+Dùng MDXEditor 4.5.0 cùng plugin hard-break, source có cổng kiểm tra Markdown và adapter reference sang inline. Dùng renderer chấm riêng theo `vv-render-text-v1`. Lượt thử chung đi từ rich DOM qua editor export, tạo file submission và rubric snapshot, nhập proposal YAML, ghi công bố `garden.review-publication/1` thành bytes trong kho mock, rồi đọc và giải mã bytes lại sau reload. URL trang chỉ giữ ID fixture. Phiên bản thứ tự bài nộp được pin từ metadata fixture, nằm ngoài file submission như thiết kế và đi vào file công bố cùng rubric ID/hash. Công bố mẫu có một criterion và ánh xạ điểm sang level ID của snapshot. Adapter giữ comment ID, giải quyết ID của nhận xét chung và kiểm cả hai hash khi đọc.
+
+Fixture chứa bảng, hai lần “Hoa nở.”, tiếng Việt NFD, emoji và ảnh UUID do giáo viên chèn. Fixture tổng hợp đi qua editor giáo viên để kiểm hợp đồng ảnh, bài viết và renderer cùng một lượt. API bài viết học sinh vẫn chặn ảnh. Test kiểm ảnh tải được cả trong rich editor và bài đọc, highlight nằm đúng lần thứ hai sau reload, offset cắt surrogate bị từ chối và sửa riêng explanation làm hash toàn file đổi trong khi hash projection giữ nguyên. Sau khi sửa metadata, cả mở lại và ghi công bố bị chặn. Khôi phục bytes cũ cho phép đọc lại công bố cũ.
+
+- Markdown tải xuống giữ `/api/assets/<UUID>`. Trình đọc ngoài Vườn Văn hiển thị alt text nếu không có quyền đọc ảnh. Mở lại trong Vườn Văn để ứng dụng cấp quyền qua tài liệu chứa ảnh và lấy URL xem trong phiên. Prototype kiểm lease theo cookie mock. Luồng giả lập chưa chứng minh quyền theo tài liệu đầy đủ hoặc đọc ảnh trên Google thật.
+- T04 dùng subset CommonMark/GFM đã kiểm. Cổng prototype nhận tối đa 100.000 UTF-16 code units cho body Markdown, 250.000 code units cho proposal, và giới hạn bytes envelope submission/rubric/review tương ứng 410.000/250.000/1.500.000. Mock uploader nhận PNG tối đa 2.000.000 bytes theo kiểm tra signature hiện có. Các giới hạn này là cấu hình thực nghiệm cho bản đầu và cần so lại khi tích hợp xử lý raster đã decode ở T16.
+- T04 chốt thời điểm sync cho T19 theo thiết kế hiện có. Ghi nháp cục bộ khi xuất được snapshot mới từ editor. Đồng bộ Drive debounce 2 giây, tối đa 10 giây kể từ thay đổi chưa đồng bộ, với lease còn quyền ghi. ACK chỉ đánh dấu snapshot đã gửi. Nộp và công bố lấy snapshot hiện tại khi người dùng bấm, gồm nội dung ô bảng đang focus, và là thao tác riêng. T04 dùng nút ghi rõ ràng trong harness, chưa triển khai lịch sync.
+- Giao thức DB/Drive thật, pin reply giữa nhiều worker, luồng autosave và storage Drive của các vai trò được nghiệm thu ở các task tích hợp sau. Kết quả T04 chỉ áp dụng stack prototype và kho bytes giả lập.
+
+Từ root checkout, chạy `npm --prefix prototypes/editor test`, `npm --prefix prototypes/editor run test:browser` và `npm --prefix prototypes/editor run build`. Playwright khởi động Vite/adapter ở `127.0.0.1:4311` và chạy ca `review-adapter.spec.js` trong Chrome. [Kết quả thực thi T04](validation/T04.txt).

@@ -111,7 +111,7 @@ test('teacher PNG upload through actual MDXEditor clipboard calls mock adapter a
   await ready(page); const response=page.waitForResponse((r)=>r.url().endsWith('/api/assets')&&r.request().method()==='POST');
   await page.locator('[contenteditable="true"]').first().click();
   await page.evaluate(()=>{const png=Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1cAAAAASUVORK5CYII='),(c)=>c.charCodeAt(0));const dt=new DataTransfer();dt.items.add(new File([png],'flower.png',{type:'image/png'}));document.querySelector('[contenteditable="true"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:dt}));});
-  expect((await response).status()).toBe(201); await expect.poll(()=>page.evaluate(()=>window.spike.get())).toContain('/api/assets/mock-');
+  expect((await response).status()).toBe(201); await expect.poll(()=>page.evaluate(()=>window.spike.get())).toMatch(/\/api\/assets\/[0-9a-f-]{36}/);
   expect(await page.evaluate(()=>window.spike.get())).not.toContain('asset-views');
 });
 

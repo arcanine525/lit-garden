@@ -6,7 +6,7 @@ import './style.css';
 import { hardBreakPlugin } from './hard-break-plugin.js';
 import { validateMarkdown, prepareEditorMarkdown, projectMarkdown, sha256, semantic } from './markdown.js';
 import { makeAnchor, writeReview, readReview, restoreReview, schema } from './review.js';
-import { sample, cases } from './fixtures.js';
+import { sample, cases, contractFixture } from './fixtures.js';
 async function api(path, data, options = {}) {
   const response = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data), ...options });
   const result = await response.json();
@@ -21,6 +21,15 @@ async function preview(src) {
 }
 async function upload(file) {
   return (await api('/api/assets', null, { headers: { 'Content-Type': file.type }, body: file })).reference;
+}
+function PrivateImage({ reference, alt }) {
+  const [src, setSrc] = useState(null);
+  useEffect(() => {
+    let active = true;
+    preview(reference).then(url => { if (active) setSrc(url); });
+    return () => { active = false; };
+  }, [reference]);
+  return src ? <img src={src} alt={alt}/> : null;
 }
 function RenderedSubmission({ source, annotations }) {
   const { tree } = projectMarkdown(source);
@@ -44,17 +53,21 @@ function RenderedSubmission({ source, annotations }) {
     if (n.type==='list') return React.createElement(n.ordered?'ol':'ul',{key:k,start:n.ordered?n.start:undefined},children);
     if (n.type==='table') return <table key={k}><tbody>{children}</tbody></table>;
     if (n.type==='link') return <a key={k} href={n.url} rel="noreferrer">{children}</a>;
+    if (n.type==='image') return <PrivateImage key={k} reference={n.url} alt={n.alt}/>;
     if (n.type==='definition') return null;
     return <React.Fragment key={k}>{children}{suffix}</React.Fragment>;
   }
   return render(tree);
 }
 function App() {
+  const [contractId, setContractId] = useState(() => new URLSearchParams(location.search).get('contract'));
+  const [contract, setContract] = useState(null);
+  const [publication, setPublication] = useState(null);
   const importError=useRef(null), importSource=useRef(sample);
   const editor=useRef(null), [role,setRole]=useState(null), [mode,setMode]=useState('rich'), [source,setSource]=useState(sample), [status,setStatus]=useState(''), [epoch,setEpoch]=useState(0);
   const [reviewSource,setReviewSource]=useState(''), [annotations,setAnnotations]=useState([]), [selection,setSelection]=useState(null), [comment,setComment]=useState('Hình ảnh gợi cảm, em hãy phát triển thêm.'), [reviewStatus,setReviewStatus]=useState('Chưa nạp review'), [changed,setChanged]=useState(false), [reviewOverall,setReviewOverall]=useState('Bài viết giàu hình ảnh.');
   useEffect(()=>{ api('/api/mock/login',{role:'teacher'}).then(()=>setRole('teacher')); const onError=(e)=>setStatus(e.detail); window.addEventListener('asset-error',onError); return ()=>window.removeEventListener('asset-error',onError); },[]);
-  async function changeRole(next) { await api('/api/mock/login',{role:next}); importError.current=null; importSource.current=sample; setRole(next); setMode('rich'); setSource(sample); setEpoch((n)=>n+1); setStatus('Đã đổi vai mock'); }
+  async function changeRole(next) { await api('/api/mock/login',{role:next}); importError.current=null; importSource.current=sample; setRole(next); setContract(null); setPublication(null); setSelection(null); setMode('rich'); setSource(sample); setEpoch((n)=>n+1); setStatus('Đã đổi vai mock'); }
   function onImportError({error,source:failedSource}) {
     importError.current=error;
     setSource(importSource.current ?? failedSource);
@@ -115,15 +128,61 @@ function App() {
     const start=position(range.startContainer,range.startOffset), end=position(range.endContainer,range.endOffset);
     if (start!==null && end>start) setSelection({start,end});
   }
+  const contractPath = `/api/mock/review-fixtures/${contractId}`;
+  const reviewBody = contract?.markdown ?? (changed ? sample+'\nNội dung bị đổi.' : sample);
+  async function loadContract(id = contractId) {
+    setAnnotations([]);
+    setPublication(null);
+    try {
+      const path = `/api/mock/review-fixtures/${id}`;
+      const original = await api(path, null, { method: 'GET', body: undefined });
+      setContract(original);
+      const response = await fetch(`${path}/publication`);
+      if (response.status === 404) { setReviewStatus('Chưa có công bố adapter'); return; }
+      const result = await response.json();
+      if (!response.ok) throw Error(result.error);
+      setPublication(result.garden);
+      setReviewSource(result.file);
+      setAnnotations(result.review.annotations);
+      setReviewOverall(result.review.overall);
+      setReviewStatus('Đã đọc công bố qua adapter');
+    } catch (error) { setReviewStatus(error.message); }
+  }
+  useEffect(() => {
+    if (role === 'teacher' && contractId) loadContract();
+  }, [role, contractId]);
+  async function createContract() {
+    try {
+      if (mode !== 'rich' || importError.current) throw Error('EDITOR_IMPORT_FAILED');
+      const original = await api('/api/mock/review-fixtures', { markdown: editor.current.getMarkdown() });
+      history.replaceState(null, '', `?contract=${original.submissionId}`);
+      setSelection(null);
+      setContract(original);
+      setContractId(original.submissionId);
+    } catch (error) { setReviewStatus(error.message); }
+  }
   async function saveReview() {
     try {
       if (role !== 'teacher') throw Error('TEACHER_ONLY');
       if (!selection) throw Error('Hãy chọn một đoạn bài gốc');
+      if (contractId) {
+        if (!contract) throw Error('SUBMISSION_MISSING');
+        const anchor = await makeAnchor(reviewBody, selection.start, selection.end);
+        const proposal = writeReview({
+          schema, id: crypto.randomUUID(), kind: 'publication',
+          submissionId: contract.submissionId, version: contract.version, contentHash: contract.contentHash,
+          scores: [{ criterionId: 'images', value: 2, max: 2 }], overall: reviewOverall,
+          annotations: [{ id: crypto.randomUUID(), color: 'yellow', comment, anchor }]
+        });
+        await api(`${contractPath}/publication`, { proposal });
+        await loadContract();
+        return;
+      }
       const contentHash=await sha256(sample), anchor=await makeAnchor(sample,selection.start,selection.end);
       const r={schema,id:'review-1',kind:'publication',submissionId:'submission-1',version:1,contentHash, scores:[{criterionId:'images',value:2,max:2}],overall:reviewOverall,annotations:[{id:'annotation-1',color:'yellow',comment,anchor}]};
       const md=writeReview(r); setReviewSource(md); localStorage.setItem('PROTOTYPE-review.md',md);
       await loadReview(md); setReviewStatus('Đã ghi review Markdown cục bộ và phục hồi');
-    } catch(e) { setReviewStatus(e.message); }
+    } catch(e) { if (contractId) setAnnotations([]); setReviewStatus(e.message); }
   }
   async function loadReview(md=reviewSource || localStorage.getItem('PROTOTYPE-review.md')) {
     try {
@@ -132,7 +191,7 @@ function App() {
       setReviewSource(md); setAnnotations(result.annotations); setReviewOverall(r.overall); setReviewStatus(result.status);
     } catch(e) { setAnnotations([]); setReviewStatus(e.message); }
   }
-  useEffect(()=>{ if (localStorage.getItem('PROTOTYPE-review.md')) loadReview(localStorage.getItem('PROTOTYPE-review.md')); },[changed]);
+  useEffect(()=>{ if (!contractId && localStorage.getItem('PROTOTYPE-review.md')) loadReview(localStorage.getItem('PROTOTYPE-review.md')); },[changed]);
   // Deliberately exposed only in the local spike for deterministic DOM probes.
   window.spike={ cases, semantic, projectMarkdown, validateMarkdown, get:()=>editor.current?.getMarkdown(), set:(md)=>apply(md), role:changeRole, ready:!!role, review:()=>reviewSource,
     importError:()=>importError.current, probeImport:(md)=>importToEditor(md) };
@@ -145,9 +204,18 @@ function App() {
       ...(role==='teacher'?[imagePlugin({imageUploadHandler:upload,imagePreviewHandler:preview,disableImageResize:true,allowSetImageDimensions:false,disableImageSettingsButton:true})]:[]),
       toolbarPlugin({toolbarContents:()=> <><UndoRedo/><BoldItalicUnderlineToggles options={['Bold','Italic']}/><BlockTypeSelect/><ListsToggle options={['bullet','number']}/><CreateLink/><InsertTable/>{role==='teacher'&&<InsertImage/>}</>})
     ]}/></div><output aria-label="Trạng thái editor">{status}</output></section>
-    <section><h2>Khôi phục đánh dấu từ review Markdown</h2><p>Bài gốc cố định để chấm; chọn văn bản, ghi góp ý rồi tải lại trang. Tệp review là nguồn phục hồi duy nhất.</p><article data-testid="submission" className="essay" onMouseUp={selectText}><RenderedSubmission source={changed?sample+'\nNội dung bị đổi.':sample} annotations={annotations}/></article>
+    {role === 'teacher' && <section><h2>Hợp đồng ghi và đọc review</h2>
+      <div className="actions">
+        <button onClick={() => apply(contractFixture)}>Mở fixture tích hợp</button>
+        <button onClick={createContract}>Chốt bản nộp mẫu từ editor</button>
+        {contract && <a href={`${contractPath}/submission-file`}>Tải bản nộp mẫu</a>}
+      </div>
+      {contract && <p data-testid="contract-context">Bản nộp {contract.submissionId} · phiên bản {contract.version} · rubric {contract.rubricId}</p>}
+      {publication && <p data-testid="contract-publication">Công bố {publication.id} · {publication.scores[0].value} / 2.00</p>}
+    </section>}
+    <section><h2>Khôi phục đánh dấu từ review Markdown</h2><p>Bài gốc cố định để chấm; chọn văn bản, ghi góp ý rồi tải lại trang. Tệp review là nguồn phục hồi duy nhất.</p><article data-testid="submission" className="essay" onMouseUp={selectText}><RenderedSubmission source={reviewBody} annotations={annotations}/></article>
     <p>Vùng chọn UTF-16: {selection?`${selection.start}–${selection.end}`:'Chưa chọn'}</p><label>Góp ý<textarea aria-label="Góp ý" value={comment} onChange={(e)=>setComment(e.target.value)}/></label><label>Nhận xét chung<input aria-label="Nhận xét chung" value={reviewOverall} onChange={(e)=>setReviewOverall(e.target.value)}/></label>
-    <div className="actions"><button disabled={role!=='teacher'} onClick={saveReview}>Ghi review Markdown cục bộ</button><button onClick={()=>loadReview()}>Nạp review Markdown</button><button disabled={role!=='teacher'} onClick={()=>setChanged((v)=>!v)}>Đổi/khôi phục nội dung gốc</button><button onClick={()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([reviewSource],{type:'text/markdown'}));a.href=url;a.download='prototype.review.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);}}>Tải .review.md</button></div>
+    <div className="actions"><button disabled={role!=='teacher'} onClick={saveReview}>{contractId ? 'Công bố qua adapter' : 'Ghi review Markdown cục bộ'}</button><button onClick={()=>contractId ? loadContract() : loadReview()}>Nạp review Markdown</button><button disabled={role!=='teacher' || !!contractId} onClick={()=>setChanged((v)=>!v)}>Đổi/khôi phục nội dung gốc</button><button onClick={()=>{const a=document.createElement('a'),url=URL.createObjectURL(new Blob([reviewSource],{type:'text/markdown'}));a.href=url;a.download='prototype.review.md';a.click();setTimeout(()=>URL.revokeObjectURL(url),0);}}>Tải .review.md</button></div>
     <output aria-label="Trạng thái review">{reviewStatus}</output>{annotations.map((a)=><p key={a.id}><mark className={a.color}>{a.anchor.exact}</mark> — {a.comment}</p>)}<details><summary>Review Markdown (YAML + phần đọc được)</summary><textarea aria-label="Review Markdown" value={reviewSource} onChange={(e)=>setReviewSource(e.target.value)}/></details></section>
   </main>;
 }

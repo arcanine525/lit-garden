@@ -11,3 +11,7 @@ export const cases = [
   { id: 'normalization', markdown: 'Tiêu đề\n=======\n\n* Một\n* Hai\n\n__Đậm__ và _nghiêng_.\n' }
 ];
 export const sample = '# Mùa xuân trong vườn\n\nHoa nở. **Hoa nở.**\n\nTiếng Việt 👩🏽‍🏫 — a\u0306\u0301 và 🌱.\n\n> Mỗi trang viết là một hạt mầm.\n\n| Ý | Điểm |\n| --- | --- |\n| Hình ảnh | 2 |';
+
+// Synthetic teacher-authored fixture for checking the submission envelope.
+// The student editor still rejects all image insertion.
+export const contractFixture = sample + '\n\n![Hoa riêng tư](/api/assets/c2fed575-0c3a-47c4-863a-fff392ced1ac)';
