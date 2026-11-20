@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import { ActionDialog } from '../action-dialog';
 
 type Class = { id: string; name: string; school_year: string; teacher?: string; state: string; class_state?: string };
 type Member = { class_id: string; student_id: string; display_name: string; username: string; state: string };
@@ -25,6 +26,8 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
   const [busy, setBusy] = useState(false);
   const [singleKey, setSingleKey] = useState('');
   const [archived, setArchived] = useState(false);
+  const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [retry, setRetry] = useState(0);
 
   async function refresh(showArchived = archived, signal?: AbortSignal) {
     const response = await fetch(showArchived ? '/api/classes?view=archived' : '/api/classes', { cache: 'no-store', signal });
@@ -34,11 +37,13 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
 
   useEffect(() => {
     const controller = new AbortController();
-    refresh(archived, controller.signal).catch(error => {
-      if (!controller.signal.aborted) setFeedback(error.message);
+    refresh(archived, controller.signal).then(() => {
+      if (!controller.signal.aborted) setLoadState('ready');
+    }, () => {
+      if (!controller.signal.aborted) setLoadState('error');
     });
     return () => controller.abort();
-  }, [archived]);
+  }, [archived, retry]);
 
   async function post(payload: Record<string, unknown>) {
     const response = await fetch('/api/classes', {
@@ -99,6 +104,7 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
     if (archived === showArchived) return;
     setData(initial);
     setFeedback('');
+    setLoadState('loading');
     setArchived(showArchived);
   }
 
@@ -113,13 +119,18 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
   const currentClasses = data.classes.filter(item => item.class_state !== 'archived' && item.state !== 'removed');
   const pastClasses = data.classes.filter(item => item.class_state === 'archived' || item.state === 'removed');
 
-  return <>
-    {teacher ? <>
-      <nav aria-label="Danh sách lớp">
+  return <div aria-busy={busy || loadState === 'loading'}>
+    {teacher && <nav className="app-actions" aria-label="Danh sách lớp">
         <button disabled={busy} aria-pressed={!archived} onClick={() => changeView(false)}>Đang hoạt động</button>{' '}
         <button disabled={busy} aria-pressed={archived} onClick={() => changeView(true)}>Đã lưu trữ</button>
-      </nav>
-      {!archived && <>
+      </nav>}
+    {loadState === 'loading' && <p className="app-panel" role="status">Đang tải lớp học…</p>}
+    {loadState === 'error' && <section className="app-panel">
+      <p className="app-error" role="alert">Chưa tải được lớp học.</p>
+      <button onClick={() => { setLoadState('loading'); setRetry(retry + 1); }}>Thử lại</button>
+    </section>}
+    {loadState === 'ready' && (teacher ? <>
+      {!archived && <section className="app-panel app-roster-form">
       <h2>Tạo lớp</h2>
       <form onSubmit={event => handle(event, 'save_class')}>
         <label>Tên lớp <input name="name" required maxLength={100}/></label>{' '}
@@ -156,12 +167,18 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
         {row.temporaryPassword && <p>Mật khẩu tạm <output>{row.temporaryPassword}</output></p>}
         {row.state === 'pending' && <button disabled={busy} onClick={() => loadRows(false, row.line)}>Thử lại dòng {row.line}</button>}
       </li>)}</ul>}
-      </>}
+      </section>}
       <h2>{archived ? 'Lớp đã lưu trữ' : 'Danh sách lớp'}</h2>
-      {data.classes.map(item => <section aria-label={item.name} key={item.id}>
+      {data.classes.length === 0 && <p className="app-panel">{archived ? 'Chưa có lớp đã lưu trữ.' : 'Tạo lớp để cấp tài khoản và gửi mã tham gia.'}</p>}
+      {data.classes.map(item => <section className="app-panel" aria-label={item.name} key={item.id}>
         <h3>{item.name} · {item.school_year}</h3>
         {item.state === 'active'
-          ? <button disabled={busy} onClick={() => changeRoster({ action: 'archive_class', classId: item.id }, 'Đã lưu trữ lớp.')}>Lưu trữ lớp</button>
+          ? <ActionDialog trigger="Lưu trữ lớp" title={`Lưu trữ ${item.name}?`} detail="Lớp sẽ chuyển sang lịch sử. Bạn có thể khôi phục để tiếp tục quản lý lớp."
+            confirmLabel="Xác nhận lưu trữ" inactive={busy} onConfirm={async () => {
+              await post({ action: 'archive_class', classId: item.id });
+              await refresh();
+              setFeedback('Đã lưu trữ lớp.');
+            }}/>
           : <button disabled={busy} onClick={() => changeRoster({ action: 'restore_class', classId: item.id }, 'Đã khôi phục lớp.')}>Khôi phục lớp</button>}
         {item.state === 'active' && <form onSubmit={event => handle(event, 'save_class', {classId: item.id})}>
           <label>Tên lớp <input name="name" required maxLength={100} defaultValue={item.name}/></label>{' '}
@@ -182,19 +199,20 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
             changeRoster({ action: 'approve', requestId: request.id }, 'Đã duyệt yêu cầu vào lớp.')}>Duyệt {request.display_name}</button>}
         </li>)}</ul>
       </section>)}
-    </> : <>
+    </> : <section className="app-panel">
       <form onSubmit={event => handle(event, 'join')}>
         <label>Mã lớp <input name="code" required maxLength={12}/></label>{' '}
         <button disabled={busy}>Gửi yêu cầu</button>
       </form>
       <h2>Lớp của tôi</h2>
+      {currentClasses.length === 0 && <p>Nhập mã giáo viên gửi để xin tham gia lớp.</p>}
       <ul>{currentClasses.map(item => <li key={item.id}>{item.name} · {item.teacher} · {enrollmentState[item.state]}</li>)}</ul>
       {pastClasses.length > 0 && <>
         <h2>Lịch sử lớp</h2>
         <ul>{pastClasses.map(item => <li key={item.id}>{item.name} · {item.teacher} · {item.class_state === 'archived'
           ? `Đã lưu trữ · ${enrollmentState[item.state]}` : enrollmentState[item.state]}</li>)}</ul>
       </>}
-    </>}
-    <p role="status">{feedback}</p>
-  </>;
+    </section>)}
+    {loadState === 'ready' && <p role="status">{busy ? 'Đang xử lý…' : feedback}</p>}
+  </div>;
 }

@@ -1,7 +1,12 @@
-:root { color: #29493b; background: #faf9f1; font: 14px/1.65 system-ui, sans-serif; }
+@font-face { font-family: 'Be Vietnam Pro'; src: url(fonts/be-vietnam-pro-400.ttf) format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Be Vietnam Pro'; src: url(fonts/be-vietnam-pro-600.ttf) format('truetype'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url(fonts/lora-400.ttf) format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url(fonts/lora-600.ttf) format('truetype'); font-weight: 600; font-display: swap; }
+@font-face { font-family: 'Lora'; src: url(fonts/lora-700.ttf) format('truetype'); font-weight: 700; font-display: swap; }
+:root { color: #29493b; background: #faf9f1; font: 14px/1.65 'Be Vietnam Pro', Arial, sans-serif; }
 * { box-sizing: border-box; }
 body { margin: 0; }
-h1, h2, .wordmark { font-family: Georgia, serif; line-height: 1.25; }
+h1, h2, .wordmark { font-family: 'Lora', Georgia, serif; line-height: 1.25; }
 h1 { font-size: 29px; }
 .wordmark { font-size: 27px; font-weight: 600; margin: 0 0 24px; }
 p { margin-top: 0; }
@@ -21,7 +26,7 @@ button {
 .art img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
 .art p {
   position: absolute; bottom: 12px; left: 22px; padding: 9px 13px; border-radius: 8px;
-  background: #29493b; color: white; font: 30px/1.27 Georgia, serif;
+  background: #29493b; color: white; font: 30px/1.27 'Lora', Georgia, serif;
 }
 .login-content { align-self: center; justify-self: center; width: 100%; max-width: 445px; padding: 34px; }
 .muted { margin-top: 17px; color: #536753; font-size: 12px; }

@@ -62,7 +62,7 @@ export function Accounts({ editable }: { editable: boolean }) {
   }
 
   return <>
-    <section aria-labelledby="teachers">
+    <section className="app-panel" aria-labelledby="teachers" aria-busy={busy}>
       <h2 id="teachers">Giáo viên</h2>
       <form onSubmit={createTeacher} autoComplete="off">
         <label>Tên đăng nhập giáo viên <input name="username" minLength={3} maxLength={30} pattern="[a-z0-9_]+" required/></label>
@@ -81,7 +81,7 @@ export function Accounts({ editable }: { editable: boolean }) {
         })}>{account.status === 'suspended' ? 'Mở khóa' : 'Khóa tài khoản'}</button>}
       </li>)}</ul>
     </section>
-    <section aria-labelledby="students">
+    <section className="app-panel" aria-labelledby="students" aria-busy={busy}>
       <h2 id="students">Học sinh</h2>
       <ul>{accounts.filter(account => account.role === 'student').map(account => <li key={account.id}>
         <p><strong>{account.display_name}</strong> · {account.username}</p>

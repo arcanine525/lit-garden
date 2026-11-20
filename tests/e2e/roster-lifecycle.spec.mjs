@@ -91,6 +91,7 @@ test('T11 class and membership transitions are owner-only, preserve history and 
     expect(await membership(second.classId)).toEqual(unrelated);
 
     await owner.page.getByRole('button', { name: 'Lưu trữ lớp', exact: true }).click();
+    await owner.page.getByRole('dialog').getByRole('button', { name: 'Xác nhận lưu trữ' }).click();
     await expect(owner.page.getByRole('status')).toHaveText('Đã lưu trữ lớp.');
     await expect(owner.page.getByRole('heading', { name: new RegExp(name) })).toHaveCount(0);
     expect((await read(owner.page)).classes).toEqual([]);

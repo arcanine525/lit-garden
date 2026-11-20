@@ -2,6 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import { currentSession } from '../../server/auth/session';
 import { driveStatus } from '../../server/drive/connection';
 import { DriveConnection } from './drive-connection';
+import { AppShell } from '../app-shell';
 
 export default async function DrivePage({ searchParams }: { searchParams: Promise<{ connect?: string }> }) {
   const session = await currentSession();
@@ -9,9 +10,9 @@ export default async function DrivePage({ searchParams }: { searchParams: Promis
   if (session.user.role !== 'teacher') notFound();
   const status = await driveStatus({ teacher: session.user.id, sessionDigest: session.sessionDigest }).catch(() => null);
   const { connect } = await searchParams;
-  return <main>
-    <p><a href="/">Vườn Văn</a></p>
-    <h1>Kết nối Google Drive</h1>
-    {status ? <DriveConnection status={status} result={connect}/> : <p role="alert">Chưa có cấu hình kết nối Drive.</p>}
-  </main>;
+  return <AppShell user={session.user} current="/drive" title="Kết nối Google Drive">
+    <section className="app-panel" aria-label="Trạng thái Drive">
+      {status ? <DriveConnection status={status} result={connect}/> : <p className="app-error" role="alert">Chưa có cấu hình kết nối Drive.</p>}
+    </section>
+  </AppShell>;
 }

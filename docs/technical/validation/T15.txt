@@ -1,0 +1,42 @@
+T15 | Role-based application shell and responsive states
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and local Drive fixture were healthy. The application
+and Keycloak login serve the bundled Be Vietnam Pro and Lora fonts. The home
+hero uses the book WebP in the repository's design references.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+10 passed (48.9s) on the full local application stack.
+
+$ T15_CAPTURE_DIR=/tmp/lit-garden-t15 PLAYWRIGHT_CHANNEL=chrome npm run test:e2e -- shell.spec.mjs
+1 passed (5.4s). Used the real role sessions and a local class fixture.
+
+- Teacher home at 1440×900 has a 235px sidebar and 76px header. At 768×1024
+  the sidebar remains visible at 205px. At 390×844 the sidebar is hidden and
+  navigation is fixed to the viewport bottom. No document overflow or
+  obstruction of the last class panel. Tested using Chrome emulation.
+- Admin, teacher and student see only their role's linked surfaces. The
+  current destination exposes aria-current. The teacher can reach Drive,
+  the admin can reach account management, and no AI/demo control is present.
+  Future features add links when their routes are usable.
+- Tab focuses the skip link with an outline. Enter moves focus to the main
+  landmark. The archive dialog opens with focus on Cancel. Tab reaches the
+  confirmation, Escape dismisses it and returns focus to the trigger.
+- The test pauses the roster HTTP read, observes loading and returns a 503.
+  Retry loads the real API. While archive is paused, the dialog exposes
+  aria-busy, disables the buttons, and stays open on Escape. On release the
+  request completes against the running application.
+- Browser confirms the Vietnamese source fonts loaded and hero image decoded.
+  Inspected the three teacher captures plus the 390px error and dialog states.
+
+The Impeccable static detector reported no findings in the changed UI files.
+The captures use the current app shell and synthetic class data. The approved
+T05 visual fixtures and matched pixel comparison remain part of T35. Tested
+with resized Chrome viewports. No physical-device or live Google checks ran.

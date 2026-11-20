@@ -73,7 +73,7 @@ export function RubricCatalog({ initial, editable }: { initial: Rubric[]; editab
       </option>)}
     </select></label> : <p>Chưa có rubric.</p>}
     {editable && <p><button type="button" disabled={busy || !!draft} onClick={startNew}>Tạo rubric</button></p>}
-    {rubric && <section aria-labelledby="rubric-name" key={selected}>
+    {rubric && <section className="app-panel" aria-labelledby="rubric-name" key={selected}>
       <h2 id="rubric-name">{rubric.label}</h2>
       <p>{point(rubric.definition.max)} điểm · Phiên bản {rubric.revision}{rubric.retired ? ' · Đã ngừng dùng' : ''}</p>
       {rubric.definition.criteria.map(criterion => <details key={criterion.id}>
@@ -88,7 +88,7 @@ export function RubricCatalog({ initial, editable }: { initial: Rubric[]; editab
         <button type="button" disabled={busy || !!draft} onClick={() => change('retire', rubric)}>Ngừng dùng</button>
       </p>}
     </section>}
-    {draft && <form onSubmit={submit}>
+    {draft && <form className="app-panel" onSubmit={submit} aria-busy={busy}>
       <fieldset disabled={busy}>
         <legend>{draft.revision ? 'Phiên bản mới' : 'Rubric mới'}</legend>
         <label>Tên rubric <input value={draft.label} required maxLength={150}
