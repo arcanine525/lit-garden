@@ -1,0 +1,37 @@
+T06 | Local Next.js application stack and CI smoke workflow
+
+Versions: Node 24.18.0, npm 11.16.0, Docker Compose 5.7.1, PostgreSQL 16.15,
+Keycloak 26.6.3, Next.js 16.4.6, React 19.3.1, TypeScript 5.9.3,
+Playwright 1.58.2, Chrome 157.0.8103.79 on macOS.
+Drive mock runs on Node 24.18.0 Alpine. No Google credentials are required.
+
+$ npm ci
+Passed. The lockfile installs the app and browser test runner.
+
+$ npm run stack:up
+Passed. PostgreSQL initialized from an empty dev volume, created the separate
+Keycloak database and role, and became healthy. Keycloak imported the dev realm.
+OIDC discovery and the mock Drive service both responded.
+The initial bind-mounted .sh failed under Docker Desktop with exit 126.
+The version under test initializes PostgreSQL with a psql .sql file instead.
+
+$ npm run typecheck
+Passed. Next generated route types and TypeScript checked the app and smoke test.
+
+$ npm run build
+Passed. Static home page and dynamic /api/health compiled.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
+1 passed (5.2s). Playwright started the built Next server. Browser loaded the
+home page and fetched HTTP 200 from /api/health. The health route queried the
+database and verified OIDC issuer/discovery/signing keys and Drive mock readiness.
+
+$ docker compose --env-file .env.local stop drive-mock
+With the Next app running, /api/health returned 503 and only driveMock=false.
+After starting drive-mock and rechecking the stack, health returned 200 and
+all three checks were true again.
+
+GitHub Actions runs npm ci, typecheck, build, stack boot, and the same smoke
+test on hosted Linux Chromium. Hosted CI starts after pushing this commit.
+Scope: real local PostgreSQL and Keycloak OIDC discovery. Drive is a local
+readiness stub. Login/session and Google integration are later tasks.

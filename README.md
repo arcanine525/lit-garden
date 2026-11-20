@@ -8,7 +8,7 @@ Nội dung học tập chính thức được lưu trên **Google Drive của gi
 
 ## Trạng thái dự án
 
-Repo hiện có tài liệu khảo sát, đặc tả chức năng, thiết kế giao diện, bằng chứng tham chiếu và [prototype kiểm chứng editor](prototypes/editor/README.md). **Chưa có mã ứng dụng sản phẩm hoặc cấu hình triển khai.** Các sơ đồ dưới đây mô tả kiến trúc mục tiêu.
+Repo hiện có tài liệu khảo sát, đặc tả chức năng, thiết kế giao diện, bằng chứng tham chiếu và [prototype kiểm chứng editor](prototypes/editor/README.md). Có khung ứng dụng Next.js và stack phát triển cục bộ. Các sơ đồ dưới đây mô tả kiến trúc mục tiêu.
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -305,7 +305,30 @@ Source trong `docs/research/` là bằng chứng khảo sát, không phải mã 
 
 ## Làm việc với repo
 
-Đọc README → đặc tả Admin–Drive–Markdown và Review chức năng → FEATURES và DESGIN trước khi triển khai. Root repo chưa có `package.json`, Docker Compose hoặc database migrations; hướng dẫn chạy ứng dụng sản phẩm sẽ được bổ sung khi scaffold. Prototype cô lập có lệnh chạy tại [prototypes/editor](prototypes/editor/README.md).
+Đọc README → đặc tả Admin–Drive–Markdown và Review chức năng → FEATURES và DESGIN trước khi triển khai. Root repo chạy ứng dụng Next.js với PostgreSQL, Keycloak và Drive giả lập cho môi trường phát triển. Prototype editor có lệnh chạy riêng tại [prototypes/editor](prototypes/editor/README.md).
+
+Dùng Node theo `.nvmrc`, Docker Compose v2, OpenSSL và curl. Chạy từ gốc checkout:
+
+```bash
+npm ci
+npm run stack:up
+npm run dev
+```
+
+Mở ứng dụng ở `http://127.0.0.1:3000`. Endpoint `/api/health` trả HTTP 200 khi app kết nối được PostgreSQL, đọc OIDC discovery và khóa công khai của Keycloak, và gọi được Drive giả lập. Khi một dịch vụ mất kết nối, app trả 503 và mã kiểm tra theo từng dịch vụ. Keycloak chạy ở cổng 8186, PostgreSQL ở 5546 và Drive giả lập ở 8187. Tất cả cổng trên máy chủ dùng loopback cho cấu hình dev.
+
+`npm run stack:up` tạo `.env.local` nếu chưa có, điền mật khẩu ngẫu nhiên vào tệp đã được Git bỏ qua. Có thể chỉnh cổng và endpoint trong cùng tệp trước khi khởi động. `npm run stack:down` dừng các container và giữ volume PostgreSQL. Giữ tệp cấu hình cùng volume để các mật khẩu vẫn khớp sau lần chạy đầu tiên.
+
+Dừng tiến trình `npm run dev` trước khi chạy E2E từ bản build:
+
+```bash
+npx playwright install chromium
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+Playwright khởi động bản build tại cổng 3000 và kiểm qua trình duyệt. Nếu máy đã có Chrome, có thể chạy `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. GitHub Actions chạy các bước tương đương với Chromium trên Linux. T06 dùng realm dev và kiểm kết nối OIDC. Đăng nhập theo phiên thuộc T08, còn Google OAuth và Drive thật thuộc các mốc tích hợp sau. [Kiểm chứng T06](docs/technical/validation/T06.txt).
 
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
@@ -323,7 +346,7 @@ Khi đã có screenshot của bản triển khai, so với ảnh gốc bằng th
 
 1. Tích hợp [kết quả spike editor](docs/technical/EDITOR-VALIDATION.md); kiểm chứng ảnh/đọc ghi review với OAuth và Drive thật, thống nhất contract với thiết kế schema/giao thức.
 2. Áp dụng [thiết kế metadata–auth–Drive](docs/technical/DATA-AUTH-DRIVE-DESIGN.md) khi scaffold; schema/kịch bản tham chiếu đã có, còn kiểm chứng OAuth/Drive/Keycloak thật và transaction trong ứng dụng.
-3. Scaffold stack, cấu hình môi trường và triển khai luồng tài khoản/lớp/Drive.
+3. Áp migration metadata và triển khai luồng tài khoản, lớp và Drive trên stack dev.
 4. Hoàn thiện viết bài, đồng bộ nháp, phiên bản, rubric/nhận xét và thư viện theo từng luồng sử dụng.
 5. Kiểm thử các tình huống lỗi và đo giao diện với bộ baseline.
 

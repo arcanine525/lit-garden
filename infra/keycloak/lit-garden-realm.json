@@ -1,0 +1,7 @@
+{
+  "realm": "lit-garden",
+  "enabled": true,
+  "displayName": "Vườn Văn",
+  "sslRequired": "external",
+  "registrationAllowed": false
+}

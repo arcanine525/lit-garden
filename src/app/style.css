@@ -1,0 +1,4 @@
+:root { color-scheme: light; background: #faf9f1; color: #29493b; }
+body { margin: 0; font: 16px/1.6 system-ui, sans-serif; }
+main { max-width: 44rem; margin: 0 auto; padding: 4rem 1.5rem; }
+h1 { margin: 0; font: 600 2.5rem/1.2 Georgia, serif; }

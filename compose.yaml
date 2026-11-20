@@ -1,0 +1,46 @@
+name: lit-garden-dev
+services:
+  postgres:
+    image: postgres:16.15-alpine
+    environment:
+      POSTGRES_USER: ${APP_DB_USER:?Run npm run stack:setup}
+      POSTGRES_DB: ${APP_DB_NAME:?Run npm run stack:setup}
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD:?Run npm run stack:setup}
+      KEYCLOAK_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run npm run stack:setup}
+    ports:
+      - "127.0.0.1:${APP_DB_PORT}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/db/init-keycloak.sql:/docker-entrypoint-initdb.d/10-keycloak.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.6.3
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: ${KEYCLOAK_DB_PASSWORD:?Run npm run stack:setup}
+      KC_HOSTNAME: http://127.0.0.1:${KEYCLOAK_PORT}
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USER}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:?Run npm run stack:setup}
+    ports:
+      - "127.0.0.1:${KEYCLOAK_PORT}:8080"
+    volumes:
+      - ./infra/keycloak/lit-garden-realm.json:/opt/keycloak/data/import/lit-garden-realm.json:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+  drive-mock:
+    image: node:24.18.0-alpine
+    command: ["node", "/opt/drive/mock-drive.mjs"]
+    ports:
+      - "127.0.0.1:${DRIVE_MOCK_PORT}:8080"
+    volumes:
+      - ./infra/mock-drive.mjs:/opt/drive/mock-drive.mjs:ro
+volumes:
+  pgdata:
