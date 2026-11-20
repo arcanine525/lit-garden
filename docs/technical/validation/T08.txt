@@ -1,0 +1,45 @@
+T08 | Keycloak Authorization Code with PKCE, required password change and app sessions
+
+$ npm run stack:up
+Verified local PostgreSQL 16.15, Keycloak 26.6.3, and mock Drive. Repeated using a
+separate fresh Compose project with an empty DB and isolated ports. The fresh
+Keycloak initialized the temporary management service via client credentials.
+The pre-T08 volume was upgraded in place using the documented offline bootstrap
+service command and retained all metadata.
+
+$ npm run db:migrate
+Applied 003-auth-sessions.sql to the running app DB. A fresh isolated database
+successfully applied all three migrations.
+
+$ npm run auth:bootstrap
+Succeeded twice against the existing stack and twice against the fresh one.
+The OIDC client was configured for PKCE S256 and exact callback URL. The
+initial application admin was linked by issuer/subject and matched the admin
+role. The repeat verified the previous binding without resetting its password.
+Service credentials and the initial password came from generated, ignored dev
+configuration. The application login flow never uses direct password grants.
+
+$ npm run test:db
+2 integration tests passed, including the schema upgrade with three migrations.
+
+$ npm run typecheck
+Passed.
+
+$ npm run build
+Passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
+4 passed (9.6s) against the full local stack. The three auth cases used real
+Keycloak test identities and exercised the Vietnamese login/password theme.
+Student without email: Keycloak requires UPDATE_PASSWORD, no session or API
+access before the required action, then linked role and valid session. Logout
+deletes the session, a replay of its opaque cookie fails, and cross-origin
+logout is rejected. Teacher: forced change, linked role and expiry block API
+and UI. Admin fixture: linked role resolves, with the separate bootstrapped
+admin binding also verified. Application DB stores opaque session digests
+and expiration/epoch metadata, not passwords or issued provider tokens.
+
+Scope: development OIDC service and local application. The admin account setup
+script is an operator action. Production HTTPS, admin MFA/device setup and
+live Google authorization are outside this run. The theme follows the T05 login
+and password layouts. Pixel comparison against approved baselines is T35.

@@ -5,21 +5,30 @@ compose() {
   docker compose --env-file .env.local "$@"
 }
 setup() {
-  if [ -f .env.local ]; then
-    return
-  fi
   umask 077
-  awk '
-    /^[A-Z_]*PASSWORD=$/ {
-      "openssl rand -hex 24" | getline secret
-      close("openssl rand -hex 24")
-      if (length(secret) != 48) exit 1
-      print $0 secret
-      next
+  tmp=$(mktemp .env.local.tmp.XXXXXX)
+  awk -v existing=".env.local" '
+    BEGIN {
+      while ((getline line < existing) > 0) {
+        print line
+        split(line, pair, "=")
+        seen[pair[1]] = 1
+      }
+      close(existing)
     }
-    { print }
-  ' .env.example > .env.local.tmp
-  mv .env.local.tmp .env.local
+    /^[A-Z_]+=/ {
+      split($0, pair, "=")
+      if (seen[pair[1]]) next
+      if ($0 ~ /_(PASSWORD|SECRET)=$/) {
+        cmd = "openssl rand -hex 24"
+        cmd | getline secret
+        close(cmd)
+        if (length(secret) != 48) exit 1
+        print $0 secret
+      } else print
+    }
+  ' .env.example > "$tmp"
+  mv "$tmp" .env.local
 }
 wait_for() {
   label="$1"

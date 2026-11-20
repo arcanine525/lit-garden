@@ -313,6 +313,7 @@ Dùng Node theo `.nvmrc`, Docker Compose v2, OpenSSL và curl. Chạy từ gốc
 npm ci
 npm run stack:up
 npm run db:migrate
+npm run auth:bootstrap
 npm run dev
 ```
 
@@ -332,7 +333,24 @@ npm run test:e2e
 
 `npm run db:migrate` áp migration SQL theo thứ tự, khóa các lượt chạy đồng thời và từ chối lịch sử bị sửa. `npm run test:db` tạo rồi dọn các database thử riêng trên PostgreSQL local để kiểm cài mới, nâng cấp có dữ liệu và ràng buộc. [Kiểm chứng T07](docs/technical/validation/T07.txt).
 
-Playwright khởi động bản build tại cổng 3000 và kiểm qua trình duyệt. Nếu máy đã có Chrome, có thể chạy `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. GitHub Actions chạy các bước tương đương với Chromium trên Linux. T06 dùng realm dev và kiểm kết nối OIDC. Đăng nhập theo phiên thuộc T08, còn Google OAuth và Drive thật thuộc các mốc tích hợp sau. [Kiểm chứng T06](docs/technical/validation/T06.txt).
+Playwright khởi động bản build tại cổng 3000 và kiểm qua trình duyệt. Nếu máy đã có Chrome, có thể chạy `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. GitHub Actions chạy các bước tương đương với Chromium trên Linux. Đăng nhập ứng dụng dùng Keycloak qua Authorization Code + PKCE. Phiên của app có thời hạn tám giờ và kiểm trạng thái tài khoản cùng auth epoch ở mỗi request. Google OAuth và Drive thật thuộc các mốc tích hợp sau. [Kiểm chứng T06](docs/technical/validation/T06.txt).
+
+`npm run auth:bootstrap` cấu hình client OIDC, theme đăng nhập và tạo tài khoản admin ứng dụng. Cấp giá trị `APP_BOOTSTRAP_PASSWORD` cho người vận hành qua kho secret. Tài khoản phải đổi mật khẩu tạm trong Keycloak trước khi nhận phiên app. Chạy lại bootstrap giữ nguyên mật khẩu của admin hiện có. Khóa, cấp tài khoản thường và đặt lại mật khẩu ứng dụng là các task tiếp theo.
+
+Nếu dùng lại volume dev được tạo trước T08, Keycloak đã có master realm nên bỏ qua bootstrap service ở startup. Chạy một lần quy trình dev dưới đây để tạo service bằng secret cục bộ, giữ nguyên volume:
+
+```bash
+npm run stack:setup
+docker compose --env-file .env.local stop keycloak
+docker compose --env-file .env.local run --rm --no-deps keycloak \
+  bootstrap-admin service --client-id:env KC_BOOTSTRAP_ADMIN_CLIENT_ID \
+  --client-secret:env KC_BOOTSTRAP_ADMIN_CLIENT_SECRET --no-prompt
+npm run stack:up
+npm run db:migrate
+npm run auth:bootstrap
+```
+
+Service quản trị dùng client credentials trong lệnh vận hành và E2E. App không cần service credential để phục vụ người dùng. Với môi trường triển khai, người vận hành thay service bootstrap bằng quyền quản trị giới hạn và thiết lập MFA cho admin ưu tiên quy trình vận hành. [Kiểm chứng T08](docs/technical/validation/T08.txt).
 
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 

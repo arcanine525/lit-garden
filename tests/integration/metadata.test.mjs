@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { migrate, migrationPool } from '../../infra/db/migrate.mjs';
 import { findIdentity, findLatestSubmission, metadataReady } from '../../src/server/metadata.ts';
 
-const migrations = ['001-metadata.sql', '002-tenant-constraints.sql'];
+const migrations = ['001-metadata.sql', '002-tenant-constraints.sql', '003-auth-sessions.sql'];
 const uid = key => {
   const hash = createHash('md5').update(key).digest('hex');
   return [hash.slice(0, 8), hash.slice(8, 12), hash.slice(12, 16), hash.slice(16, 20), hash.slice(20)].join('-');
@@ -118,7 +118,7 @@ test('T07 upgrades a populated database atomically and rejects cross-teacher lin
     assert.deepEqual(unaltered.rows, [{ operation_id: op, object_id: object, state: 'pending' }]);
 
     await db.query('UPDATE garden.notifications SET teacher_id=$1 WHERE id=$2', [teacherA, notification]);
-    assert.deepEqual(await migrate(db), [migrations[1]]);
+    assert.deepEqual(await migrate(db), migrations.slice(1));
     assert.equal(await metadataReady(db), true);
     const upgraded = await db.query('SELECT * FROM garden.library_delete_files WHERE operation_id=$1', [op]);
     assert.deepEqual(upgraded.rows, [{ ...unaltered.rows[0], teacher_id: teacherA }]);

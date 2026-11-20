@@ -1,0 +1,36 @@
+:root { color: #29493b; background: #faf9f1; font: 14px/1.65 system-ui, sans-serif; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+h1, h2, .wordmark { font-family: Georgia, serif; line-height: 1.25; }
+h1 { font-size: 29px; }
+.wordmark { font-size: 27px; font-weight: 600; margin: 0 0 24px; }
+p { margin-top: 0; }
+label { display: block; font-size: 13px; font-weight: 600; }
+input, button { color: inherit; font: inherit; }
+input {
+  width: 100%; display: block; margin: 6px 0 14px; padding: 10px 12px;
+  border: 1px solid #d6dfcf; border-radius: 10px; background: #fffefb;
+}
+button {
+  cursor: pointer; min-height: 40px; border: 1px solid #39745b; border-radius: 10px;
+  color: white; background: #39745b; padding: 8px 13px; font-size: 12px; font-weight: 600;
+}
+:focus-visible { outline: 2px solid #28553e; outline-offset: 3px; }
+.login { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; background: #f6f7e9; }
+.art { position: relative; min-height: 210px; background: #29493b; }
+.art img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+.art p {
+  position: absolute; bottom: 12px; left: 22px; padding: 9px 13px; border-radius: 8px;
+  background: #29493b; color: white; font: 30px/1.27 Georgia, serif;
+}
+.login-content { align-self: center; justify-self: center; width: 100%; max-width: 445px; padding: 34px; }
+.muted { margin-top: 17px; color: #536753; font-size: 12px; }
+.password-gate { max-width: 590px; padding: 44px 20px; margin: auto; }
+.password-gate section { border: 1px solid #d6dfcf; border-radius: 16px; background: #fffef9; padding: 23px; }
+.notice { background: #edf2e6; padding: 11px 13px; border-radius: 10px; }
+[role=alert] { color: #773f35; }
+@media (max-width: 760px) {
+  .login { display: block; }
+  .art p { font-size: 23px; bottom: 6px; left: 16px; }
+  .login-content { margin: auto; padding: 26px; }
+}
