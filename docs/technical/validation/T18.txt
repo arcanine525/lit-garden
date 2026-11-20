@@ -1,0 +1,44 @@
+T18 | Assignment lifecycle, soft deadlines and reference visibility
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the fake Drive fixture were healthy.
+Applied 010-assignment-policy.sql and confirmed the repeat is current.
+
+$ npm run test:db
+2 passed. On closed assignments the author retains draft read/download
+permission, writing and submission permission are denied, and the owning
+teacher can grade. The teacher and author can exchange replies on a returned
+submission. Another student and a submission awaiting return are excluded.
+Archiving the class preserves the author's draft read and blocks grading and
+replies. These are database checks for the feature endpoints in later tasks.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+14 passed (49.4s) on the full local stack, including removal of a recipient's
+reference access and conversion of a finite deadline to an unlimited one.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e -- assignment-lifecycle.spec.mjs
+1 passed (8.2s) on the full local app with real user sessions.
+- Fixed submission times one second before, at, and one second after the
+  deadline give late flags [false,false,true]. A no-deadline assignment has
+  no late label. An existing deadline cannot be shortened or added after
+  publishing an unlimited assignment.
+- Extending through the teacher UI keeps all original submission times and
+  recomputes labels against the new deadline. One history row and one event
+  per recipient commit together. Replaying the same key creates no duplicate.
+- Closing rejects pending autosave and submit operations and fences the live
+  student draft lease. The own draft remains readable according to SQL.
+- Approval in the active class grants an overdue open assignment and a single
+  assigned event. The same approval skips the closed assignment. The deadline
+  does not interfere with writing eligibility for the open assignment.
+- Reference stays private before release. The app blocks release while open
+  and for a blank reference. Release after closing lets the recipient read
+  it and permanently blocks reopen, including after restoring the class.
+
+Assignment content reads use the fake Drive provider. Submission timestamps
+and pending writes are seeded test metadata. The full writer, submission and
+discussion paths are covered by T19, T20 and T26. T22 covers recipient accrual
+when reopening. Live Google service checks remain in T13/T34.

@@ -7,6 +7,9 @@ import { DriveError } from '../../../server/drive/provider';
 import { AppShell } from '../../app-shell';
 import { MarkdownDocument } from '../../editor/markdown-document';
 import { AssignmentEditor } from '../assignment-editor';
+import { AssignmentLifecycle } from '../assignment-lifecycle';
+import { deadlineFormat } from '../deadline-input';
+import { submissionTimings } from '../../../server/assignments/lifecycle';
 import '../assignment.css';
 
 export default async function AssignmentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -34,8 +37,12 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
       <AssignmentEditor id={id} initial={{ draft:detail.draft, hash:detail.hash, draftVersion:detail.draftVersion }} rubrics={rubrics}/>
     </AppShell>;
   }
+  const timings = await submissionTimings(user.id,id);
   return <AppShell user={user} current="/assignments" title={detail.prompt.title}>
     <p>{detail.className} · {detail.teacherName} · {detail.accepting ? 'Đang mở' : 'Đã đóng'}</p>
+    <p>{detail.dueAt ? `Hạn nộp ${deadlineFormat.format(new Date(detail.dueAt))}` : 'Không giới hạn hạn nộp'}</p>
+    {user.role === 'teacher' && detail.classState === 'active' && <AssignmentLifecycle id={id} version={detail.version}
+      accepting={detail.accepting} dueAt={detail.dueAt} hasReference={Boolean(detail.reference)} referenceIsPublic={Boolean(detail.referencePublicAt)}/>}
     <section className="app-panel">
       <h2>Đề bài</h2>
       <MarkdownDocument source={detail.prompt.prompt}/>
@@ -52,5 +59,12 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
         </div>)}</dl>
       </details>)}
     </section>
+    {timings.length > 0 && <section className="app-panel">
+      <h2>Lịch sử bản nộp</h2>
+      <ul>{timings.map(item => <li key={item.id}>
+        {user.role === 'teacher' && `${item.student} · `}Lần nộp {item.number} · {deadlineFormat.format(new Date(item.submittedAt))}
+        {item.late && ' · Nộp muộn'}
+      </li>)}</ul>
+    </section>}
   </AppShell>;
 }

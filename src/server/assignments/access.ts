@@ -6,6 +6,7 @@ import { decodeAssignment, draftInput, type AssignmentDraft, type AssignmentProm
 
 export type AssignmentRow = {
   id: string; teacher_id: string; class_id: string; class_name: string; teacher_name: string;
+  class_state: 'active' | 'archived';
   state: 'draft' | 'published'; accepting: boolean; due_at: Date | null; reference_public_at: Date | null;
   rubric_template_id: string; rubric_template_revision: number; draft_stream_id: string;
   prompt_object_id: string | null; reference_object_id: string | null; rubric_object_id: string | null;
@@ -13,7 +14,7 @@ export type AssignmentRow = {
   lease_epoch: string; lease_live: boolean; version: string;
 };
 
-const overview = `SELECT a.*, c.name AS class_name, t.display_name AS teacher_name,
+const overview = `SELECT a.*, c.name AS class_name, c.state AS class_state, t.display_name AS teacher_name,
   ds.head_object_id,ds.version AS draft_version,ds.lease_actor_id,ds.lease_session_id,ds.lease_epoch,
   COALESCE(ds.lease_until>clock_timestamp(),false) AS lease_live
   FROM garden.assignments a JOIN garden.classes c ON c.id=a.class_id
@@ -67,8 +68,9 @@ export async function assignmentDraft(row: AssignmentRow) {
 
 export async function assignmentDetails(actor: string, id: string) {
   const row = await assignmentForActor(actor,id);
-  const info = { id, classId: row.class_id, className: row.class_name, teacherName: row.teacher_name,
-    accepting: row.accepting, version: row.version, dueAt: row.due_at?.toISOString() ?? null };
+  const info = { id, classId: row.class_id, className: row.class_name, classState: row.class_state, teacherName: row.teacher_name,
+    accepting: row.accepting, version: row.version, dueAt: row.due_at?.toISOString() ?? null,
+    referencePublicAt: row.reference_public_at?.toISOString() ?? null };
   if (row.state === 'draft') {
     const draft = await assignmentDraft(row);
     const next = await assignmentForActor(actor,id);
@@ -86,8 +88,10 @@ export async function assignmentDetails(actor: string, id: string) {
     'garden.rubric-snapshot/1',row.rubric_template_id);
   if (decoded.assignmentId !== id || decoded.revision !== row.rubric_template_revision) throw new DriveError('DRIVE_INTEGRITY',409);
   const { assignmentId: _, ...rubric } = decoded;
-  await assignmentForActor(actor,id);
-  return { ...info, state: 'published' as const, prompt: decodeAssignment<AssignmentPrompt>(prompt.bytes,'garden.assignment-prompt/1',id),
+  const final = await assignmentForActor(actor,id);
+  return { ...info, accepting:final.accepting, version:final.version, classState:final.class_state,
+    dueAt:final.due_at?.toISOString() ?? null, referencePublicAt:final.reference_public_at?.toISOString() ?? null,
+    state: 'published' as const, prompt: decodeAssignment<AssignmentPrompt>(prompt.bytes,'garden.assignment-prompt/1',id),
     rubric: { id: row.rubric_template_id, ...rubric }, rubricHash: snapshot.hash,
     reference: reference && await readsReference() ? decodeAssignment<{ reference: string }>(reference.bytes,'garden.assignment-reference/1',id).reference : null };
 }

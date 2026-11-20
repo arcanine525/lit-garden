@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { migrate, migrationPool } from '../../infra/db/migrate.mjs';
 import { findIdentity, findLatestSubmission, metadataReady } from '../../src/server/metadata.ts';
 
-const migrations = ['001-metadata.sql', '002-tenant-constraints.sql', '003-auth-sessions.sql', '004-identity-lifecycle.sql', '005-enrollment.sql', '006-roster-lifecycle.sql', '007-rubric-versioning.sql', '008-drive-connection.sql', '009-private-assets.sql'];
+const migrations = ['001-metadata.sql', '002-tenant-constraints.sql', '003-auth-sessions.sql', '004-identity-lifecycle.sql', '005-enrollment.sql', '006-roster-lifecycle.sql', '007-rubric-versioning.sql', '008-drive-connection.sql', '009-private-assets.sql', '010-assignment-policy.sql'];
 const uid = key => {
   const hash = createHash('md5').update(key).digest('hex');
   return [hash.slice(0, 8), hash.slice(8, 12), hash.slice(12, 16), hash.slice(16, 20), hash.slice(20)].join('-');
@@ -85,6 +85,26 @@ test('T07 migrates an empty PostgreSQL database and applies only once across par
         SELECT count(*) AS passed_sql_checks FROM checks_passed;
       `);
       assert.equal(checksAfterUpgrade.at(-1).rows[0].passed_sql_checks, '64');
+      const closedPolicy = await client.query(`SELECT
+        garden.can_read_draft(pg_temp.uid('student1'),pg_temp.uid('student-stream')) AS read_draft,
+        garden.can_write_recipient(pg_temp.uid('student1'),pg_temp.uid('recipient1')) AS write_draft,
+        garden.can_review_submission(pg_temp.uid('teacher1'),pg_temp.uid('sub1')) AS review,
+        garden.can_reply_submission(pg_temp.uid('teacher1'),pg_temp.uid('sub1')) AS teacher_reply,
+        garden.can_reply_submission(pg_temp.uid('student1'),pg_temp.uid('sub1')) AS author_reply,
+        garden.can_reply_submission(pg_temp.uid('student1'),pg_temp.uid('sub2')) AS unpublished_reply,
+        garden.can_reply_submission(pg_temp.uid('student2'),pg_temp.uid('sub1')) AS peer_reply
+      `);
+      assert.deepEqual(closedPolicy.rows[0], {
+        read_draft: true, write_draft: false, review: true, teacher_reply: true, author_reply: true,
+        unpublished_reply: false, peer_reply: false
+      });
+      await client.query("UPDATE garden.classes SET state='archived' WHERE id=pg_temp.uid('class1')");
+      const archivePolicy = await client.query(`SELECT
+        garden.can_read_draft(pg_temp.uid('student1'),pg_temp.uid('student-stream')) AS read_draft,
+        garden.can_review_submission(pg_temp.uid('teacher1'),pg_temp.uid('sub1')) AS review,
+        garden.can_reply_submission(pg_temp.uid('student1'),pg_temp.uid('sub1')) AS author_reply
+      `);
+      assert.deepEqual(archivePolicy.rows[0], { read_draft: true, review: false, author_reply: false });
     } finally {
       await client.query('ROLLBACK');
       client.release();

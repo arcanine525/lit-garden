@@ -368,6 +368,8 @@ Chế độ `APP_DRIVE_PROVIDER=google` dùng `APP_DRIVE_GOOGLE_CLIENT_ID`, `APP
 
 Từ **Bài giao**, giáo viên chọn lớp và rubric để tạo nháp. Nháp tự lưu lên Drive và có thể mở lại ở phiên khác. Khi giao, Vườn Văn kiểm các tệp đề, thang điểm, rubric và tham chiếu nếu có, rồi cấp bài cho học sinh đang tham gia. Thay đổi rubric mẫu về sau chỉ áp dụng cho bài mới. [Kiểm chứng T17](docs/technical/validation/T17.txt).
 
+Hạn nộp dùng giờ Việt Nam và có thể để trống. Bài mở vẫn nhận bản nộp sau hạn, với nhãn **Nộp muộn** tính theo thời điểm của từng lần nộp và hạn hiện tại. Giáo viên có thể gia hạn hoặc bỏ hạn hiện có. Công khai tham chiếu sau khi đóng bài sẽ giữ bài ở trạng thái đóng. [Kiểm chứng T18](docs/technical/validation/T18.txt).
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash

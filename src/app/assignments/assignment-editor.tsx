@@ -6,6 +6,7 @@ import type { AssignmentDraft } from '../../server/assignments/bundle';
 import { EditorWorkbench } from '../editor/editor-workbench';
 import type { EditorHandle } from '../editor/markdown-editor';
 import type { RubricChoice } from './create-assignment';
+import { deadlineField, deadlineValue } from './deadline-input';
 
 type Saved = { draft: AssignmentDraft; draftVersion: string; hash: string | null };
 type Attempt = {
@@ -198,6 +199,8 @@ export function AssignmentEditor({ id, initial, rubrics }: { id: string; initial
       </select></label>
       <label>Điểm tối đa <input type="number" min="0.25" max="100" step="0.25" required value={draft.scale}
         onChange={event => setDraft({ ...draft,scale:event.target.value })}/></label>
+      <label>Hạn nộp (giờ Việt Nam) <input type="datetime-local" value={deadlineField(draft.dueAt)}
+        onChange={event => setDraft({ ...draft,dueAt:deadlineValue(event.target.value) })}/></label>
     </fieldset>
     {([
       ['Đề bài','prompt',prompt],['Ngữ liệu','material',material],['Nội dung tham chiếu','reference',reference]

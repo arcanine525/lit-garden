@@ -5,7 +5,7 @@ import { maxMarkdownBytes } from '../../shared/editor-markdown';
 
 export type AssignmentDraft = {
   title: string; prompt: string; material: string; reference: string;
-  rubricId: string; rubricRevision: number; scale: string;
+  rubricId: string; rubricRevision: number; scale: string; dueAt?: string | null;
 };
 export type AssignmentPrompt = Pick<AssignmentDraft, 'title' | 'prompt' | 'material'>;
 export type RubricSnapshot = { id: string; label: string; revision: number; scale: string; max: string;
@@ -14,7 +14,7 @@ export type RubricSnapshot = { id: string; label: string; revision: number; scal
 export function draftInput(input: unknown): AssignmentDraft {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new DriveError('INVALID_DRAFT',422);
   const value = input as Record<string,unknown>;
-  if (Object.keys(value).some(key => !['title','prompt','material','reference','rubricId','rubricRevision','scale'].includes(key)) ||
+  if (Object.keys(value).some(key => !['title','prompt','material','reference','rubricId','rubricRevision','scale','dueAt'].includes(key)) ||
       typeof value.title !== 'string' || value.title.trim().length > 160 || /[\r\n\u0000]/.test(value.title) ||
       typeof value.prompt !== 'string' || typeof value.material !== 'string' || typeof value.reference !== 'string' ||
       typeof value.rubricId !== 'string' || !uuidPattern.test(value.rubricId) ||
@@ -23,9 +23,18 @@ export function draftInput(input: unknown): AssignmentDraft {
   const scale = Number(value.scale.replace(',','.'));
   if (scale < .25 || scale > 100 || !Number.isInteger(scale * 4)) throw new DriveError('INVALID_SCALE',422);
   const draft = { title: value.title.trim(), prompt: value.prompt, material: value.material, reference: value.reference,
-    rubricId: value.rubricId, rubricRevision: value.rubricRevision, scale: scale.toFixed(2) };
+    rubricId: value.rubricId, rubricRevision: value.rubricRevision, scale: scale.toFixed(2),
+    ...(value.dueAt === undefined ? {} : { dueAt: deadlineInput(value.dueAt) }) };
   if (Buffer.byteLength(JSON.stringify(draft)) > maxMarkdownBytes) throw new DriveError('MARKDOWN_SIZE',422);
   return draft;
+}
+
+export function deadlineInput(input: unknown) {
+  if (input === null) return null;
+  if (typeof input !== 'string' || !/^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}Z$/.test(input)) throw new DriveError('INVALID_DEADLINE',422);
+  const due = new Date(input);
+  if (!Number.isFinite(due.getTime()) || due.toISOString() !== input) throw new DriveError('INVALID_DEADLINE',422);
+  return input;
 }
 
 export function encodeAssignment(schema: string, id: string, fields: object, body = '') {

@@ -3,6 +3,7 @@ import type { PoolClient } from 'pg';
 import { database } from '../db';
 import { requiredEnv } from '../config';
 import { userManagement } from '../auth/iam';
+import { grantOpenAssignments } from '../assignments/recipients';
 import { csvStudents, type CsvRow } from './csv';
 
 export class RosterError extends Error {
@@ -125,6 +126,7 @@ export function setMembershipState(teacher: string, classId: string, studentId: 
           UPDATE garden.enrollment_requests SET state='approved',decided_by=$3,decided_at=now()
           WHERE class_id=$1 AND student_id=$2 AND state='pending'
         `, [classId,studentId,teacher]);
+        await grantOpenAssignments(connection,teacher,classId,studentId);
       }
       await connection.query(`
         INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,class_id,outcome)
@@ -169,6 +171,7 @@ export function approveEnrollment(teacher: string, requestId: string) {
       INSERT INTO garden.memberships(class_id,student_id,state) VALUES($1,$2,'active')
       ON CONFLICT (class_id,student_id) DO UPDATE SET state='active',removed_at=NULL,version=garden.memberships.version+1
     `, [request.class_id, request.student_id]);
+    await grantOpenAssignments(connection,teacher,request.class_id,request.student_id);
     await connection.query(`
       UPDATE garden.enrollment_requests SET state='approved',decided_by=$2,decided_at=now() WHERE id=$1
     `, [requestId, teacher]);
@@ -249,6 +252,7 @@ export async function provisionStudent(teacher: string, key: string, input: Stud
       await connection.query(`
         INSERT INTO garden.memberships(class_id,student_id,state) VALUES ($1,$2,'active')
       `, [classId, completed.target_user_id]);
+      await grantOpenAssignments(connection,teacher,classId,completed.target_user_id);
       await connection.query("UPDATE garden.identity_operations SET state='committed' WHERE id=$1", [completed.id]);
       await connection.query(`
         INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,identity_operation_id,outcome)

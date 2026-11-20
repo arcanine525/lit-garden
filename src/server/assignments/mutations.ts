@@ -203,8 +203,8 @@ export async function publishAssignment(teacher: string, id: string, snapshot: S
         WHEN asset_id=ANY($2::uuid[]) THEN 'prompt' WHEN asset_id=ANY($3::uuid[]) THEN 'reference' ELSE 'staged' END
         WHERE assignment_id=$1`,[id,[...new Set([...prompt.assets,...material.assets])],reference.assets]);
       await db.query(`UPDATE garden.assignments SET state='published',accepting=true,published_at=(SELECT accepted_at FROM garden.operations WHERE id=$2),
-        prompt_object_id=$3,reference_object_id=$4,rubric_object_id=$5,version=version+1 WHERE id=$1`,
-        [id,context.op.id,written.prompt,written.reference ?? null,written.rubric]);
+        prompt_object_id=$3,reference_object_id=$4,rubric_object_id=$5,due_at=$6,version=version+1 WHERE id=$1`,
+        [id,context.op.id,written.prompt,written.reference ?? null,written.rubric,draft.dueAt ?? null]);
       await db.query(`WITH granted AS (
         INSERT INTO garden.recipients(assignment_id,class_id,teacher_id,student_id)
         SELECT $1,$2,$3,m.student_id FROM garden.memberships m JOIN garden.users u ON u.id=m.student_id
