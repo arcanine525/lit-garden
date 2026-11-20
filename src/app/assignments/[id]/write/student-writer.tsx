@@ -7,6 +7,7 @@ import type { EditorHandle } from '../../../editor/markdown-editor';
 import type { DraftBody } from '../../../../server/student-drafts/access';
 import { deadlineFormat } from '../../deadline-input';
 import { deviceDrafts, downloadDraft, keepDeviceCopy, syncedBranch, type DeviceCopy } from './draft-device';
+import { FocusClock, type FocusClockHandle } from './focus-clock';
 import { useSubmission } from './use-submission';
 
 type Head = { draft: DraftBody; writable: boolean; version: string; hash: string | null };
@@ -36,6 +37,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
   const [deviceError,setDeviceError] = useState(false);
   const [status,setStatus] = useState('Đang mở nháp…');
   const editor = useRef<EditorHandle>(null);
+  const clock = useRef<FocusClockHandle>(null);
   const client = useRef('');
   const branch = useRef('');
   const restored = useRef<string | null>(null);
@@ -222,6 +224,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
     if (!lease.current || working.current || submission.busy || submission.attempt) return;
     const snapshot = current();
     capture(snapshot);
+    if (snapshot.markdown.trim()) clock.current?.pause();
     void submission.act('submit',{ action:'submit',key:crypto.randomUUID(),clientId:client.current,epoch:lease.current,
       baseVersion:head.current.version,draft:snapshot });
   }
@@ -285,7 +288,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
     };
   });
 
-  return <section className="app-panel" aria-label="Nháp bài viết" onInputCapture={() => {
+  const draftPanel = <section className="app-panel" aria-label="Nháp bài viết" onInputCapture={() => {
     if (!lease.current) return;
     cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(() => capture(current()));
@@ -343,4 +346,8 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
       </section>}
     </>}
   </section>;
+  return <>
+    <FocusClock student={student} assignment={assignment} clockRef={clock}/>
+    {draftPanel}
+  </>;
 }

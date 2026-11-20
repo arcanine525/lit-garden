@@ -1,0 +1,24 @@
+.focus-clock { margin-block: 0 22px; }
+.focus-clock .focus-clock-toggle {
+  min-height: 48px;
+  padding: 12px 22px;
+  font-size: 15px;
+  border-color: #326149;
+  box-shadow: 0 3px 10px #29493b20;
+}
+.focus-clock-panel:not([hidden]) {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #cfddbf;
+  border-radius: 12px;
+  background: #f3f6e9;
+}
+.focus-clock-panel > svg { flex: none; }
+.focus-clock-content { min-width: 0; }
+.focus-clock-content h2 { margin-bottom: 4px; font-size: 18px; }
+.focus-clock-content [role="timer"] { font-size: 18px; font-variant-numeric: tabular-nums; }
+.focus-clock-content label { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.focus-clock-content input { inline-size: 6.5em; }

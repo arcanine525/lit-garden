@@ -18,6 +18,6 @@ export default async function WritePage({ params }: { params: Promise<{ id: stri
   catch (error) { if (error instanceof DriveError && error.status === 404) notFound(); throw error; }
   return <AppShell user={session.user} current="/assignments" title="Viết bài">
     <p><a href={`/assignments/${id}`}>Xem đề bài</a></p>
-    <StudentWriter assignment={id} student={session.user.id}/>
+    <StudentWriter key={id} assignment={id} student={session.user.id}/>
   </AppShell>;
 }

@@ -1,0 +1,39 @@
+T21 | Local writing focus clock
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+The local PostgreSQL, Keycloak and fake Drive services were healthy.
+Migrations were current and the application verified OIDC discovery.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+17 passed (1.4m), including the T21 test (3.3s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/focus-clock.spec.mjs
+1 passed (5.3s, 3.8s test body).
+
+- The first open starts the clock. The button exposes its expanded state
+  and keeps keyboard focus. The panel fits a 390×844 Chromium viewport.
+- A Playwright clock checks Mầm, Chồi, Nụ and Hoa at a one-minute goal.
+  Pausing freezes elapsed time. The clock resumes, keeps counting while
+  hidden, and remains in Hoa after passing the goal. Goals are whole
+  minutes in 1–240 and default to 30. Reset brings elapsed time to zero and
+  stays stopped when hidden and reopened.
+- Switching assignments gets an independent clock. Returning restores
+  elapsed time, goal and visibility from sessionStorage for the same
+  student and assignment. Running elapsed time includes time away from the
+  writing page in the same browser session.
+- Clock interaction generates no draft save or submission requests. An
+  explicit submit pauses the clock. Its request, Drive Markdown envelope
+  and PostgreSQL submission record have no focus duration. There are no
+  server-side timer fields for grading, CSV or reporting to consume. The
+  CSV and reporting UI suites are later tasks.
+
+The browser time was simulated. Authentication and PostgreSQL were local
+services. Submission read-back crossed the application adapter to the local
+fake Drive, and live Google Drive was outside the test scope.
