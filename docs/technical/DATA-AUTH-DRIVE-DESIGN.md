@@ -218,7 +218,8 @@ Lock order chung: teacher user → class → assignment → membership → recip
 | 403 storageQuotaExceeded | needs_client; dừng upload; giải phóng quota bởi teacher, user retry | Drive hết dung lượng, chưa hoàn tất |
 | 401 → refresh thất bại/invalid_grant | reconnect_required; bảo toàn expected account; không đổi credentials bằng student | Cần teacher kết nối lại |
 | 403 insufficientFilePermissions/appNotAuthorized | unavailable/forbidden; không auto retry write vô hạn | Không có quyền Drive |
-| GET 404/trashed file đã committed | missing (404 có thể do mất quyền); chặn dependent edit/publish | Không tìm thấy hoặc không còn quyền; không hứa đã bị xóa chắc chắn |
+| File đã committed được xác nhận trong thùng rác | missing; chặn dependent edit/publish | Không tìm thấy bản nộp tại vị trí dùng để chấm |
+| GET 404 cho file đã committed | unavailable vì Drive có thể ẩn file khi app thiếu quyền; chặn dependent edit/publish | Chưa đọc được từ Drive |
 | GET 404 candidate unknown | Chưa chứng minh không có late create; giữ unknown/needs_client có pin | Chưa xác nhận; cùng operation |
 | Drive success, DB T2 fail/crash | Candidate đã reserve; reconcile verify + T2 theo policy hiện tại | Chưa xác nhận cho đến DB committed |
 | DB commit success, ACK mất | status cùng key → result cũ | Đã nộp/trả một lần |
@@ -232,7 +233,7 @@ Phân loại 403 theo reason, không coi mọi 403 là revoked. [Google error gu
 
 Hash SHA-256 **bytes cuối cùng upload** UTF-8, LF; normalize trước pin, không normalize lại bytes khi verify. `expected_sha256` chỉ đặt lúc reserve rồi bất biến. Drive `version` tăng cả khi thay đổi metadata, nên chỉ là hint, không đủ kết luận nội dung đổi; `sha256Checksum` có điều kiện có mặt cho blob theo [files resource](https://developers.google.com/workspace/drive/api/reference/rest/v3/files). Luôn có fallback GET media tự hash, kiểm MIME/size/trashed. Không dùng md5 hay modifiedTime làm bằng chứng duy nhất. Rename/move không đổi hash thì không freeze content, nhưng folder/ownership sai cần báo connection/path anomaly.
 
-Khi đọc submission, source review, publication, message, library: verify bytes trước render và authorize dependency closure. Submission mismatch → conflict/freeze grading version, không tự bind annotations vào bytes khác. File deleted/trashed → missing; permission/network failure → unavailable, không xóa lịch sử metadata. Hash đúng trở lại có thể unfreeze sau verify đầy đủ, audit; thao tác restore bytes thực hiện bởi teacher ngoài app từ bản tải xuống/Drive revision còn tồn tại, app không hứa có bản đó. Không ghi đè expected hash để “chấp nhận phiên bản mới”; bài mới phải là submission mới theo hành động student.
+Khi đọc submission, source review, publication, message, library: verify bytes trước render và authorize dependency closure. Submission mismatch → conflict/freeze grading version, không tự bind annotations vào bytes khác. Việc thiếu file phải có bằng chứng như metadata `trashed`. Lỗi quyền, mạng hoặc 404 chưa rõ nguyên nhân được ghi là unavailable và giữ lịch sử metadata. Hash đúng trở lại có thể unfreeze sau verify đầy đủ, audit; thao tác restore bytes thực hiện bởi teacher ngoài app từ bản tải xuống/Drive revision còn tồn tại, app không hứa có bản đó. Không ghi đè expected hash để “chấp nhận phiên bản mới”; bài mới phải là submission mới theo hành động student.
 
 Ảnh đề/reference cũng hash và quyền riêng, mất ảnh hiển thị placeholder unavailable chứ không coi ảnh trống. Review publication mismatch không lộ nội dung bị sửa ngoài ứng dụng như kết quả hợp lệ; giữ pointer và báo unavailable/conflict, không tự quay về old publication cho student. Tin nhắn mismatch giữ ID/thread nhưng không hiển thị text không xác minh.
 

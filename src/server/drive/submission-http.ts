@@ -1,7 +1,7 @@
 import { sessionUser } from '../auth/session';
 import { uuidPattern } from '../auth/identity-operations';
 import { driveFailure, driveJson, privateHeaders } from './http';
-import { readSubmissionFile } from './storage';
+import { readSubmissionFile } from './submission-integrity';
 
 export async function serveSubmission(id: string, asset?: string) {
   try {

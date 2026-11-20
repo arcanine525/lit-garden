@@ -114,6 +114,10 @@ async function fixture(request, response) {
   } else if (input.action === 'alter') {
     const entry = files.get(input.id);
     if (entry?.sub !== input.sub) return json(response, 404, {});
+    if (typeof input.base64 === 'string') {
+      entry.bytes = Buffer.from(input.base64,'base64');
+      entry.file.size = String(entry.bytes.length);
+    }
     Object.assign(entry.file,input.patch);
   } else if (input.action === 'inspect') {
     return json(response, 200, {

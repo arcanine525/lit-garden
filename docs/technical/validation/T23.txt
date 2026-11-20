@@ -1,0 +1,42 @@
+T23 | Verify the immutable submission before reading or reviewing
+
+$ docker compose --env-file .env.local restart drive-mock
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. Migration
+011-submission-integrity.sql applied and a repeat reported current.
+
+$ npm run test:db
+2 passed, including scratch installation and upgrade with existing metadata.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+19 passed (1.6m), including the T23 test (2.5s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/submission-integrity.spec.mjs tests/e2e/drive.spec.mjs
+2 passed (9.2s), including the T23 test (2.4s) and the T14 access regression.
+
+- Two real application submit requests create two versions on the local
+  fake Drive. The teacher reads and verifies v1 in the same session. A
+  change only to the explanation in the Markdown envelope keeps the body,
+  Drive version and byte length identical but changes whole-file SHA-256.
+  The next read fails and the verification route returns SUBMISSION_CONFLICT.
+- PostgreSQL preserves the expected hash and marks only v1 as conflict.
+  The mutation guard garden.can_review_submission denies v1 and allows
+  verified v2. Renaming v2 and changing Drive version without changing its
+  bytes remains valid. Student and admin calls cannot use the teacher verifier.
+- A verified Drive response marking v1 as trashed returns SUBMISSION_MISSING.
+  Access 403 and an ambiguous provider 404 return SUBMISSION_UNAVAILABLE.
+  These states block the affected version. No response reports definitive
+  deletion from the access errors. Replacing v1 externally with the exact
+  original bytes allows verification again. Audit records contain IDs and
+  outcomes for the state transitions and the expected digest never changes.
+
+The grading and return screens in T24/T25 use the verified-source reader and
+transaction guard added here. This task exercised the read and verifier
+endpoints and the database gate. Keycloak and PostgreSQL were local and file
+changes/failures were injected at the HTTP fake Drive. The test restores
+original bytes held by the fixture, and no application recovery is inferred
+from the digest. Live Drive verification remains in T13/T34.

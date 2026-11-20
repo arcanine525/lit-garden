@@ -10,6 +10,12 @@ export type DriveObject = { id: string; teacher_id: string; operation_id: string
   drive_file_id: string; parent_drive_id: string; mime_type: string; expected_sha256: string; byte_size: string };
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
+export class DriveObjectReadError extends DriveError {
+  constructor(public readonly integrity: 'missing' | 'conflict' | 'unavailable') {
+    super(integrity === 'missing' ? 'DRIVE_MISSING' : 'DRIVE_INTEGRITY',integrity === 'missing' ? 404 : 409);
+  }
+}
+
 async function pathFolder(files: DriveFiles, teacher: string, kind: FolderKind, resource: string, parent: string, name = resource) {
   const query = `SELECT folder_id,parent_folder_id FROM garden.drive_folders WHERE teacher_id=$1 AND kind=$2 AND resource_id=$3`;
   const key = [teacher,kind,resource];
@@ -107,28 +113,20 @@ export async function storeCandidate(workspace: Workspace, input: Candidate) {
 
 async function verifiedBytes(files: DriveFiles, object: DriveObject) {
   const file = await files.inspect(object.drive_file_id);
-  if (file.id !== object.drive_file_id || !file.ownedByMe || file.trashed || file.driveId ||
+  if (file.trashed === true && file.id === object.drive_file_id) throw new DriveObjectReadError('missing');
+  if (file.id !== object.drive_file_id || !file.ownedByMe || file.driveId ||
       file.mimeType !== object.mime_type || file.parents?.length !== 1 || file.parents[0] !== object.parent_drive_id ||
       file.appProperties?.schema !== 'garden-blob-1' || file.appProperties.resource !== object.id ||
       file.appProperties.operation !== object.operation_id ||
       file.permissions?.some(permission => permission.type === 'anyone' || permission.type === 'domain')) {
-    throw new DriveError('DRIVE_INTEGRITY', 409);
+    throw new DriveObjectReadError('unavailable');
   }
-  const bytes = await files.download(file.id, Number(object.byte_size));
-  if (hash(bytes) !== object.expected_sha256) throw new DriveError('DRIVE_INTEGRITY', 409);
+  const bytes = await files.download(file.id, Number(object.byte_size)).catch(error => {
+    if (error instanceof DriveError && error.code === 'DRIVE_INTEGRITY') throw new DriveObjectReadError('conflict');
+    throw error;
+  });
+  if (hash(bytes) !== object.expected_sha256) throw new DriveObjectReadError('conflict');
   return { bytes, version: file.version ?? null };
-}
-
-async function submissionObject(actor: string, id: string, asset?: string) {
-  const { rows } = await database().query<DriveObject>(`
-    SELECT object.* FROM garden.submissions sub
-    LEFT JOIN garden.submission_assets link ON link.submission_id=sub.id AND link.asset_id=$3
-    JOIN garden.drive_objects object ON object.teacher_id=sub.teacher_id AND
-      (($3::uuid IS NULL AND object.id=sub.object_id AND object.slot='document' AND object.mime_type='text/markdown') OR
-       ($3::uuid IS NOT NULL AND object.id=link.asset_id AND object.slot='asset' AND object.mime_type IN ('image/png','image/jpeg','image/webp')))
-    WHERE sub.id=$2 AND object.lifecycle='referenced' AND garden.can_read_submission($1,sub.id)
-  `, [actor,id,asset ?? null]);
-  return rows[0];
 }
 
 export async function readVerifiedObject(object: DriveObject) {
@@ -142,14 +140,5 @@ export async function readVerifiedObject(object: DriveObject) {
     }
     throw error;
   }
-  return { bytes: result.bytes, mimeType: object.mime_type };
-}
-
-export async function readSubmissionFile(actor: string, id: string, asset?: string) {
-  const object = await submissionObject(actor,id,asset);
-  if (!object) throw new DriveError('NOT_FOUND', 404);
-  const file = await readVerifiedObject(object);
-  const after = await submissionObject(actor,id,asset);
-  if (after?.id !== object.id) throw new DriveError('NOT_FOUND', 404);
-  return file;
+  return { bytes:result.bytes,mimeType:object.mime_type,version:result.version };
 }
