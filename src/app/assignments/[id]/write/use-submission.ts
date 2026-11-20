@@ -4,9 +4,15 @@ import { useRef, useState } from 'react';
 import { keepSubmission, pendingSubmission, type PendingSubmission } from './draft-device';
 
 type Timing = { id: string; number: number; submittedAt: string; late: boolean; returned: boolean };
-type Status = { state: 'missing' | 'rejected' | 'pending' | 'unknown' } | { state: 'committed'; id: string };
+type Status = { state: 'missing' | 'rejected' | 'pending' | 'unknown'; issue?: string } | { state: 'committed'; id: string };
 const waiting = 'Chưa xác nhận đã nộp. Bạn có thể thử lại lần nộp này.';
 const rejection = 'Chưa nộp. Nháp vẫn được giữ trên thiết bị.';
+const offline = 'Chưa nộp do mất kết nối. Nội dung vẫn được giữ trên thiết bị.';
+const driveIssues: Record<string,string> = {
+  AUTH:'Chưa xác nhận đã nộp. Giáo viên cần kết nối lại Drive.',
+  QUOTA:'Chưa xác nhận đã nộp. Drive đang giới hạn ghi tệp.',
+  FORBIDDEN:'Chưa xác nhận đã nộp. Không có quyền ghi lên Drive.'
+};
 const resetCodes = ['SUBMISSION_REJECTED','SUBMISSION_EMPTY','INVALID_DRAFT','MARKDOWN_SIZE','STUDENT_IMAGE_FORBIDDEN',
   'UNSAFE_LINK','UNSUPPORTED_MARKDOWN','DRAFT_CHANGED','STALE_WRITER','DRAFT_READ_ONLY','DRIVE_INTEGRITY','KEY_REUSED'];
 
@@ -52,7 +58,10 @@ export function useSubmission(student: string, assignment: string) {
       const result = await request<Status>({ action:'status',key:stored.key });
       if (pending.current?.key !== stored.key || inFlight.current) return;
       if (result.state === 'committed' || result.state === 'rejected') await resolved(stored,result.state === 'committed');
-      else setKnownPending(result.state === 'pending');
+      else {
+        setKnownPending(result.state === 'pending');
+        setStatus(result.state === 'missing' ? rejection : driveIssues[result.issue ?? ''] ?? waiting);
+      }
     } catch { /* Only a confirmed server result can clear a saved attempt. */ }
   }
 
@@ -85,11 +94,15 @@ export function useSubmission(student: string, assignment: string) {
           return;
         }
       }
+      if (action === 'submit' && !navigator.onLine) {
+        setStatus(next ? offline : waiting);
+        return;
+      }
       const result = await request<Status>(action === 'submit' ? stored : { action,key:stored.key });
       if (result.state === 'committed' || result.state === 'rejected') await resolved(stored,result.state === 'committed');
       else {
         setKnownPending(result.state === 'unknown' || result.state === 'pending');
-        setStatus(waiting);
+        setStatus(driveIssues[result.issue ?? ''] ?? waiting);
       }
     } catch (error) {
       if (resetCodes.includes((error as Error).message)) {

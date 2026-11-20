@@ -2,8 +2,10 @@ import { randomUUID } from 'node:crypto';
 import { expect, test } from '@playwright/test';
 import { origin } from './auth-fixture.mjs';
 import { post, responseBody, withStudentWork, writeSource } from './student-work-fixture.mjs';
+import { restartableApp, unusedPort } from './restartable-app.mjs';
 
-const responseFor = (page,path,method) => page.waitForResponse(response => response.url() === origin+path && response.request().method() === method,{ timeout:15_000 });
+const responseFor = (page,path,method,base = origin) => page.waitForResponse(response => response.url() === base+path &&
+  response.request().method() === method,{ timeout:15_000 });
 
 test.use({ actionTimeout:10_000,navigationTimeout:15_000 });
 test('T28 shared library replacement is atomic and deletion reconciles every owned file', async ({ browser }) => {
@@ -121,27 +123,35 @@ test('T28 shared library replacement is atomic and deletion reconciles every own
     expect(partial.some(file => file.drive_file_id === pinned.drive_file_id)).toBe(true);
     expect((await saved(item)).find(entry => entry.idempotency_key === attempt.key)).toMatchObject({ state:'rejected' });
 
-    const abort = 'fixture_item_delete_' + tag;
-    await db.query(`CREATE FUNCTION garden.${abort}() RETURNS trigger LANGUAGE plpgsql AS $$
-      BEGIN IF NEW.id='${item}'::uuid AND NEW.state='deleted' THEN RAISE EXCEPTION 'Fixture failed delete commit'; END IF; RETURN NEW; END $$;
-      CREATE TRIGGER ${abort} BEFORE UPDATE ON garden.library_items FOR EACH ROW EXECUTE FUNCTION garden.${abort}()`);
+    const port = await unusedPort();
+    let app = await restartableApp(port);
     try {
-      const retry = () => owner.request.delete(route,{ headers:{ Origin:origin },data:intent });
-      await responseBody(await retry(),202);
-      expect((await row(item)).state).toBe('deleting');
-      expect((await cleanup()).every(file => file.state === 'trashed')).toBe(true);
-      expect((await reader.request.get(route)).status()).toBe(404);
-    } finally { await db.query(`DROP TRIGGER ${abort} ON garden.library_items; DROP FUNCTION garden.${abort}()`); }
-    const cleanupIds = (await cleanup()).map(file => file.drive_file_id);
-    const trashed = (await fake('inspect')).files.filter(file => cleanupIds.includes(file.id));
-    expect(trashed.every(file => file.trashed)).toBe(true);
-    await owner.goto('/library');
-    await expect(owner.getByRole('heading',{ name:'Đang đối chiếu thùng rác' })).toBeVisible();
-    const done = responseFor(owner,route,'DELETE');
-    await owner.getByRole('button',{ name:'Thử chuyển vào thùng rác lại' }).click();
-    expect(await responseBody(await done)).toEqual({ state:'deleted',id:item });
-    expect((await row(item)).state).toBe('deleted');
-    expect((await fake('inspect')).files.filter(file => cleanupIds.includes(file.id))).toEqual(trashed);
-    expect(await (await reader.request.get(`/api/library/${file}/download`)).text()).toBe('Bản thay thế.');
+      const abort = 'fixture_item_delete_' + tag;
+      await db.query(`CREATE FUNCTION garden.${abort}() RETURNS trigger LANGUAGE plpgsql AS $$
+        BEGIN IF NEW.id='${item}'::uuid AND NEW.state='deleted' THEN RAISE EXCEPTION 'Fixture failed delete commit'; END IF; RETURN NEW; END $$;
+        CREATE TRIGGER ${abort} BEFORE UPDATE ON garden.library_items FOR EACH ROW EXECUTE FUNCTION garden.${abort}()`);
+      try {
+        const retry = () => owner.request.delete(app.origin + route,{ headers:{ Origin:app.origin },data:intent });
+        await responseBody(await retry(),202);
+        expect((await row(item)).state).toBe('deleting');
+        expect((await cleanup()).every(file => file.state === 'trashed')).toBe(true);
+        expect((await reader.request.get(route)).status()).toBe(404);
+      } finally { await db.query(`DROP TRIGGER ${abort} ON garden.library_items; DROP FUNCTION garden.${abort}()`); }
+      const cleanupIds = (await cleanup()).map(file => file.drive_file_id);
+      const trashed = (await fake('inspect')).files.filter(file => cleanupIds.includes(file.id));
+      expect(trashed.every(file => file.trashed)).toBe(true);
+      const pid = app.pid;
+      await app.stop();
+      app = await restartableApp(port);
+      expect(app.pid).not.toBe(pid);
+      await owner.goto(app.origin + '/library');
+      await expect(owner.getByRole('heading',{ name:'Đang đối chiếu thùng rác' })).toBeVisible();
+      const done = responseFor(owner,route,'DELETE',app.origin);
+      await owner.getByRole('button',{ name:'Thử chuyển vào thùng rác lại' }).click();
+      expect(await responseBody(await done)).toEqual({ state:'deleted',id:item });
+      expect((await row(item)).state).toBe('deleted');
+      expect((await fake('inspect')).files.filter(file => cleanupIds.includes(file.id))).toEqual(trashed);
+      expect(await (await reader.request.get(`/api/library/${file}/download`)).text()).toBe('Bản thay thế.');
+    } finally { await app.stop(); }
   });
 });

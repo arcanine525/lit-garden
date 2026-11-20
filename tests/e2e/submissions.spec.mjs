@@ -1,35 +1,8 @@
-import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
-import { once } from 'node:events';
 import { readFile } from 'node:fs/promises';
-import { createServer } from 'node:net';
-import { resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { lastCell, post, responseBody, withStudentWork, writeSource } from './student-work-fixture.mjs';
-
-async function unusedPort() {
-  const socket = createServer().listen(0,'127.0.0.1');
-  await once(socket,'listening');
-  const port = socket.address().port;
-  await new Promise((success,reject) => socket.close(error => error ? reject(error) : success()));
-  return port;
-}
-
-async function restartableApp(port) {
-  const origin = `http://127.0.0.1:${port}`;
-  const child = spawn(process.execPath,[resolve('node_modules/next/dist/bin/next'),'start','--hostname','127.0.0.1','--port',String(port)],{
-    stdio:'ignore',env:{ ...process.env,APP_ORIGIN:origin,NEXT_TELEMETRY_DISABLED:'1' }
-  });
-  const exit = once(child,'exit');
-  async function stop() {
-    if (child.exitCode === null && child.signalCode === null) child.kill('SIGTERM');
-    await exit;
-  }
-  try {
-    await expect.poll(() => fetch(origin + '/api/health').then(response => response.status,() => 0),{ timeout:15_000 }).toBe(200);
-    return { origin, pid:child.pid, stop };
-  } catch (error) { await stop(); throw error; }
-}
+import { restartableApp, unusedPort } from './restartable-app.mjs';
 
 async function status(page, path, action) {
   return page.waitForResponse(response => response.url() === path && response.request().method() === 'POST' &&
@@ -132,8 +105,6 @@ test('T20 explicit submissions retain one immutable version across Drive, DB and
       expect((await pins())[1]).toEqual(pendingPin);
       expect((await history()).map(item => item.id)).toEqual([first.id]);
       expect((await db.query('SELECT next_submission_no FROM garden.recipients WHERE id=$1',[active])).rows[0].next_submission_no).toBe(2);
-      await dropFault();
-
       const beforeRestart = app.pid;
       await app.stop();
       app = await restartableApp(port);
@@ -146,12 +117,15 @@ test('T20 explicit submissions retain one immutable version across Drive, DB and
       expect(local).toContain(intent.draft.markdown);
       expect(local).toContain(intent.draft.explanation);
       expect(writes).toEqual([writes[0],intent,intent]);
+      const reconciling = status(page,path,'status');
       await page.evaluate(() => window.addEventListener('online',() => { window.reconnected = true; }));
       await page.context().setOffline(true);
       await page.context().setOffline(false);
       await expect.poll(() => page.evaluate(() => window.reconnected)).toBe(true);
+      expect(await responseBody(await reconciling)).toEqual({ state:'pending' });
       expect((await history()).map(item => item.id)).toEqual([first.id]);
       expect(writes).toHaveLength(3);
+      await dropFault();
 
       let lost;
       const drop = async route => {

@@ -270,7 +270,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
         setStatus('Kiểm tra Markdown trước khi đồng bộ lại.');
       } else {
         setRetry(true);
-        setStatus('Chưa xác nhận đồng bộ lên Drive.');
+        setStatus(navigator.onLine ? 'Chưa xác nhận đồng bộ lên Drive.' : 'Mất kết nối. Nháp chưa đồng bộ lên Drive.');
       }
     } finally { working.current = false; setBusy(false); }
   }

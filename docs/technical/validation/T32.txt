@@ -1,0 +1,72 @@
+T32 | Drive and database recovery matrix
+
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. The schema was
+current.
+
+$ npm run test:db
+2 passed, including fresh and upgrade schema tests.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+29 passed (4.1m). New fault scenarios passed in 7.0s and 6.9s. The T28
+restart check passed in 15.5s and the T19 three-session check in 13.2s.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/drive-recovery.spec.mjs tests/e2e/submissions.spec.mjs
+3 passed (49.3s), including the T32 scenarios (8.4s and 7.0s).
+
+TODO failure matrix and browser evidence
+
+1. Before recording an intent, offline editing shows "Nháp chưa đồng bộ"
+   and the offline submit shows "Chưa nộp". The downloaded local .md
+   contains the text. No submission POST or durable operation exists.
+   Reconnect checks only the operation key and does not resend content.
+   Explicit retries classify quota, write permission and revoked token
+   separately. Same-account reauthorization preserves the original pin.
+   A 504 before upload leaves no readable file or history.
+2. After Drive writes and loses the response, a new Next.js process reads
+   the exact pinned ID and verifies its hash. It returns one durable
+   submission, with the original accepted time, while an injected fault
+   blocks uploads. The browser sends only status/key after restart.
+   T20 keeps the final INSERT fault active across restart and status,
+   then separately loses a successful DB commit response. Replays and
+   payload mismatch prove one submission and an unchanged original.
+3. Close rejects a held submit after Drive create but before DB finalize.
+   Reopen before releasing Drive does not make the old intent writable.
+   The original history remains visible. The rejected physical candidate
+   stays orphaned on Drive with no submitted pointer.
+4. T19 holds tab A's upload, verifies tab B commits with the new lease,
+   rejects A's late response and old-lease renewal, then reads B through
+   a third session. Tab A can still download its own Unicode draft.
+5. For both teacher-first and student-first reply order, the second key
+   returns OP_IN_PROGRESS while the first is held. The first pin remains
+   unchanged and the second creates nothing until retried after release.
+   Each message and notification occurs once in order.
+6. T23 (submission-integrity.spec.mjs) checks changed bytes, explicit
+   trash, 403 and ambiguous 404, preserving the original hash and the
+   other version's usability. T24 and T25 exercise the source-integrity
+   barrier before saving or publishing after the review was opened.
+7. A PostgreSQL trigger fails notification insert for a publication and
+   for a reply after the adapter writes to the HTTP fake. No reader sees an
+   uncommitted revision/message. After Next.js restarts, the same client
+   intent reuses ID and hash, and one pointer/event commits atomically.
+   T26 checks that an already pending publisher revalidates a comment
+   when a reply arrives. Pending reply payload remains on the client.
+8. T28 holds the old reader, shares and favorites during pointer failure.
+   Partial trash hides reader, download, featured, favorite and image
+   URLs. Following failure of the final database update, a fresh Next.js
+   process resumes deletion in the teacher's UI and verifies the same
+   Drive items without repeating the physical trash. The separate
+   active document remains readable.
+
+Only Next.js was restarted in these fault cases. PostgreSQL and Keycloak
+were real local services and remained running. The HTTP fake Drive
+persisted for each fixture and recorded physical files, holds and trash.
+The app reconciles a submission on authenticated status/retry using
+recorded IDs and hashes. Missing or inaccessible provider results do
+not confirm a submission. No live Google or KMS was used.

@@ -101,6 +101,13 @@ test('T19 draft leases fence delayed uploads and retain local Unicode edits acro
       ON o.operation_id=op.id WHERE op.idempotency_key=$1`,[late.request().postDataJSON().key]);
     expect(abandoned.rows).toEqual([{ state:'rejected',lifecycle:'orphan' }]);
     expect(await read(a)).toMatchObject({ version:'2',draft:request.draft });
+    const oldLease = late.request().postDataJSON();
+    const obsolete = await responseBody(await post(a,draftApi,{
+      action:'renew',clientId:oldLease.clientId,epoch:oldLease.epoch
+    }),409);
+    expect(obsolete.error).toBe('STALE_WRITER');
+    const third = await student.newSession();
+    expect(await read(third)).toMatchObject({ version:'2',draft:request.draft });
 
     await a.evaluate(() => {
       window.connectionEvents = [];
