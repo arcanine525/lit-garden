@@ -4,7 +4,7 @@ import { MDXEditor, headingsPlugin, listsPlugin, quotePlugin, tablePlugin, linkP
 import '@mdxeditor/editor/style.css';
 import './style.css';
 import { hardBreakPlugin } from './hard-break-plugin.js';
-import { validateMarkdown, projectMarkdown, sha256, semantic } from './markdown.js';
+import { validateMarkdown, prepareEditorMarkdown, projectMarkdown, sha256, semantic } from './markdown.js';
 import { makeAnchor, writeReview, readReview, restoreReview, schema } from './review.js';
 import { sample, cases } from './fixtures.js';
 async function api(path, data, options = {}) {
@@ -50,11 +50,32 @@ function RenderedSubmission({ source, annotations }) {
   return render(tree);
 }
 function App() {
+  const importError=useRef(null), importSource=useRef(sample);
   const editor=useRef(null), [role,setRole]=useState(null), [mode,setMode]=useState('rich'), [source,setSource]=useState(sample), [status,setStatus]=useState(''), [epoch,setEpoch]=useState(0);
   const [reviewSource,setReviewSource]=useState(''), [annotations,setAnnotations]=useState([]), [selection,setSelection]=useState(null), [comment,setComment]=useState('Hình ảnh gợi cảm, em hãy phát triển thêm.'), [reviewStatus,setReviewStatus]=useState('Chưa nạp review'), [changed,setChanged]=useState(false), [reviewOverall,setReviewOverall]=useState('Bài viết giàu hình ảnh.');
   useEffect(()=>{ api('/api/mock/login',{role:'teacher'}).then(()=>setRole('teacher')); const onError=(e)=>setStatus(e.detail); window.addEventListener('asset-error',onError); return ()=>window.removeEventListener('asset-error',onError); },[]);
-  async function changeRole(next) { await api('/api/mock/login',{role:next}); setRole(next); setMode('rich'); setSource(sample); setEpoch((n)=>n+1); setStatus('Đã đổi vai mock'); }
-  function apply(md=source) { try { validateMarkdown(md,role); editor.current.setMarkdown(md); setSource(md); setMode('rich'); setStatus('Markdown hợp lệ'); return true; } catch(e) { setStatus(e.message); return false; } }
+  async function changeRole(next) { await api('/api/mock/login',{role:next}); importError.current=null; importSource.current=sample; setRole(next); setMode('rich'); setSource(sample); setEpoch((n)=>n+1); setStatus('Đã đổi vai mock'); }
+  function onImportError({error,source:failedSource}) {
+    importError.current=error;
+    setSource(importSource.current ?? failedSource);
+    setMode('source');
+    setStatus(`EDITOR_IMPORT: ${error}`);
+  }
+  function importToEditor(md, original=md) {
+    const recovering=importError.current!==null;
+    importError.current=null; importSource.current=original;
+    if (recovering) {
+      // A failed import may retain the same markdown$ and skip the next setMarkdown.
+      // Remount on recovery so we cannot treat that retained source as a rich tree.
+      setSource(md); setEpoch(n=>n+1);
+    } else {
+      editor.current.setMarkdown(md);
+      if (importError.current) return false;
+      setSource(md);
+    }
+    setMode('rich'); setStatus('Markdown hợp lệ'); return true;
+  }
+  function apply(md=source) { try { return importToEditor(prepareEditorMarkdown(md,role),md); } catch(e) { setSource(md); setMode('source'); setStatus(e.message); return false; } }
   function keyDown(e) {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'u') { e.preventDefault(); e.stopPropagation(); setStatus('UNSUPPORTED_UNDERLINE'); }
   }
@@ -72,12 +93,15 @@ function App() {
       e.preventDefault(); e.stopPropagation();
       try {
         if (html && /<img\b/i.test(html)) throw Error(role==='teacher'?'PRIVATE_ASSET_REQUIRED':'STUDENT_IMAGE_FORBIDDEN');
-        validateMarkdown(text,role); editor.current.insertMarkdown(text); setStatus('Đã dán Markdown đã kiểm tra');
+        const markdown=prepareEditorMarkdown(text,role);
+        importSource.current=editor.current.getMarkdown();
+        editor.current.insertMarkdown(markdown);
+        if (!importError.current) setStatus('Đã dán Markdown đã kiểm tra');
       } catch(error) { setStatus(error.message); }
     }
   }
   async function persist() {
-    try { const markdown=mode==='source'?source:editor.current.getMarkdown(); validateMarkdown(markdown,role); await api('/api/documents',{markdown}); setStatus('API mock đã nhận; chưa lưu Drive'); } catch(e) { setStatus(e.message); }
+    try { if (importError.current) throw Error('EDITOR_IMPORT_FAILED'); const markdown=mode==='source'?source:editor.current.getMarkdown(); validateMarkdown(markdown,role); await api('/api/documents',{markdown}); setStatus('API mock đã nhận; chưa lưu Drive'); } catch(e) { setStatus(e.message); }
   }
   function selectText() {
     const s=window.getSelection(); if (!s?.rangeCount || s.isCollapsed) return;
@@ -110,12 +134,13 @@ function App() {
   }
   useEffect(()=>{ if (localStorage.getItem('PROTOTYPE-review.md')) loadReview(localStorage.getItem('PROTOTYPE-review.md')); },[changed]);
   // Deliberately exposed only in the local spike for deterministic DOM probes.
-  window.spike={ cases, semantic, projectMarkdown, validateMarkdown, get:()=>editor.current?.getMarkdown(), set:(md)=>apply(md), role:changeRole, ready:!!role, review:()=>reviewSource };
+  window.spike={ cases, semantic, projectMarkdown, validateMarkdown, get:()=>editor.current?.getMarkdown(), set:(md)=>apply(md), role:changeRole, ready:!!role, review:()=>reviewSource,
+    importError:()=>importError.current, probeImport:(md)=>importToEditor(md) };
   if (!role) return <p>Đang mở prototype…</p>;
   return <main><header><small>SPIKE · LOCAL MOCK · KHÔNG LƯU DRIVE</small><h1>Vườn Văn · Kiểm chứng editor</h1><p>MDXEditor 4.5.0 · Ảnh và tài khoản bên dưới đều là mock.</p><label>Vai thử nghiệm <select aria-label="Vai thử nghiệm" value={role} onChange={(e)=>changeRole(e.target.value)}><option value="teacher">Giáo viên</option><option value="student">Học sinh</option></select></label></header>
-    <section><h2>Trực quan ↔ Markdown</h2><div className="actions"><button onClick={()=>{setSource(editor.current.getMarkdown());setMode('source');}}>Mã Markdown</button><button onClick={()=>apply()}>Áp dụng nguồn</button><button onClick={persist}>Kiểm tra lưu qua API mock</button>{role==='teacher'&&<button onClick={()=>apply(editor.current.getMarkdown()+'\n\n![Hoa riêng tư](/api/assets/flower)')}>Chèn ảnh mock</button>}<button onClick={()=>setEpoch((n)=>n+1)}>Tải lại URL ảnh</button></div>
+    <section><h2>Trực quan ↔ Markdown</h2><div className="actions"><button onClick={()=>{if (!importError.current && mode!=='source') setSource(editor.current.getMarkdown());setMode('source');}}>Mã Markdown</button><button onClick={()=>apply()}>Áp dụng nguồn</button><button onClick={persist}>Kiểm tra lưu qua API mock</button>{role==='teacher'&&<button onClick={()=>apply(editor.current.getMarkdown()+'\n\n![Hoa riêng tư](/api/assets/flower)')}>Chèn ảnh mock</button>}<button onClick={()=>setEpoch((n)=>n+1)}>Tải lại URL ảnh</button></div>
     {mode==='source'&&<label>Nguồn Markdown<textarea aria-label="Nguồn Markdown" value={source} onChange={(e)=>setSource(e.target.value)}/></label>}
-    <div style={{display:mode==='source'?'none':'block'}} onPasteCapture={paste} onDropCapture={paste} onKeyDownCapture={keyDown}><MDXEditor key={`${role}-${epoch}`} ref={editor} markdown={source} suppressHtmlProcessing trim={false} contentEditableClassName="essay" onChange={(md)=>setSource(md)} onError={({error})=>setStatus(error)} plugins={[
+    <div style={{display:mode==='source'?'none':'block'}} onPasteCapture={paste} onDropCapture={paste} onKeyDownCapture={keyDown}><MDXEditor key={`${role}-${epoch}`} ref={editor} markdown={source} suppressHtmlProcessing trim={false} contentEditableClassName="essay" onChange={(md)=>{if (!importError.current) setSource(md);}} onError={onImportError} plugins={[
       hardBreakPlugin(),headingsPlugin(),listsPlugin(),quotePlugin(),tablePlugin(),linkPlugin(),linkDialogPlugin(),
       ...(role==='teacher'?[imagePlugin({imageUploadHandler:upload,imagePreviewHandler:preview,disableImageResize:true,allowSetImageDimensions:false,disableImageSettingsButton:true})]:[]),
       toolbarPlugin({toolbarContents:()=> <><UndoRedo/><BoldItalicUnderlineToggles options={['Bold','Italic']}/><BlockTypeSelect/><ListsToggle options={['bullet','number']}/><CreateLink/><InsertTable/>{role==='teacher'&&<InsertImage/>}</>})

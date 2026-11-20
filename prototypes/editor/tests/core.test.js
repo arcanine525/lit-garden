@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateMarkdown, projectMarkdown, semantic, sha256 } from '../src/markdown.js';
+import { validateMarkdown, prepareEditorMarkdown, projectMarkdown, semantic, sha256 } from '../src/markdown.js';
 import { makeAnchor, writeReview, readReview, restoreReview, ReviewLedger, schema } from '../src/review.js';
 import { sample, cases } from '../src/fixtures.js';
 async function fixture(markdown = sample) {
@@ -93,4 +94,50 @@ test('reply arriving after edited draft save blocks later publication',async()=>
   r.annotations[0].comment='Bản đang sửa';ledger.saveDraft(r);ledger.reply('a1','Em phản hồi bản đã trả');
   assert.throws(()=>ledger.publish('p2'),/REPLIED_COMMENT_IMMUTABLE/);
   assert.equal(ledger.read('student').current.id,'p1');
+});
+
+// R5: untrusted review ranges must not split a UTF-16 surrogate pair.
+test('anchor boundaries reject half emoji on create and restore', async()=>{
+  const md='🌱', hash=await sha256(md);
+  for(const [start,end] of [[0,1],[1,2]]) {
+    await assert.rejects(makeAnchor(md,start,end),/ANCHOR_RANGE/);
+  }
+  const anchor=await makeAnchor(md,0,2);
+  const r={schema,id:'emoji',kind:'publication',submissionId:'s',version:1,contentHash:hash,
+    scores:[{criterionId:'c',value:1,max:1}],overall:'',annotations:[{id:'a',color:'yellow',comment:'x',anchor}]};
+  assert.equal((await restoreReview(readReview(writeReview(r)),submission(r),md)).status,'restored');
+  for(const [start,end] of [[0,1],[1,2]]) {
+    const bad=structuredClone(r),text=projectMarkdown(md).text;
+    Object.assign(bad.annotations[0].anchor,{start,end,exact:text.slice(start,end),prefix:text.slice(0,start),suffix:text.slice(end)});
+    assert.equal((await restoreReview(readReview(writeReview(bad)),submission(r),md)).status,'anchor-conflict');
+  }
+});
+
+test('reference adapter preserves semantics for inline, collapsed, shortcut and image references',()=>{
+  for(const md of [
+    '[link][a] and [a][] and [a]\n\n[a]: https://example.org/path "Title"',
+    '![Hoa][a]\n\n[a]: /api/assets/flower "Ảnh"',
+    '> **Đậm** [x][a]  \n> Dòng cứng\n\n| A | B |\n|---|---|\n|[x][a]|2|\n\n[a]: https://example.org',
+    '[a]: https://example.org/unused'
+  ]) {
+    const converted=prepareEditorMarkdown(md,'teacher');
+    assert.deepEqual(semantic(converted),semantic(md));
+    assert.equal(projectMarkdown(converted).text,projectMarkdown(md).text);
+  }
+  assert.throws(()=>prepareEditorMarkdown('![x][a]\n\n[a]: /api/assets/flower','student'),/STUDENT_IMAGE_FORBIDDEN/);
+});
+test('reference validation and conversion use the first definition consistently',()=>{
+  const md='[x][a]\n\n[a]: https://example.org/first\n[a]: https://example.org/last';
+  assert.match(prepareEditorMarkdown(md,'student'),/example.org\/first/);
+  assert.doesNotMatch(prepareEditorMarkdown(md,'student'),/example.org\/last/);
+  for(const role of ['teacher','student']) assert.throws(()=>prepareEditorMarkdown('[x][a]\n\n[a]: javascript:alert%281%29\n[a]: https://example.org',role),/UNSAFE_LINK/);
+  assert.throws(()=>prepareEditorMarkdown('![x][a]\n\n[a]: https://example.org/tracker.png\n[a]: /api/assets/flower','teacher'),/PRIVATE_ASSET_REQUIRED/);
+});
+
+test('shared UTF-16 boundary corpus agrees on valid and invalid anchors',async()=>{
+  const cases=JSON.parse(readFileSync(new URL('utf16-anchor-cases.json',import.meta.url),'utf8'));
+  for(const c of cases) {
+    if(c.valid) assert.equal((await makeAnchor(c.markdown,c.start,c.end)).exact,c.exact);
+    else await assert.rejects(makeAnchor(c.markdown,c.start,c.end),/ANCHOR_RANGE/);
+  }
 });

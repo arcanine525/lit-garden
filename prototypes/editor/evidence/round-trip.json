@@ -8,6 +8,8 @@
       "first": "Vườn Văn — tiếng Việt: ắ ộ ự Đ. 👩🏽‍🏫 🌱 é; NFD: ắ.",
       "second": "Vườn Văn — tiếng Việt: ắ ộ ự Đ. 👩🏽‍🏫 🌱 é; NFD: ắ.",
       "syntaxChanged": false,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -18,6 +20,8 @@
       "first": "# Tiêu đề\n\n## Mầm xanh\n\n### Hoa\n\n#### Quả\n\n##### Năm\n\n###### Sáu",
       "second": "# Tiêu đề\n\n## Mầm xanh\n\n### Hoa\n\n#### Quả\n\n##### Năm\n\n###### Sáu",
       "syntaxChanged": false,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -28,6 +32,8 @@
       "first": "Một **ý đậm**, *ý nghiêng*, ***cả hai*** và **đậm có *nghiêng* bên trong**.",
       "second": "Một **ý đậm**, *ý nghiêng*, ***cả hai*** và **đậm có *nghiêng* bên trong**.",
       "syntaxChanged": false,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -38,6 +44,8 @@
       "first": "* Mầm\n* Hoa\n  * Cánh nhỏ\n\n3. Ba\n4. Bốn",
       "second": "* Mầm\n* Hoa\n  * Cánh nhỏ\n\n3. Ba\n4. Bốn",
       "syntaxChanged": true,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -48,6 +56,8 @@
       "first": "> Một đoạn **trích dẫn**.\n>\n> Đoạn hai.\n>\n> > Trích lồng nhau.",
       "second": "> Một đoạn **trích dẫn**.\n>\n> Đoạn hai.\n>\n> > Trích lồng nhau.",
       "syntaxChanged": false,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -58,6 +68,8 @@
       "first": "| Ý          |  Điểm |\n| :--------- | ----: |\n| Tiếng Việt | **2** |\n| Ký tự \\|   |     1 |",
       "second": "| Ý          |  Điểm |\n| :--------- | ----: |\n| Tiếng Việt | **2** |\n| Ký tự \\|   |     1 |",
       "syntaxChanged": true,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -65,9 +77,11 @@
     {
       "id": "links",
       "input": "[Vườn Văn](https://example.org/a?q=Vi%E1%BB%87t \"Tham khảo\") và [tham chiếu][doc].\n\n[doc]: https://example.org/b \"Tài liệu\"",
-      "first": "[Vườn Văn](https://example.org/a?q=Vi%E1%BB%87t \"Tham khảo\") và [tham chiếu][doc].\n\n[doc]: https://example.org/b \"Tài liệu\"",
-      "second": "[Vườn Văn](https://example.org/a?q=Vi%E1%BB%87t \"Tham khảo\") và [tham chiếu][doc].\n\n[doc]: https://example.org/b \"Tài liệu\"",
-      "syntaxChanged": false,
+      "first": "[Vườn Văn](https://example.org/a?q=Vi%E1%BB%87t \"Tham khảo\") và [tham chiếu](https://example.org/b \"Tài liệu\").",
+      "second": "[Vườn Văn](https://example.org/a?q=Vi%E1%BB%87t \"Tham khảo\") và [tham chiếu](https://example.org/b \"Tài liệu\").",
+      "syntaxChanged": true,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -78,6 +92,8 @@
       "first": "Dòng mềm\nvẫn một đoạn.\\\nDòng ngắt cứng.\\\nDòng cứng thứ hai.\n\nĐoạn mới.",
       "second": "Dòng mềm\nvẫn một đoạn.\\\nDòng ngắt cứng.\\\nDòng cứng thứ hai.\n\nĐoạn mới.",
       "syntaxChanged": true,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -88,6 +104,8 @@
       "first": "Hoa nở. **Hoa nở.**\n\nHoa nở. Mùa xuân 👩🏽‍🏫 lại đến.\n\nHoa nở.",
       "second": "Hoa nở. **Hoa nở.**\n\nHoa nở. Mùa xuân 👩🏽‍🏫 lại đến.\n\nHoa nở.",
       "syntaxChanged": false,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true
@@ -98,6 +116,8 @@
       "first": "# Tiêu đề\n\n* Một\n* Hai\n\n**Đậm** và *nghiêng*.",
       "second": "# Tiêu đề\n\n* Một\n* Hai\n\n**Đậm** và *nghiêng*.",
       "syntaxChanged": true,
+      "fullRichTextVerified": true,
+      "richEditExported": true,
       "semanticEqual": true,
       "stable": true,
       "textEqual": true

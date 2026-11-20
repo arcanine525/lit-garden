@@ -2,7 +2,7 @@
 
 Ngày: 20/11/2026 (Asia/Ho_Chi_Minh). Nhánh: `spike/editor-validation`, baseline `976470faefc0ba00145d6a4fe1afb1bad315692f`. Phạm vi là spike cô lập, chưa scaffold ứng dụng Vườn Văn. D01–D24 và F01–F42 là đầu vào; F mới hơn được ưu tiên. Không sửa website tham chiếu, không gọi Drive thật, không tìm/đọc token Google cá nhân.
 
-**Kết luận: khuyến nghị tiếp tục với MDXEditor 4.5.0 kèm adapter Markdown, plugin hard-break và renderer chấm riêng.** Bản mặc định không đạt ca hard-break: giữ chữ nhưng đổi ngắt dòng cứng thành mềm. Plugin export sử dụng API công khai đã sửa được lỗi này; 10 fixture sau adapter giữ ngữ nghĩa và văn bản qua hai vòng DOM. Chưa có bằng chứng buộc phải đổi thư viện. Đây là khuyến nghị kỹ thuật sau spike, không chốt schema nghiệp vụ hay chứng nhận production.
+**Kết luận: khuyến nghị tiếp tục với MDXEditor 4.5.0 kèm adapter reference link/image, plugin hard-break và renderer chấm riêng. Bản sửa sau review R1/R5 đã bổ sung kiểm tra import lỗi và ranh giới UTF-16.** Bản mặc định không đạt ca hard-break: giữ chữ nhưng đổi ngắt dòng cứng thành mềm. Plugin export sử dụng API công khai đã sửa được lỗi này; 10 fixture sau bản sửa giữ ngữ nghĩa và toàn bộ văn bản qua hai vòng DOM; từng fixture còn được sửa trực tiếp rồi kiểm tra Markdown xuất ra. Kết luận cũ trước review có false positive ở reference link và đã được thay bằng kết quả này. Chưa có bằng chứng buộc phải đổi thư viện. Đây là khuyến nghị kỹ thuật sau spike, không chốt schema nghiệp vụ hay chứng nhận production.
 
 **Ảnh Drive chỉ được kiểm chứng tích hợp bằng mock.** Luồng review lưu/đọc một chuỗi Markdown cục bộ; lifecycle nháp/công bố/hội thoại được thử bằng module bộ nhớ. Chưa có OAuth, Drive API thật, Keycloak, PostgreSQL, đồng bộ nhiều thiết bị hoặc transaction công bố.
 
@@ -34,11 +34,13 @@ npm --prefix prototypes/editor run build
 
 ## 2. Bằng chứng và cách đọc kết quả
 
-- [Round-trip mặc định](../../prototypes/editor/evidence/round-trip-default.json): lần đầu trước plugin hard-break, 9/10 fixture giữ AST ngữ nghĩa; ca ngắt dòng cứng thất bại. Hai lỗi browser khác lúc đầu là selector test nhầm `radio` thành `button` và selector nhiều contenteditable trong bảng, đã sửa test; không quy là lỗi editor.
-- [Round-trip sau adapter](../../prototypes/editor/evidence/round-trip.json): từng input, lần xuất 1/2, cờ đổi cú pháp, so AST ngữ nghĩa, so văn bản và phiên bản Chrome.
+- [Round-trip mặc định](../../prototypes/editor/evidence/round-trip-default.json): bằng chứng lịch sử trước review, bộ so sánh nguồn báo 9/10 nhưng chưa bắt lỗi import reference link; không dùng số này để chứng minh rich text hoạt động; ca ngắt dòng cứng thất bại. Hai lỗi browser khác lúc đầu là selector test nhầm `radio` thành `button` và selector nhiều contenteditable trong bảng, đã sửa test; không quy là lỗi editor.
+- [Round-trip sau adapter](../../prototypes/editor/evidence/round-trip.json): từng input, lần xuất 1/2, cờ đổi cú pháp, so AST ngữ nghĩa, so văn bản, `fullRichTextVerified`, `richEditExported` và phiên bản Chrome.
 - [Ảnh annotation sau reload](../../prototypes/editor/evidence/annotation-reloaded.png): vùng chọn qua hai leaf, có chữ đậm, hiện lại đúng highlight/comment.
 - [Review Markdown mẫu](../../prototypes/editor/evidence/sample.review.md): metadata YAML, rubric, overall, anchor và phần người đọc; một file duy nhất.
-- [Logic tests](../../prototypes/editor/tests/core.test.js) và [browser tests](../../prototypes/editor/tests/editor.spec.js) là kịch bản tái lập. Kết quả cuối: **16/16 logic, 6/6 browser, build thành công, audit 0 vulnerability**. [Manifest kiểm chứng](../../prototypes/editor/evidence/verification.json) liên kết số liệu với môi trường/lệnh; log thực thi nằm cùng thư mục.
+- [Logic tests](../../prototypes/editor/tests/core.test.js) và [browser tests](../../prototypes/editor/tests/editor.spec.js) là kịch bản tái lập. Kết quả cuối: **20/20 logic, 9/9 browser, build thành công, audit 0 vulnerability**. [Manifest kiểm chứng](../../prototypes/editor/evidence/verification.json) liên kết số liệu với môi trường/lệnh; log thực thi nằm cùng thư mục.
+
+Test còn kiểm toàn bộ chữ trong DOM (bỏ khoảng trắng chỉ ở phép so hiển thị), trạng thái import không lỗi và gõ thêm chữ thật trước khi kiểm Markdown xuất. Với bảng, rời ô để commit nested editor rồi đọc Markdown. Không coi `getMarkdown()` trả lại nguồn cũ khi import lỗi là một vòng chuyển đổi thành công.
 
 So sánh AST bỏ vị trí nguồn, cách viết marker, độ rộng cột bảng, blank-line/spread của list và định nghĩa link sau khi đã resolve. Giữ cấu trúc heading/list/format, thứ tự/bắt đầu danh sách số, alignment bảng, URL/title, text và node hard-break. So chuỗi văn bản riêng giúp phát hiện mất chữ, nhưng **không dùng text bằng nhau để kết luận ngữ nghĩa bằng nhau**: lỗi hard-break chính là phản ví dụ.
 
@@ -54,7 +56,7 @@ Các ca dưới đây chạy MDXEditor thật trong DOM, `setMarkdown → rich t
 | Bullet, list lồng, ordered bắt đầu ở 3 | `-` thành `*`, số bắt đầu không mất | PASS; thay marker hợp lệ |
 | Quote nhiều đoạn, quote lồng | Giữ cấu trúc | PASS |
 | GFM table, alignment trái/phải, `\|`, bold trong ô | Căn lại spacing bảng | PASS; thay spacing hợp lệ |
-| Inline/reference link, title và URL có Unicode percent encoding | Giữ label, URL, title | PASS |
+| Inline/reference link, title và URL có Unicode percent encoding | Reference link không được import đầy đủ ở cấu hình cũ | PASS sau adapter reference → inline; kiểm đủ label, URL và chữ gõ mới |
 | Soft LF, hai cách hard-break, đoạn mới | **FAIL:** hard-break thành soft LF | **PASS sau plugin**; xuất hard-break bằng `\` + LF |
 | Trích đoạn lặp trong/cạnh bold | Không mất/đảo lần xuất hiện | PASS |
 | Setext heading, `_`/`__`, newline cuối file | Thành ATX, `*`/`**`, bỏ LF cuối | PASS; chuẩn hóa cú pháp, không mất nội dung |
@@ -67,8 +69,8 @@ Giới hạn subset có chủ đích của harness: không HTML, MDX, task-list,
 
 ### Đã làm và thử trong spike
 
-- Source là textarea bên ngoài với nút áp dụng có kiểm tra AST trước `setMarkdown`; rich → source lấy `getMarkdown`. Đây **không phải** thử đầy đủ CodeMirror/diffSourcePlugin gốc. Chọn cách này để không parse/render source chưa hợp lệ trước kiểm tra quyền. Nội dung source chưa hợp lệ vẫn ở textarea để người dùng sửa.
-- Chỉ bật `imagePlugin` cho giáo viên, tắt resize/dimensions để tránh xuất HTML `<img>`. Toolbar chỉ bold/italic; chặn shortcut gạch chân. Paste/drop qua capture kiểm tra file/HTML/Markdown; ảnh HTML không được nhập từ clipboard. File PNG giáo viên đi qua `imageUploadHandler` thật của MDXEditor tới backend mock.
+- Source là textarea bên ngoài với nút áp dụng có kiểm tra AST và chuyển reference link/image sang inline trước `setMarkdown`; rich → source lấy `getMarkdown`. Đây **không phải** thử đầy đủ CodeMirror/diffSourcePlugin gốc. Chọn cách này để không parse/render source chưa hợp lệ trước kiểm tra quyền. Nội dung source chưa hợp lệ vẫn ở textarea để người dùng sửa. `onError` của MDXEditor được giữ thành trạng thái lỗi import: quay về source, giữ nguyên đầu vào, chặn lưu cho tới khi áp dụng lại thành công. Adapter dùng definition đầu tiên nhất quán với validator/API; definition trùng phía sau không che được URL không hợp lệ.
+- Chỉ bật `imagePlugin` cho giáo viên, tắt resize/dimensions để tránh xuất HTML `<img>`. Toolbar chỉ bold/italic; chặn shortcut gạch chân. Paste/drop qua capture kiểm tra file/HTML/Markdown và dùng cùng adapter cho reference; ảnh HTML không được nhập từ clipboard. File PNG giáo viên đi qua `imageUploadHandler` thật của MDXEditor tới backend mock.
 - Backend `/api/documents` chạy lại validator, không tin role hoặc validation từ browser. Học sinh không thể gửi ảnh bằng inline/reference Markdown hoặc HTML. Teacher image inline/reference chỉ được dùng ID asset có trong scope fixture. Không đổi quyền Drive thành public.
 - Markdown chỉ chứa reference ổn định, ví dụ `![Hoa riêng tư](/api/assets/flower)`. External URL/data URL/view lease/query token đều bị từ chối làm image reference. Link thông thường vẫn được phép theo D12/F40; link `javascript:`/`data:` bị từ chối.
 - `imagePreviewHandler` đổi reference thành URL xem ngắn hạn qua API. URL xem gắn với phiên cookie HttpOnly, kiểm tra quyền mỗi GET; copy sang phiên khác bị từ chối. Hết hạn trả 410; xin lease mới được. Remount/nút tải lại ảnh làm mới URL; Markdown không đổi.
@@ -128,7 +130,7 @@ Luồng restore:
 1. Parse frontmatter có schema, kiểm tra loại/score/range/ID trùng; YAML duplicate keys và alias bị từ chối.
 2. So submission ID/version; sai → `wrong-version`.
 3. Bài gốc mất → `missing`; hash khác metadata submission/review → `content-conflict`, không tô/chấm.
-4. Tạo lại projection đúng phiên bản; kiểm tra textHash, vị trí, exact, prefix/suffix; sai → `anchor-conflict`. Không dùng tìm trích đoạn đầu tiên hoặc fuzzy reattachment.
+4. Tạo lại projection đúng phiên bản; kiểm tra textHash, vị trí, exact, prefix/suffix; sai → `anchor-conflict`. Start/end cắt giữa hai code unit của một surrogate pair cũng bị từ chối, kể cả metadata giả mạo có exact/context/hash khớp; Không dùng tìm trích đoạn đầu tiên hoặc fuzzy reattachment.
 5. Chỉ khi tất cả hợp lệ mới render highlight và comment. Tọa độ lặp không bị tự chuyển sang đoạn khác.
 
 | Ca phục hồi | Kết quả |
@@ -144,6 +146,7 @@ Luồng restore:
 | Thêm/sửa nội dung bài gốc sau review | PASS logic + browser: bỏ highlight, báo xung đột |
 | Khác submission/version hoặc bài gốc bị xóa | PASS logic, không gắn annotation |
 | Tọa độ/context/hash/projection sai hoặc YAML lỗi | PASS logic, không reattach âm thầm |
+| Anchor cắt đôi emoji ở start/end | PASS: tạo mới bị ANCHOR_RANGE, restore metadata giả mạo trả anchor-conflict; corpus UTF-16 dùng chung với agent2 |
 
 Normalization được phép trong **soạn nháp trước khi chốt file nộp**. Không normalize lại file bất biến để bỏ qua D13. Hash phát hiện thay đổi, không phục hồi bài gốc đã mất; các phiên bản khác phải vẫn sử dụng được khi tích hợp thật. Nếu renderer/projection thay đổi phải giữ thuật toán cũ hoặc migration rõ ràng, không tái diễn giải offset cũ bằng version mới.
 
@@ -187,3 +190,10 @@ Chưa thực thi Drive autosave cho nháp chấm, immutable file thật cho các
 - [Extending editor](https://mdxeditor.dev/editor/docs/extending-the-editor), [addExportVisitor](https://mdxeditor.dev/editor/api/variables/addExportVisitor$): cơ chế import/export extension công khai dùng cho sửa hard-break.
 - [Drive download](https://developers.google.com/workspace/drive/api/guides/manage-downloads): `files.get` + `alt=media` cho bytes blob và kiểm tra `canDownload`. Đây là thiết kế adapter, chưa phải kết quả live.
 - [Drive OAuth scopes](https://developers.google.com/workspace/drive/api/guides/api-specific-auth): cơ sở kiểm chứng `drive.file`, không thay ACL ứng dụng.
+
+## Bản sửa sau review R1/R5
+
+- `prepareEditorMarkdown` chỉ chuyển definition/reference khi vào rich editor hoặc paste; dùng `mdast-util-to-markdown` 2.2.3 và `mdast-util-gfm` 3.1.0 khóa trực tiếp. Không normalize bài đã nộp hoặc đổi baseline hash.
+- Test browser kiểm cả reference ảnh riêng tư, dán reference link, lỗi import được MDXEditor xử lý nội bộ và hồi phục từ source. Probe bypass AST chỉ nằm trong `window.spike` của harness local, không phải API sản phẩm.
+- [Corpus Unicode](../../prototypes/editor/tests/utf16-anchor-cases.json) được giữ cùng bytes với `docs/technical/validation/utf16-anchor-cases.json` trong nhánh agent2 để hai clone tự chạy được. Đổi corpus phải đồng bộ cả hai.
+- Table cell của MDXEditor dùng nested editor và commit lên root khi blur. Spike đã kiểm bước blur trước export; tích hợp autosave production cần flush nested editor hoặc kiểm đường xuất đang focus ô bảng, không mặc định mọi lần gọi `getMarkdown()` đều chứa phím gõ cuối cùng trong ô đang focus.

@@ -1,6 +1,8 @@
 import { unified } from 'unified';
 import remarkParse from 'remark-parse';
 import remarkGfm from 'remark-gfm';
+import { toMarkdown } from 'mdast-util-to-markdown';
+import { gfmToMarkdown } from 'mdast-util-gfm';
 
 const parser = unified().use(remarkParse).use(remarkGfm);
 export const parseMarkdown = (source) => parser.parse(source);
@@ -10,11 +12,41 @@ const safeLink = (url) => {
   try { const u = new URL(url); return ['https:', 'http:', 'mailto:'].includes(u.protocol) && !u.username && !u.password; }
   catch { return false; }
 };
+export function referenceDefinitions(tree) {
+  const definitions = new Map();
+  // CommonMark resolves the FIRST definition, including case-normalized IDs.
+  // Validation, editor conversion and semantic comparison must agree.
+  walk(tree, (n) => {
+    if (n.type === 'definition' && !definitions.has(n.identifier)) definitions.set(n.identifier, n);
+  });
+  return definitions;
+}
+export function prepareEditorMarkdown(source, role) {
+  const tree = validateMarkdown(source, role), definitions = referenceDefinitions(tree);
+  if (!definitions.size) return source;
+  function resolve(n) {
+    if (n.type === 'definition') return null;
+    if (n.type === 'linkReference' || n.type === 'imageReference') {
+      const definition = definitions.get(n.identifier);
+      if (!definition) throw Error('UNRESOLVED_REFERENCE');
+      const node = { type: n.type === 'linkReference' ? 'link' : 'image',
+        url: definition.url, title: definition.title ?? null };
+      if (n.type === 'imageReference') node.alt = n.alt;
+      else node.children = n.children.map(resolve).filter(Boolean);
+      return node;
+    }
+    return { ...n, ...(n.children ? { children: n.children.map(resolve).filter(Boolean) } : {}) };
+  }
+  // Only drafts entering the rich editor are converted. Never rewrite a submitted
+  // file or its integrity baseline; projection/hash restore still uses original bytes.
+  const markdown = toMarkdown(resolve(tree), { extensions: [gfmToMarkdown()] });
+  validateMarkdown(markdown, role);
+  return markdown;
+}
 export function validateMarkdown(source, role = 'student') {
   if (typeof source !== 'string' || source.length > 100000) throw Error('MARKDOWN_SIZE');
   const tree = parseMarkdown(source);
-  const definitions = new Map();
-  walk(tree, (n) => { if (n.type === 'definition') definitions.set(n.identifier, n); });
+  const definitions = referenceDefinitions(tree);
   walk(tree, (n) => {
     if (!allowed.has(n.type)) throw Error(`UNSUPPORTED_${n.type}`);
     // CommonMark treats unknown MDX expressions/JSX as text: explicitly refuse source syntax too.
@@ -55,8 +87,7 @@ export function projectMarkdown(source) {
 // serializer changes to hard-break spelling; preserves AST content/structure.
 export function semantic(source) {
   const tree = parseMarkdown(source);
-  const definitions = new Map();
-  walk(tree, (n) => { if (n.type === 'definition') definitions.set(n.identifier, n); });
+  const definitions = referenceDefinitions(tree);
   function clean(n) {
     if (n.type === 'definition') return null;
     const type = n.type === 'linkReference' ? 'link' : n.type === 'imageReference' ? 'image' : n.type;

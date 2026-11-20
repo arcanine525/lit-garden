@@ -1,7 +1,7 @@
 // PROTOTYPE ONLY: deterministic principals, fake Drive bytes, memory only.
 // No Google credentials are loaded or requested.
 import { randomUUID } from 'node:crypto';
-import { validateMarkdown, walk } from './markdown.js';
+import { validateMarkdown, walk, referenceDefinitions } from './markdown.js';
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aZ1cAAAAASUVORK5CYII=', 'base64');
 export function mockApi() {
   const sessions = new Map(), leases = new Map();
@@ -46,9 +46,8 @@ export function mockApi() {
         if (url.pathname === '/api/documents' && req.method === 'POST') {
           if (!['teacher', 'student'].includes(user)) fail('FORBIDDEN', 403);
           const tree = validateMarkdown(body().markdown, user);
-          const definitions = new Map();
-          walk(tree, (n) => { if (n.type === 'definition') definitions.set(n.identifier, n.url); });
-          walk(tree, (n) => { if (n.type === 'image' || n.type === 'imageReference') { const url = n.url ?? definitions.get(n.identifier); permission(user, assets.get(url.split('/').at(-1))); } });
+          const definitions = referenceDefinitions(tree);
+          walk(tree, (n) => { if (n.type === 'image' || n.type === 'imageReference') { const url = n.url ?? definitions.get(n.identifier)?.url; permission(user, assets.get(url.split('/').at(-1))); } });
           return json({ accepted: true, persisted: false, mock: true });
         }
         if (url.pathname === '/api/assets' && req.method === 'POST') {

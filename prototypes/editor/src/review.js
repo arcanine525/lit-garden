@@ -1,9 +1,14 @@
 import { parseDocument, stringify } from 'yaml';
 import { projectMarkdown, sha256 } from './markdown.js';
 export const schema = 'vv-review-proposal-v1';
+function isUtf16Boundary(text, offset) {
+  if (!Number.isInteger(offset) || offset < 0 || offset > text.length) return false;
+  const left = text.charCodeAt(offset - 1), right = text.charCodeAt(offset);
+  return !(left >= 0xd800 && left <= 0xdbff && right >= 0xdc00 && right <= 0xdfff);
+}
 export async function makeAnchor(markdown, start, end) {
   const { text } = projectMarkdown(markdown);
-  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end <= start || end > text.length) throw Error('ANCHOR_RANGE');
+  if (!isUtf16Boundary(text, start) || !isUtf16Boundary(text, end) || end <= start) throw Error('ANCHOR_RANGE');
   return { projection: 'vv-render-text-v1', start, end, exact: text.slice(start, end), prefix: text.slice(Math.max(0, start - 32), start), suffix: text.slice(end, end + 32), textHash: await sha256(text) };
 }
 export function writeReview(review) {
@@ -44,7 +49,7 @@ export async function restoreReview(review, submission, markdown) {
   if (await sha256(markdown) !== submission.contentHash || review.contentHash !== submission.contentHash) return { status: 'content-conflict', annotations: [] };
   const { text } = projectMarkdown(markdown);
   const hash = await sha256(text);
-  if (review.annotations.some(({ anchor: a }) => a.textHash !== hash || a.end > text.length || text.slice(a.start, a.end) !== a.exact || text.slice(Math.max(0, a.start - 32), a.start) !== a.prefix || text.slice(a.end, a.end + 32) !== a.suffix)) return { status: 'anchor-conflict', annotations: [] };
+  if (review.annotations.some(({ anchor: a }) => a.textHash !== hash || !isUtf16Boundary(text, a.start) || !isUtf16Boundary(text, a.end) || text.slice(a.start, a.end) !== a.exact || text.slice(Math.max(0, a.start - 32), a.start) !== a.prefix || text.slice(a.end, a.end + 32) !== a.suffix)) return { status: 'anchor-conflict', annotations: [] };
   return { status: 'restored', annotations: review.annotations };
 }
 

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 const evidence = new URL('../evidence/', import.meta.url);
-async function ready(page) { await page.goto('/'); await page.waitForFunction(()=>window.spike?.ready && window.spike.get()); }
+async function ready(page) { await page.goto('/'); await page.waitForFunction(()=>window.spike?.ready && document.querySelector('[contenteditable="true"]')?.textContent.includes('Mùa xuân')); }
 async function post(page,path,body) { return page.evaluate(async({path,body})=>{const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});return {status:r.status,body:await r.json(),cache:r.headers.get('cache-control')};},{path,body}); }
 
 test('MDXEditor DOM: supported Markdown round-trips and stabilizes across two cycles',async({page,browser})=>{
@@ -10,13 +10,25 @@ test('MDXEditor DOM: supported Markdown round-trips and stabilizes across two cy
   for(const fixture of fixtures) {
     expect(await page.evaluate((md)=>window.spike.set(md),fixture.markdown)).toBe(true);
     await expect.poll(()=>page.evaluate(()=>window.spike.get())).not.toBe('');
-    // Lexical reconciliation is asynchronous; wait for the actual DOM update.
-    await expect.poll(()=>page.evaluate(()=>document.querySelector('[contenteditable="true"]').textContent)).toContain(fixture.id==='headings'?'Tiêu đề':fixture.id==='lists'?'Mầm':fixture.id==='quotes'?'trích dẫn':fixture.id==='table'?'Tiếng Việt':fixture.id==='links'?'Vườn Văn':fixture.id==='line-breaks'?'Dòng mềm':fixture.id==='repeated'?'Hoa nở.':fixture.id==='normalization'?'Tiêu đề':fixture.id==='bold-italic'?'ý đậm':'NFD');
+    // Full visible text and handled import errors, not just a prefix or retained source.
+    const expectedText=await page.evaluate(md=>window.spike.projectMarkdown(md).text.replace(/\s/g,''),fixture.markdown);
+    async function assertRichTree() {
+      await expect.poll(()=>page.locator('[contenteditable="true"]').first().textContent().then(t=>t.replace(/\s/g,''))).toBe(expectedText);
+      expect(await page.evaluate(()=>window.spike.importError())).toBeNull();
+    }
+    await assertRichTree();
     const first=await page.evaluate(()=>window.spike.get());
     await page.evaluate((md)=>window.spike.set(md),first);
+    await assertRichTree();
     const second=await page.evaluate(()=>window.spike.get());
     const comparison=await page.evaluate(({input,first,second})=>({semanticEqual:JSON.stringify(window.spike.semantic(input))===JSON.stringify(window.spike.semantic(first)),stable:JSON.stringify(window.spike.semantic(first))===JSON.stringify(window.spike.semantic(second)),textEqual:window.spike.projectMarkdown(input).text===window.spike.projectMarkdown(first).text}),{input:fixture.markdown,first,second});
-    results.push({id:fixture.id,input:fixture.markdown,first,second,syntaxChanged:first!==fixture.markdown,...comparison});
+    const editable=page.locator('[contenteditable="true"]').first();
+    await editable.click();await page.keyboard.press('ControlOrMeta+End');await page.keyboard.type(' VERIFYEDIT');
+    // Table cells are nested editors and commit to the root on blur. Exercise
+    // that real UI boundary before reading the serialized document.
+    await page.getByRole('heading',{name:'Vườn Văn · Kiểm chứng editor',exact:true}).click();
+    await expect.poll(()=>page.evaluate(()=>window.spike.get())).toContain('VERIFYEDIT');
+    results.push({id:fixture.id,input:fixture.markdown,first,second,syntaxChanged:first!==fixture.markdown,fullRichTextVerified:true,richEditExported:true,...comparison});
   }
   await writeFile(new URL('round-trip.json',evidence),JSON.stringify({browser:browser.version(),editor:'4.5.0',results,errors},null,2)+'\n');
   expect(errors).toEqual([]); expect(results.filter((r)=>!r.semanticEqual || !r.stable || !r.textEqual)).toEqual([]);
@@ -132,4 +144,53 @@ test('DOM annotation selection across bold leaves: review-only reload, repeated 
   await page.getByRole('button',{name:'Đổi/khôi phục nội dung gốc',exact:true}).click();
   await expect(page.getByLabel('Trạng thái review')).toHaveText('content-conflict'); await expect(page.locator('article mark')).toHaveCount(0);
   await page.getByRole('button',{name:'Đổi/khôi phục nội dung gốc',exact:true}).click(); await expect(page.getByLabel('Trạng thái review')).toHaveText('restored');
+});
+
+// R1: reading the original source back is not evidence of a successful rich import.
+test('reference links render completely and rich edits reach exported Markdown',async({page})=>{
+  await ready(page);
+  await page.evaluate(()=>window.spike.set(window.spike.cases.find(c=>c.id==='links').markdown));
+  const editable=page.locator('[contenteditable="true"]').first();
+  await expect(editable).toContainText('Vườn Văn và tham chiếu.');
+  await expect(editable.getByRole('link',{name:'tham chiếu',exact:true})).toHaveAttribute('href','https://example.org/b');
+  await editable.click();await page.keyboard.press('ControlOrMeta+End');await page.keyboard.type(' NEWEDIT');
+  await expect.poll(()=>page.evaluate(()=>window.spike.get())).toContain('NEWEDIT');
+});
+
+test('reference images use the private adapter and pasted reference links remain editable',async({page})=>{
+  await ready(page);
+  await page.evaluate(()=>window.spike.set('![Hoa riêng tư][asset]\n\n[asset]: /api/assets/flower'));
+  const editable=page.locator('[contenteditable="true"]').first();
+  const img=editable.locator('img');await expect(img).toBeVisible();
+  await expect.poll(()=>img.evaluate(i=>i.naturalWidth)).toBeGreaterThan(0);
+  expect(await page.evaluate(()=>window.spike.get())).toContain('![Hoa riêng tư](/api/assets/flower)');
+  expect(await page.evaluate(()=>window.spike.importError())).toBeNull();
+  await page.evaluate(()=>window.spike.set('Bắt đầu'));
+  await editable.click();await page.keyboard.press('End');
+  await page.evaluate(()=>{const d=new DataTransfer();d.setData('text/plain',' [Tài liệu][doc]\n\n[doc]: https://example.org/doc');document.querySelector('[contenteditable="true"]').dispatchEvent(new ClipboardEvent('paste',{bubbles:true,cancelable:true,clipboardData:d}));});
+  await expect(editable.getByRole('link',{name:'Tài liệu',exact:true})).toHaveAttribute('href','https://example.org/doc');
+  await editable.click();await page.keyboard.press('ControlOrMeta+End');await page.keyboard.type(' PASTEEDIT');
+  await expect.poll(()=>page.evaluate(()=>window.spike.get())).toContain('PASTEEDIT');
+});
+
+test('handled MDX import error keeps source visible, blocks save and permits recovery',async({page})=>{
+  await ready(page);
+  const unsupported='```js\nconst x = 1;\n```';
+  // Deliberately bypass the AST gate only through the local spike probe, to exercise
+  // MDXEditor's handled error callback rather than a thrown validator error.
+  await page.evaluate(md=>window.spike.probeImport(md),unsupported);
+  await expect(page.getByLabel('Trạng thái editor')).toContainText('EDITOR_IMPORT:');
+  await expect(page.getByLabel('Nguồn Markdown',{exact:true})).toHaveValue(unsupported);
+  await expect(page.locator('[contenteditable="true"]').first()).not.toBeVisible();
+  await page.getByRole('button',{name:'Mã Markdown',exact:true}).click();
+  await expect(page.getByLabel('Nguồn Markdown',{exact:true})).toHaveValue(unsupported);
+  let writes=0;page.on('request',r=>{if(r.url().endsWith('/api/documents'))writes++;});
+  await page.getByRole('button',{name:'Kiểm tra lưu qua API mock',exact:true}).click();
+  await expect(page.getByLabel('Trạng thái editor')).toHaveText('EDITOR_IMPORT_FAILED');expect(writes).toBe(0);
+  await page.getByLabel('Nguồn Markdown',{exact:true}).fill('# Khôi phục');
+  await page.getByRole('button',{name:'Áp dụng nguồn'}).click();
+  await expect(page.locator('[contenteditable="true"] h1')).toHaveText('Khôi phục');
+  expect(await page.evaluate(()=>window.spike.importError())).toBeNull();
+  await page.locator('[contenteditable="true"]').first().click();await page.keyboard.press('End');await page.keyboard.type(' OK');
+  await expect.poll(()=>page.evaluate(()=>window.spike.get())).toContain('OK');
 });
