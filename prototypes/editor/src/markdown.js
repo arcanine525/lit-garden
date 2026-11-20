@@ -21,8 +21,8 @@ export function referenceDefinitions(tree) {
   });
   return definitions;
 }
-export function prepareEditorMarkdown(source, role) {
-  const tree = validateMarkdown(source, role), definitions = referenceDefinitions(tree);
+export function prepareEditorMarkdown(source, role, maxLength) {
+  const tree = validateMarkdown(source, role, maxLength), definitions = referenceDefinitions(tree);
   if (!definitions.size) return source;
   function resolve(n) {
     if (n.type === 'definition') return null;
@@ -40,11 +40,11 @@ export function prepareEditorMarkdown(source, role) {
   // Only drafts entering the rich editor are converted. Never rewrite a submitted
   // file or its integrity baseline; projection/hash restore still uses original bytes.
   const markdown = toMarkdown(resolve(tree), { extensions: [gfmToMarkdown()] });
-  validateMarkdown(markdown, role);
+  validateMarkdown(markdown, role, maxLength);
   return markdown;
 }
-export function validateMarkdown(source, role = 'student') {
-  if (typeof source !== 'string' || source.length > 100000) throw Error('MARKDOWN_SIZE');
+export function validateMarkdown(source, role = 'student', maxLength = 100000) {
+  if (typeof source !== 'string' || source.length > maxLength) throw Error('MARKDOWN_SIZE');
   const tree = parseMarkdown(source);
   const definitions = referenceDefinitions(tree);
   walk(tree, (n) => {

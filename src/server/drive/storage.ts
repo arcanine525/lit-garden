@@ -4,9 +4,9 @@ import { connectedDrive } from './connection';
 import { ensureFolder } from './folders';
 import { DriveError, DriveFiles } from './provider';
 
-type FolderKind = 'class' | 'assignment' | 'student';
-type Address = { classId: string; assignmentId?: string; studentId?: string };
-type ObjectRow = { id: string; teacher_id: string; operation_id: string; slot: string;
+type FolderKind = 'class' | 'assignment' | 'student' | 'assets';
+type Address = { classId: string; assignmentId?: string; studentId?: string; assets?: boolean };
+export type DriveObject = { id: string; teacher_id: string; operation_id: string; slot: string;
   drive_file_id: string; parent_drive_id: string; mime_type: string; expected_sha256: string; byte_size: string };
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -24,7 +24,7 @@ async function pathFolder(files: DriveFiles, teacher: string, kind: FolderKind, 
   return ensureFolder(files,pin.folder_id,parent,name,kind,resource,true);
 }
 
-export async function prepareWorkspace(teacher: string, { classId, assignmentId, studentId }: Address) {
+export async function prepareWorkspace(teacher: string, { classId, assignmentId, studentId, assets }: Address) {
   const { row, files } = await connectedDrive(teacher);
   const target = await database().query<{ recipient: string | null }>(`
     SELECT r.id AS recipient FROM garden.classes c JOIN garden.users owner ON owner.id=c.teacher_id
@@ -42,6 +42,10 @@ export async function prepareWorkspace(teacher: string, { classId, assignmentId,
   const classFolder = await pathFolder(files,teacher,'class',classId,row.app_folder_id);
   if (!assignmentId) return { files, generation: row.generation, folderId: classFolder, teacher };
   const assignmentFolder = await pathFolder(files,teacher,'assignment',assignmentId,classFolder);
+  if (assets) {
+    const folderId = await pathFolder(files,teacher,'assets',assignmentId,assignmentFolder,'assets');
+    return { files, generation: row.generation, folderId, teacher };
+  }
   const recipient = target.rows[0].recipient;
   const folderId = studentId && recipient ? await pathFolder(files,teacher,'student',recipient,assignmentFolder,studentId) : assignmentFolder;
   return { files, generation: row.generation, folderId, teacher };
@@ -59,7 +63,7 @@ export async function storeCandidate(workspace: Workspace, input: Candidate) {
   const checksum = hash(bytes);
   const key = [operationId,slot,slotIndex,teacher];
   const select = `SELECT * FROM garden.drive_objects WHERE operation_id=$1 AND slot=$2 AND slot_index=$3 AND teacher_id=$4`;
-  let object = (await database().query<ObjectRow>(select,key)).rows[0];
+  let object = (await database().query<DriveObject>(select,key)).rows[0];
   if (!object) {
     const driveId = await files.generateId();
     await database().query(`INSERT INTO garden.drive_objects(teacher_id,operation_id,slot,slot_index,drive_file_id,
@@ -69,7 +73,7 @@ export async function storeCandidate(workspace: Workspace, input: Candidate) {
       WHERE op.id=$1 AND op.teacher_id=$4 AND op.state IN ('reserved','writing','unknown','needs_client')
       AND dc.state='ready' AND dc.generation=$10 ON CONFLICT (operation_id,slot,slot_index) DO NOTHING`,
       [...key,driveId,folderId,mimeType,checksum,bytes.length,generation]);
-    object = (await database().query<ObjectRow>(select,key)).rows[0];
+    object = (await database().query<DriveObject>(select,key)).rows[0];
   }
   if (!object) throw new DriveError('DRIVE_SETUP_CHANGED', 409);
   if (object.parent_drive_id !== folderId || object.expected_sha256 !== checksum ||
@@ -85,7 +89,7 @@ export async function storeCandidate(workspace: Workspace, input: Candidate) {
   return object.id;
 }
 
-async function verifiedBytes(files: DriveFiles, object: ObjectRow) {
+async function verifiedBytes(files: DriveFiles, object: DriveObject) {
   const file = await files.inspect(object.drive_file_id);
   if (file.id !== object.drive_file_id || !file.ownedByMe || file.trashed || file.driveId ||
       file.mimeType !== object.mime_type || file.parents?.length !== 1 || file.parents[0] !== object.parent_drive_id ||
@@ -100,7 +104,7 @@ async function verifiedBytes(files: DriveFiles, object: ObjectRow) {
 }
 
 async function submissionObject(actor: string, id: string, asset?: string) {
-  const { rows } = await database().query<ObjectRow>(`
+  const { rows } = await database().query<DriveObject>(`
     SELECT object.* FROM garden.submissions sub
     LEFT JOIN garden.submission_assets link ON link.submission_id=sub.id AND link.asset_id=$3
     JOIN garden.drive_objects object ON object.teacher_id=sub.teacher_id AND
@@ -111,9 +115,7 @@ async function submissionObject(actor: string, id: string, asset?: string) {
   return rows[0];
 }
 
-export async function readSubmissionFile(actor: string, id: string, asset?: string) {
-  const object = await submissionObject(actor,id,asset);
-  if (!object) throw new DriveError('NOT_FOUND', 404);
+export async function readVerifiedObject(object: DriveObject) {
   const { files, row } = await connectedDrive(object.teacher_id);
   let result;
   try { result = await verifiedBytes(files,object); }
@@ -124,7 +126,14 @@ export async function readSubmissionFile(actor: string, id: string, asset?: stri
     }
     throw error;
   }
+  return { bytes: result.bytes, mimeType: object.mime_type };
+}
+
+export async function readSubmissionFile(actor: string, id: string, asset?: string) {
+  const object = await submissionObject(actor,id,asset);
+  if (!object) throw new DriveError('NOT_FOUND', 404);
+  const file = await readVerifiedObject(object);
   const after = await submissionObject(actor,id,asset);
   if (after?.id !== object.id) throw new DriveError('NOT_FOUND', 404);
-  return { bytes: result.bytes, mimeType: object.mime_type };
+  return file;
 }

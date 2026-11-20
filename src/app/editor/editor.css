@@ -1,0 +1,16 @@
+.garden-editor .app-actions { margin-bottom: 14px; }
+.garden-editor [data-lexical-editor="true"] { caret-color: var(--ink); }
+.garden-editor .mdxeditor {
+  --baseBase: var(--surface-input);
+  --baseText: var(--ink);
+  --accentText: var(--green);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+}
+.garden-editor .garden-editor-text { padding: 16px; min-height: 290px; font: 17px/2 var(--serif); overflow-wrap: anywhere; }
+.garden-editor .garden-editor-text img { max-width: 100%; height: auto; }
+.garden-editor .garden-editor-text :is(h1,h2,h3) { margin-block: 14px 8px; }
+.garden-editor .garden-editor-text td, .garden-editor .garden-editor-text th { min-width: 90px; }
+.garden-editor textarea { min-height: 290px; width: 100%; resize: vertical; font-family: monospace; }
+.garden-editor [role=status] { margin-top: 12px; }

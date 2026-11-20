@@ -42,6 +42,6 @@ export async function metadataReady(db: Executor): Promise<boolean> {
     SELECT EXISTS (
       SELECT 1 FROM public.garden_schema_migrations WHERE name = $1
     ) AND to_regclass('garden.users') IS NOT NULL AS ready
-  `, ['008-drive-connection.sql']);
+  `, ['009-private-assets.sql']);
   return rows[0]?.ready === true;
 }

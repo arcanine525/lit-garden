@@ -364,6 +364,8 @@ Giáo viên dùng **Kết nối Google Drive** để cấp quyền và chọn th
 
 Chế độ `APP_DRIVE_PROVIDER=google` dùng `APP_DRIVE_GOOGLE_CLIENT_ID`, `APP_DRIVE_GOOGLE_CLIENT_SECRET`, `APP_DRIVE_GOOGLE_PROJECT_NUMBER`, `APP_DRIVE_GOOGLE_PICKER_KEY` và `APP_DRIVE_KMS_KEY`. Đăng ký callback của ứng dụng tại `/api/drive/callback` trên `APP_ORIGIN` và origin tương ứng cho Picker. ID client, hạn chế browser key và Cloud KMS dùng cấu hình của cùng môi trường. Workload cần Application Default Credentials và quyền dùng khóa KMS để bọc hoặc mở khóa dữ liệu. T13 kiểm consent và Picker trên project tích hợp riêng. T34 kiểm lại các luồng Drive trên cấu hình thật. [Google Picker](https://developers.google.com/workspace/drive/picker/guides/web-picker) · [Cloud KMS](https://docs.cloud.google.com/kms/docs/encrypt-decrypt)
 
+**Soạn Markdown** mở ở chế độ trực quan, cho chuyển sang mã nguồn và tải `.md`. Trong nháp bài của giáo viên, ảnh đã tải lên Drive được tham chiếu bằng ID nội bộ, và Vườn Văn xác thực quyền mỗi khi ảnh được mở. Tệp `.md` giữ tham chiếu này để đọc ảnh qua ứng dụng. [Kiểm chứng T16](docs/technical/validation/T16.txt).
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash

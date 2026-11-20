@@ -1,0 +1,60 @@
+T16 | Shared Markdown editor and private images
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak, and the fake Drive provider are healthy. Applied
+009-private-assets.sql. It adds assignment-scoped attachments and stores
+only digests for session-bound viewing leases.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+12 passed (1.2m) on the full local application stack, including both editor
+acceptance scenarios.
+
+$ npm --prefix prototypes/editor test
+20 passed for the parser and review adapter shared with the prototype.
+
+$ npm --prefix prototypes/editor run test:browser
+All 13 browser cases reported passing. The optional prototype runner stayed
+open during teardown and was interrupted after the cases completed (exit 130).
+The application E2E command above finished normally with exit 0.
+
+$ npm audit --omit=dev --audit-level=high
+0 reported vulnerabilities.
+
+Editor acceptance in tests/e2e/editor.spec.mjs
+The local acceptance cases use actual Keycloak sessions and the production
+Next build. MDXEditor 4.5.0 renders Markdown visually by default. The test
+round-trips headings, bold, italic, ordered/unordered lists, quote, table,
+reference link and hard break. It types Vietnamese into the last table cell,
+downloads with the keyboard while focus stays inside that cell, then compares
+the document AST and confirms the final character. Source, API and paste
+tests reject unsafe links, arbitrary HTML and image insertion by students.
+Pasted rich-text underline and color are stripped when plain text is pasted.
+
+Only an owner teacher can insert an image into an editable assignment draft
+after Drive setup. Raster bytes are decoded and re-encoded as PNG/JPEG/WebP,
+up to 5 MiB and 12 million pixels. The fake provider creates a file then
+returns an ambiguous HTTP 504. Retrying the same upload verifies one file
+by its pinned Drive ID and hash. Teacher source validation rejects an asset
+outside the current assignment.
+
+The browser decodes the uploaded image after receiving bytes through the app.
+A missing Drive file yields a placeholder until explicit reload. The teacher,
+unauthenticated browser, unrelated student, and admin exercise distinct
+authorization paths. The recipient can read a prompt image under the same
+application session while the assigned relationship is current. An expired
+lease fails with 410, revoked Drive connectivity fails with 409, and removed
+membership fails with 404 even if an earlier lease remains. Markdown exports
+contain only the internal asset reference, without Drive or viewing tokens.
+
+The image ACL uses seeded draft/published/recipient metadata in the local
+acceptance suite. T17 implements authoring, autosave and official publication.
+The editor's standalone page validates and downloads text without persisting
+it server-side. Chrome input and clipboard are synthesized. The private file
+flow uses fake Drive and does not verify Google consent, Picker, ACLs or KMS.
