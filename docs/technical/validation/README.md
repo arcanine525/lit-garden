@@ -8,8 +8,8 @@ Ngày 20/11/2026 Asia/Ho_Chi_Minh. Baseline `976470f`, nhánh `design/metadata-d
 |---|---|---|
 | Nạp toàn bộ `metadata-reference.sql` vào DB rỗng | PASS, PostgreSQL **16.15**, aarch64 Alpine | SQL DDL, FK/check/index/trigger/function/view hợp lệ |
 | `schema-scenarios.sql` | **60/60 kiểm tra PASS**, toàn bộ fixture ROLLBACK | Constraints, predicates auth tham chiếu, immutable fields, draft CAS thực thi trong PostgreSQL |
-| `protocol_model.py` | **21/21 test PASS**, Python **3.12.0** | State machine và interleaving có điều khiển, Drive giả giữ bytes, metadata model giữ hash/IDs |
-| Đối chiếu editor | Đã đọc toàn bộ artifact và projection/review source agent-1 | Contract UTF-16/asset path/production envelope đã đối chiếu, không chạy lại spike agent-1 |
+| `protocol_model.py` | **30/30 test PASS**, Python **3.12.0** | State machine và interleaving có điều khiển, Drive giả giữ bytes, metadata model giữ hash/IDs |
+| Đối chiếu editor | Đã đối chiếu artifact và corpus UTF-16 của hai nhánh | Contract UTF-16/asset path/production envelope đã đối chiếu, kết quả chạy lại spike agent1 trong phiên sửa được lưu trong evidence của nhánh agent1 |
 | Kiểm tra whitespace/link nội bộ/JSON ví dụ | PASS | Chất lượng artifact tài liệu, không thay kiểm tra nghiệp vụ backend |
 
 Container `lit-garden-agent2-schema-check`: image `postgres:16-alpine`, network `none`, không mount volume, không expose port; không dùng `spiral-db` hoặc dữ liệu ứng dụng khác. Đã dừng/xóa container tạm sau kiểm chứng. Mọi tài khoản/ID/hash trong SQL là fixture tổng hợp, không phải credentials cá nhân. Snapshot kiểm chứng và hashes của file được ghi trong [verification.json](verification.json).
@@ -67,3 +67,14 @@ Model là một đặc tả thực thi nhỏ, không copy code backend (repo ch�
 - Review/envelope serialization production, private image adapter, CSV streaming, IndexedDB offline, lỗi/giới hạn dung lượng, E2E nhiều thiết bị/process.
 
 Không tìm token cá nhân, không kết nối production, không nhận các kiểm tra mock của agent-1 là kiểm chứng Drive thật. Các giới hạn này cần kiểm chứng tích hợp khi scaffold, không ngăn review schema/protocol hiện tại.
+
+## Hồi quy sau review R2–R5
+
+[protocol-tests.txt](protocol-tests.txt) ghi lần chạy 30 test sau sửa. Model đã kiểm:
+
+- Close/archive/remove/suspend → phục hồi trước reconcile vẫn giữ intent cũ rejected, có hoặc chưa có bytes Drive; intent mới có chủ đích vẫn hoạt động. Phục hồi một điều kiện không vượt điều kiện khác còn khóa.
+- Takeover/acquire sau expiry tự reject cả autosave và submit cũ, giải phóng mutex; test stale-write không còn gọi cancel thủ công. Release cũng vô hiệu intent cũ.
+- Hai reply khác key cùng comment không ghi đè pin. Retry intent đã committed không pin lại; unknown giữ pin, cancel trễ không xóa pin mới và không làm sống lại intent đã hủy.
+- [Corpus UTF-16](utf16-anchor-cases.json) có cùng bytes với `prototypes/editor/tests/utf16-anchor-cases.json` ở agent1; các boundary hợp lệ và cắt surrogate cho cùng kết quả.
+
+Các thao tác model tương ứng transaction đã serialize. Backend chưa được xây nên vẫn cần kiểm locking và crash thật theo contract. DDL/scenario SQL không đổi trong bản sửa; 60 kiểm tra đã được chạy lại ở phiên review trên cùng schema, không nhận model 30 test là bằng chứng DB transaction mới.

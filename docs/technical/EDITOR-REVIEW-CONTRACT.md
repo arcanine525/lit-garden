@@ -14,7 +14,7 @@ Thiết kế v1 ngày 20/11/2026, đồng hành [DATA-AUTH-DRIVE-DESIGN](DATA-AU
 | `POST /recipients/:id/submissions` | explicit key, epoch/sessionId, source headVersion, envelope snapshot | 201 sau DB+Drive; 202 chưa xác nhận; duplicate committed trả result cũ |
 | `POST /assignments/:id/publish` | key, draftVersion, envelopeHash, sessionId/epoch | Atomic visible recipients sau verify toàn bộ slots |
 | `POST /submissions/:id/review-publications` | key, draftVersion, currentPublicationId, submissionHash, sessionId/epoch | Đủ điểm, source hash đúng, comment pin hợp lệ |
-| `POST /comments/:id/messages` | key, currentPublicationId, commentDigest, message envelope | Chỉ comment đã trả đúng phiên bản; pending pin chống publish race |
+| `POST /comments/:id/messages` | key, currentPublicationId, commentDigest, message envelope | Cùng key/digest trả intent cũ; key mới gặp pending khác trả 409 OP_IN_PROGRESS; không ghi đè pin |
 | `POST /library/:id/publish` | key, draftVersion, itemVersion, sessionId/epoch | Explicit Lưu thay đổi; giữ shares/favorites |
 | `DELETE /library/:id` | key, itemVersion | 202 deleting/partial; chỉ 200 deleted khi file cleanup verified |
 | `GET /operations/:id` | Không nhận actor/owner trong query | State enum, result UUID, error enum; auth lại target |
@@ -83,7 +83,7 @@ Editor plugin lấy image bytes qua authorized app API, tạo object URL trong m
 
 Browser IndexedDB key `{userId,teacherId,streamId}` giữ `{localRevision,baseServerVersion,baseHash,pendingEnvelope,operationKey,leaseEpoch,sessionId,syncState}`. Clock/focus timer chỉ local, không đẩy vào submit/review metadata hay thống kê chấm. Khi có local chưa sync và server head khác, mở so sánh/khôi phục local có chủ đích; không silent last-write-wins. Reconnect luôn đọc operation status rồi head trước sync. Lease không đi cùng nội dung tải `.md`.
 
-Đã đọc toàn bộ `EDITOR-VALIDATION.md`, `src/markdown.js`, `src/review.js` trong clone agent-1 ngày 20/11/2026; đây là đối chiếu read-only, không copy/chạy/sửa prototype ở clone khác. Artifact agent-1 báo MDXEditor 4.5.0 + hard-break adapter, 16 logic/6 browser tests; agent-2 không chạy lại các test đó nên chỉ dẫn kết quả được báo cáo, không nhận là kiểm chứng của nhánh này.
+Ở lần bàn giao ban đầu ngày 20/11/2026, agent2 chỉ đọc `EDITOR-VALIDATION.md`, `src/markdown.js`, `src/review.js` và kết quả 16 logic/6 browser do agent1 báo cáo. Phiên sửa sau review đã chạy lại spike với reference adapter và kiểm lỗi import: 20 logic/9 browser PASS, evidence lưu tại clone agent1. Đây vẫn là kiểm chứng local/mock, chưa phải tích hợp production giữa hai nhánh.
 
 | Điểm | Thống nhất và phần cần adapter |
 |---|---|
@@ -97,3 +97,9 @@ Browser IndexedDB key `{userId,teacherId,streamId}` giữ `{localRevision,baseSe
 | Điểm cần test khi tích hợp | Private Drive thật, OAuth, adapter envelope, hash bytes, source integrity mỗi save/publish, đa process/thiết bị, Keycloak và ACL đầy đủ. |
 
 Ví dụ projection chốt: body `Em **chăm** cây.\n` → `Em chăm cây.\n`; bảng mỗi cell có TAB cuối và mỗi row có LF; không trim LF cuối projection. Fixture offsets/Unicode độc lập ở `validation/protocol_model.py` kiểm quy ước UTF-16, chưa chứng minh selection DOM ngoài spike agent-1.
+
+## Bổ sung sau review R1–R5
+
+Agent1 đã sửa reference link/image bằng adapter sang inline trước khi import/paste; validator, adapter và mock API đều resolve definition đầu tiên. Lỗi import nội bộ phải giữ source và chặn lưu, không dùng getMarkdown fallback làm bằng chứng round-trip. Corpus `utf16-anchor-cases.json` trong validation có cùng bytes với fixture tests của agent1; cả JS tạo/restore anchor và Python slice phải từ chối boundary cắt surrogate.
+
+Đối với student autosave/submit, close/archive/remove/suspend phải reject intent mất quyền ngay trong transaction thu hồi quyền. Reopen/restore không hồi sinh intent; takeover/acquire sau expiry cũng phải giải phóng pending operation epoch cũ ngay, không chờ worker đọc Drive. Reply retry kiểm key trước current publication; pin không được ghi đè bởi key khác, không được clear bởi cancel trễ của operation cũ. Chi tiết transaction tại mục 11 của thiết kế.

@@ -8,6 +8,8 @@ from dataclasses import dataclass
 from hashlib import sha256
 from itertools import permutations
 import unittest
+import json
+from pathlib import Path
 
 
 def digest(payload: bytes) -> str:
@@ -54,10 +56,34 @@ class Protocol:
         self.epoch = 1
         self.version = 0
         self.lease_live = True
-        self.write_allowed = True
+        self.policy = dict.fromkeys(("close", "archive", "remove", "suspend"), True)
         self.head = None
         self.submissions: dict[int, str] = {}
         self.notifications: set[tuple[str, str]] = set()
+
+    @property
+    def write_allowed(self):
+        return all(self.policy.values())
+
+    @write_allowed.setter
+    def write_allowed(self, allowed):
+        # Compatibility for callers modelling assignment close/open as a boolean.
+        self.set_policy("close", allowed)
+
+    def _reject_pending(self):
+        for op in self.operations.values():
+            if op.state not in {"committed", "rejected"}:
+                op.state = "rejected"
+
+    def set_policy(self, barrier, allowed):
+        if barrier not in self.policy:
+            raise ValueError("unknown policy barrier")
+        # One serialized transaction: permission change AND intent invalidation.
+        # Restoring permission must never revive an intent or depend on a worker
+        # having observed the intervening denied state.
+        self.policy[barrier] = allowed
+        if not allowed:
+            self._reject_pending()
 
     def reserve(self, key, kind, payload, epoch=1, base=0):
         fingerprint = digest(repr((kind, digest(payload), epoch, base)).encode())
@@ -66,7 +92,7 @@ class Protocol:
             if op.fingerprint != fingerprint:
                 raise Rejected("KEY_REUSED")
             return op
-        if not self.write_allowed or epoch != self.epoch or base != self.version:
+        if not self.write_allowed or not self.lease_live or epoch != self.epoch or base != self.version:
             raise Rejected("POLICY_OR_STALE")
         if any(o.kind == kind and o.state not in {"committed", "rejected"}
                for o in self.operations.values()):
@@ -86,8 +112,21 @@ class Protocol:
         return status
 
     def takeover(self):
+        if not self.write_allowed:
+            raise Rejected("POLICY_OR_STALE")
+        self._reject_pending()
         self.epoch += 1
         self.lease_live = True
+
+    def acquire_after_expiry(self):
+        if self.lease_live:
+            raise Rejected("LEASE_HELD")
+        self.takeover()
+
+    def release(self):
+        self._reject_pending()
+        self.epoch += 1
+        self.lease_live = False
 
     def cancel(self, key):
         op = self.operations[key]
@@ -142,13 +181,24 @@ class ReviewModel:
         self.messages = set()
         self.notifications = set()
         self.operations = {}
+        self.reply_operations = {}
 
     def reserve_reply(self, key, publication, comment):
+        previous = self.reply_operations.get(key)
+        if previous:
+            if previous["publication"] != publication or previous["comment"] != comment:
+                raise Rejected("KEY_REUSED")
+            return previous["state"]
         if publication != len(self.history):
             raise Rejected("PUBLICATION_CHANGED")
         if comment not in self.history[-1]:
             raise Rejected("COMMENT_NOT_CURRENT")
+        if comment in self.pending:
+            raise Rejected("OP_IN_PROGRESS")
         self.pending[comment] = (key, self.history[-1][comment])
+        self.reply_operations[key] = {"publication": publication, "comment": comment,
+                                      "state": "reserved"}
+        return "reserved"
 
     def publish(self, key, candidate, base, all_scores=True, drive_ok=True):
         if key in self.operations:
@@ -168,6 +218,11 @@ class ReviewModel:
         return len(self.history)
 
     def commit_reply(self, key, comment):
+        intent = self.reply_operations.get(key)
+        if not intent or intent["comment"] != comment:
+            raise Rejected("WRONG_OPERATION")
+        if intent["state"] == "rejected":
+            raise Rejected("REJECTED")
         if key in self.messages:
             return
         pending_key, pinned = self.pending[comment]
@@ -176,7 +231,16 @@ class ReviewModel:
         self.frozen[comment] = pinned
         self.messages.add(key)
         self.notifications.add((key, "reply"))
+        intent["state"] = "committed"
         del self.pending[comment]
+
+    def cancel_reply(self, key):
+        intent = self.reply_operations[key]
+        if intent["state"] == "committed":
+            raise Rejected("ALREADY_COMMITTED")
+        if self.pending.get(intent["comment"], (None,))[0] == key:
+            del self.pending[intent["comment"]]
+        intent["state"] = "rejected"
 
     def read(self, role, revision=None):
         if role == "admin":
@@ -206,6 +270,131 @@ class LibraryDeleteModel:
 
 
 class ProtocolScenarios(unittest.TestCase):
+    def test_revoke_restore_without_intermediate_reconcile_never_revives_submit(self):
+        for barrier in ("close", "archive", "remove", "suspend"):
+            for uploaded in (False, True):
+                with self.subTest(barrier=barrier, uploaded=uploaded):
+                    p = Protocol()
+                    p.reserve("s1", "submit", b"writing")
+                    if uploaded:
+                        p.client_upload("s1", b"writing", lose_response=True)
+                    p.set_policy(barrier, False)
+                    p.set_policy(barrier, True)
+                    p.client_upload("s1", b"writing")  # late Drive arrival
+                    p.reconcile("s1")
+                    self.assertEqual(p.operations["s1"].state, "rejected")
+                    self.assertEqual(p.submissions, {})
+                    # Only a new explicit intent may submit after rights return.
+                    p.reserve("s2", "submit", b"writing")
+                    p.client_upload("s2", b"writing")
+                    p.reconcile("s2")
+                    self.assertEqual(p.submissions, {1: "file:s2"})
+
+    def test_restoring_one_policy_does_not_override_another_barrier(self):
+        p = Protocol()
+        p.set_policy("close", False)
+        p.set_policy("suspend", False)
+        p.set_policy("close", True)
+        with self.assertRaisesRegex(Rejected, "POLICY_OR_STALE"):
+            p.reserve("new", "submit", b"writing")
+        with self.assertRaisesRegex(Rejected, "POLICY_OR_STALE"):
+            p.takeover()
+        p.set_policy("suspend", True)
+        p.reserve("new", "submit", b"writing")
+
+    def test_takeover_and_expired_acquire_reject_both_pending_kinds(self):
+        for acquire in ("takeover", "acquire_after_expiry"):
+            p = Protocol()
+            p.reserve("draft", "autosave", b"draft")
+            p.reserve("submit", "submit", b"submission")
+            if acquire == "acquire_after_expiry":
+                p.lease_live = False
+            getattr(p, acquire)()
+            self.assertEqual([o.state for o in p.operations.values()], ["rejected", "rejected"])
+            for key, payload in (("draft", b"draft"), ("submit", b"submission")):
+                p.client_upload(key, payload)
+                p.reconcile(key)
+            self.assertIsNone(p.head)
+            self.assertEqual(p.submissions, {})
+            p.reserve("new", "autosave", b"new", epoch=2)
+
+    def test_release_and_expiry_do_not_admit_new_intents(self):
+        p = Protocol()
+        with self.assertRaisesRegex(Rejected, "LEASE_HELD"):
+            p.acquire_after_expiry()
+        p.reserve("old", "submit", b"writing")
+        p.release()
+        self.assertEqual(p.operations["old"].state, "rejected")
+        with self.assertRaisesRegex(Rejected, "POLICY_OR_STALE"):
+            p.reserve("new", "submit", b"writing", epoch=2)
+        p.acquire_after_expiry()
+        p.reserve("new", "submit", b"writing", epoch=3)
+
+    def test_takeover_releases_pending_mutex_without_manual_cancel(self):
+        p = Protocol()
+        p.reserve("old", "autosave", b"old")
+        p.takeover()
+        p.reserve("new", "autosave", b"new", epoch=2)
+        p.client_upload("new", b"new")
+        p.reconcile("new")
+        p.client_upload("old", b"old")
+        p.reconcile("old")
+        self.assertEqual(p.head, "file:new")
+        self.assertEqual(p.operations["old"].state, "rejected")
+
+    def test_second_pending_reply_cannot_replace_first(self):
+        r = ReviewModel()
+        r.reserve_reply("m1", 1, "c1")
+        with self.assertRaisesRegex(Rejected, "OP_IN_PROGRESS"):
+            r.reserve_reply("m2", 1, "c1")
+        r.commit_reply("m1", "c1")
+        r.reserve_reply("m2", 1, "c1")
+        r.commit_reply("m2", "c1")
+        self.assertEqual(r.messages, {"m1", "m2"})
+        self.assertEqual(len(r.notifications), 2)
+
+    def test_reply_retries_do_not_repin_or_reuse_a_different_intent(self):
+        r = ReviewModel()
+        self.assertEqual(r.reserve_reply("m1", 1, "c1"), "reserved")
+        r.publish("p2", r.read("student"), 1)
+        self.assertEqual(r.reserve_reply("m1", 1, "c1"), "reserved")
+        with self.assertRaisesRegex(Rejected, "KEY_REUSED"):
+            r.reserve_reply("m1", 2, "c1")
+        r.commit_reply("m1", "c1")
+        self.assertEqual(r.reserve_reply("m1", 1, "c1"), "committed")
+        self.assertEqual(r.pending, {})
+        r.commit_reply("m1", "c1")
+        self.assertEqual(len(r.messages), 1)
+        self.assertEqual(len(r.notifications), 2)  # publication and reply
+
+    def test_cancelled_reply_cannot_clear_or_commit_a_newer_pending_reply(self):
+        r = ReviewModel()
+        r.reserve_reply("m1", 1, "c1")
+        r.reply_operations["m1"]["state"] = "unknown"  # timeout keeps the pin
+        with self.assertRaisesRegex(Rejected, "OP_IN_PROGRESS"):
+            r.reserve_reply("m2", 1, "c1")
+        r.cancel_reply("m1")
+        r.reserve_reply("m2", 1, "c1")
+        r.cancel_reply("m1")  # late cancellation cannot clear m2's pin
+        self.assertEqual(r.pending["c1"][0], "m2")
+        self.assertEqual(r.reserve_reply("m1", 1, "c1"), "rejected")
+        with self.assertRaisesRegex(Rejected, "REJECTED"):
+            r.commit_reply("m1", "c1")
+        r.commit_reply("m2", "c1")
+        self.assertEqual(r.messages, {"m2"})
+        with self.assertRaisesRegex(Rejected, "ALREADY_COMMITTED"):
+            r.cancel_reply("m2")
+
+    def test_shared_utf16_anchor_boundary_corpus(self):
+        cases = json.loads(Path(__file__).with_name("utf16-anchor-cases.json").read_text())
+        for case in cases:
+            with self.subTest(case=case):
+                if case["valid"]:
+                    self.assertEqual(utf16_slice(case["markdown"], case["start"], case["end"]), case["exact"])
+                else:
+                    with self.assertRaises(UnicodeDecodeError):
+                        utf16_slice(case["markdown"], case["start"], case["end"])
+
     def test_utf16_repeated_quote_and_nfd_anchor_fixture(self):
         projection = "Hoa nở. 👩🏽‍🏫 a\u0306\u0301 Hoa nở.\n"
         second_start = len(projection[:projection.rindex("Hoa nở.")].encode("utf-16-le")) // 2
@@ -282,7 +471,6 @@ class ProtocolScenarios(unittest.TestCase):
         p = Protocol()
         p.reserve("old", "autosave", b"old draft")
         p.takeover()
-        p.cancel("old")  # releasing target mutex; external request may still arrive.
         p.reserve("new", "autosave", b"new draft", epoch=2)
         p.client_upload("new", b"new draft")
         p.reconcile("new")
@@ -322,14 +510,14 @@ class ProtocolScenarios(unittest.TestCase):
                     p.client_upload("s1", b"writing")
                     for event in order:
                         if event == "barrier":
-                            p.write_allowed = False
+                            p.set_policy(barrier, False)
                         else:
                             try:
                                 p.reconcile("s1")
                             except Rejected:
                                 pass
                     self.assertEqual(len(p.submissions), int(order[0] == "finalize"))
-                    p.write_allowed = True
+                    p.set_policy(barrier, True)
                     p.reconcile("s1")
                     self.assertEqual(len(p.submissions), int(order[0] == "finalize"))
 

@@ -1,5 +1,5 @@
 {
-  "verified_at": "2026-11-19T18:47:29.399945+00:00",
+  "verified_at": "2026-11-20T04:42:53.914759+00:00",
   "branch": "design/metadata-drive-protocol",
   "baseline": "976470faefc0ba00145d6a4fe1afb1bad315692f",
   "postgres": "PostgreSQL 16.15 on aarch64-unknown-linux-musl, compiled by gcc (Alpine 15.2.0) 15.2.0, 64-bit",
@@ -7,11 +7,12 @@
   "sql_schema": "executed successfully in empty database",
   "sql_scenarios": {
     "passed": 60,
-    "transaction": "rolled back fixtures"
+    "transaction": "rolled back fixtures",
+    "fix_scope": "SQL unchanged; the 60 checks were rerun successfully in the prior review, not rerun for this model-only fix."
   },
   "python": "Python 3.12.0",
   "protocol_model": {
-    "passed": 21,
+    "passed": 30,
     "real_drive": false,
     "real_backend": false
   },
@@ -23,21 +24,27 @@
   "commands": [
     "docker exec -i lit-garden-agent2-schema-check psql -U postgres -d garden_design_verified -v ON_ERROR_STOP=1 < docs/technical/metadata-reference.sql",
     "docker exec -i lit-garden-agent2-schema-check psql -U postgres -d garden_design_verified -q -v ON_ERROR_STOP=1 < docs/technical/validation/schema-scenarios.sql",
-    "python3 docs/technical/validation/protocol_model.py"
+    "python3 docs/technical/validation/protocol_model.py",
+    "python3 docs/technical/validation/protocol_model.py > docs/technical/validation/protocol-tests.txt 2>&1"
   ],
   "artifact_sha256": {
     "README.md": "8eaab1127e05563982ac4d908e86492e6c29b0390110d6ee6c075dda7e3acee5",
-    "docs/technical/DATA-AUTH-DRIVE-DESIGN.md": "c9e1378d5f940871118f3b912cb15751ea54d4a7e7b375b97fa583e2b82427cb",
-    "docs/technical/EDITOR-REVIEW-CONTRACT.md": "b3830dfaa464a4260a717226588a06e3d4fe14bfcad6cebacd0253be6a61272f",
+    "docs/technical/DATA-AUTH-DRIVE-DESIGN.md": "9b94580fa313216367e660f17f5bade635f327a6ad76d220be1f1ad73576d625",
+    "docs/technical/EDITOR-REVIEW-CONTRACT.md": "56f5f9026416a12e7671aadc57efe891b437a008a8ab966194ad325151f4edc3",
     "docs/technical/metadata-reference.sql": "f6e64a32f7e1ce015003e6bba480ca15e4c10d9607f9e8fd59ec13712c81e557",
-    "docs/technical/validation/README.md": "bc0106f232a775e178c8896fb0182c6ce72c26d1a4b7883212e7e10ba5b223ec",
+    "docs/technical/validation/README.md": "dcc7fad1f7d36ae51d8789cfbd0a5b414ff8e4f8d8a0d68df4a0a91f46efddf7",
     "docs/technical/validation/schema-scenarios.sql": "e5284ce34efedf1bae2b60449d3ee0ea254235dfc7ca145f476b757f10e10ba9",
-    "docs/technical/validation/protocol_model.py": "d06df72ad167ca7651569676c1c9702713f784a64432d0f84c9cb1dcf4c07d24"
+    "docs/technical/validation/protocol_model.py": "7810f272be2c98846bd5528abee46d3afe718f2d90a83840503aeba143b970db",
+    "docs/technical/validation/utf16-anchor-cases.json": "113fcdc17b7d5ac34674941de563414c6f05b5a1a68c870b85b11b7d6114567b",
+    "docs/technical/validation/protocol-tests.txt": "a844c39d2691d8ae37a9ca43a030eaefdc90d4f6f15a08e5f559391cf55a159c"
   },
   "limits": [
     "No Google OAuth/Drive live calls",
     "No Keycloak live calls",
     "No app E2E",
-    "Agent-1 editor results read, not re-executed"
-  ]
+    "Agent1 local tests rerun by coordinator (20 core/9 browser); no production integration"
+  ],
+  "previous_verified_at": "2026-11-19T18:47:29.399945+00:00",
+  "reviewed_commit": "62a9734",
+  "revision": "Working tree after R2/R3/R4 fixes, shared R5 corpus and approved Q01-B documentation"
 }

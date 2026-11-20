@@ -1,0 +1,35 @@
+test_autosave_never_creates_submission (__main__.ProtocolScenarios.test_autosave_never_creates_submission) ... ok
+test_cancel_then_late_create_never_submits (__main__.ProtocolScenarios.test_cancel_then_late_create_never_submits) ... ok
+test_cancelled_reply_cannot_clear_or_commit_a_newer_pending_reply (__main__.ProtocolScenarios.test_cancelled_reply_cannot_clear_or_commit_a_newer_pending_reply) ... ok
+test_close_barrier_and_finalize_both_orders (__main__.ProtocolScenarios.test_close_barrier_and_finalize_both_orders) ... ok
+test_crash_after_drive_success (__main__.ProtocolScenarios.test_crash_after_drive_success) ... ok
+test_different_payload_same_key_rejected (__main__.ProtocolScenarios.test_different_payload_same_key_rejected) ... ok
+test_draft_failed_publish_and_hidden_history (__main__.ProtocolScenarios.test_draft_failed_publish_and_hidden_history) ... ok
+test_duplicate_create_and_submit_ack_lost (__main__.ProtocolScenarios.test_duplicate_create_and_submit_ack_lost) ... ok
+test_expiry_rejects_draft_finalize (__main__.ProtocolScenarios.test_expiry_rejects_draft_finalize) ... ok
+test_external_content_change_rejected (__main__.ProtocolScenarios.test_external_content_change_rejected) ... ok
+test_incomplete_review_and_optional_overall (__main__.ProtocolScenarios.test_incomplete_review_and_optional_overall) ... ok
+test_intentional_same_content_new_submission_allowed (__main__.ProtocolScenarios.test_intentional_same_content_new_submission_allowed) ... ok
+test_library_partial_delete_stays_hidden_and_retries_remaining (__main__.ProtocolScenarios.test_library_partial_delete_stays_hidden_and_retries_remaining) ... ok
+test_no_server_payload_after_crash_before_upload (__main__.ProtocolScenarios.test_no_server_payload_after_crash_before_upload) ... ok
+test_publish_wins_reply_against_old_content_rejected (__main__.ProtocolScenarios.test_publish_wins_reply_against_old_content_rejected) ... ok
+test_release_and_expiry_do_not_admit_new_intents (__main__.ProtocolScenarios.test_release_and_expiry_do_not_admit_new_intents) ... ok
+test_reply_retries_do_not_repin_or_reuse_a_different_intent (__main__.ProtocolScenarios.test_reply_retries_do_not_repin_or_reuse_a_different_intent) ... ok
+test_reply_retry_deduplicates_message_and_notification (__main__.ProtocolScenarios.test_reply_retry_deduplicates_message_and_notification) ... ok
+test_reply_wins_publish_of_changed_comment_rejected (__main__.ProtocolScenarios.test_reply_wins_publish_of_changed_comment_rejected) ... ok
+test_restoring_one_policy_does_not_override_another_barrier (__main__.ProtocolScenarios.test_restoring_one_policy_does_not_override_another_barrier) ... ok
+test_revoke_restore_without_intermediate_reconcile_never_revives_submit (__main__.ProtocolScenarios.test_revoke_restore_without_intermediate_reconcile_never_revives_submit) ... ok
+test_second_key_while_submit_unknown_rejected (__main__.ProtocolScenarios.test_second_key_while_submit_unknown_rejected) ... ok
+test_second_pending_reply_cannot_replace_first (__main__.ProtocolScenarios.test_second_pending_reply_cannot_replace_first) ... ok
+test_shared_utf16_anchor_boundary_corpus (__main__.ProtocolScenarios.test_shared_utf16_anchor_boundary_corpus) ... ok
+test_stale_write_finishes_after_new_head (__main__.ProtocolScenarios.test_stale_write_finishes_after_new_head) ... ok
+test_t2_rollback_then_reconcile (__main__.ProtocolScenarios.test_t2_rollback_then_reconcile) ... ok
+test_takeover_and_expired_acquire_reject_both_pending_kinds (__main__.ProtocolScenarios.test_takeover_and_expired_acquire_reject_both_pending_kinds) ... ok
+test_takeover_and_finalize_both_serial_orders (__main__.ProtocolScenarios.test_takeover_and_finalize_both_serial_orders) ... ok
+test_takeover_releases_pending_mutex_without_manual_cancel (__main__.ProtocolScenarios.test_takeover_releases_pending_mutex_without_manual_cancel) ... ok
+test_utf16_repeated_quote_and_nfd_anchor_fixture (__main__.ProtocolScenarios.test_utf16_repeated_quote_and_nfd_anchor_fixture) ... ok
+
+----------------------------------------------------------------------
+Ran 30 tests in 0.003s
+
+OK
