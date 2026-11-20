@@ -1,0 +1,20 @@
+.account-directory ul { list-style: none; padding: 0; margin: 0; }
+.account-directory ul li {
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;
+  gap: 10px 16px; padding-block: 14px; margin: 0; border-top: 1px solid var(--line);
+}
+.account-directory small { display: block; margin-top: 4px; color: var(--ink-muted); }
+.account-directory .account-create { padding: 0 0 12px; border-bottom: 0; }
+.account-create form { margin-top: 10px; }
+.account-search-head { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; align-items: baseline; margin-bottom: 12px; }
+.account-search-head h2 { margin: 0; }
+.account-directory .account-search { padding: 0; border: 0; }
+.account-search[open] { flex-basis: 100%; }
+.account-search summary { font-size: 12px; }
+.account-search form { margin-top: 10px; }
+.account-directory dialog .app-checkbox { margin: 0; font-size: 12px; align-items: center; }
+.account-directory dialog .app-checkbox input { margin: 0; }
+.account-directory dialog .app-actions { gap: 8px; }
+.account-directory dialog .app-actions button { padding-inline: 10px; }
+.account-state { background: #eef3e6; color: #3b5833; padding: 3px 9px; border-radius: 18px; font-size: 11px; }
+.account-state.suspended { background: #f9eae4; color: #773f35; }

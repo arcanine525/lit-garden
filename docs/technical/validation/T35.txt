@@ -1,0 +1,61 @@
+T35 | Responsive and visual validation against the approved T05 images
+
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak OIDC and the local HTTP Drive service were healthy.
+The schema was current and the application OIDC client was configured.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ node --env-file=.env.local scripts/t35-visual.mjs ../../validation/T35/final
+$ python3 scripts/t35-compare.py ../../validation/T35/final
+Captured 29 application states at 1440×900, 768×1024 and 390×844.
+Chrome 157.0.8103.79 on macOS, DPR 1, vi-VN, Asia/Ho_Chi_Minh, reduced
+motion and a fixed browser clock. The harness provisions real local
+Keycloak identities and migrates a dedicated PostgreSQL fixture database.
+
+Approved manifest SHA-256
+9bbd164f0c97c0a016fd7cf53801a3c02fa9e9b7fd816ccd578d47e3763838fd
+
+The harness verified the SHA-256 of all 87 approved images. All 87 raw
+full-page pairs matched dimensions and passed 90.1%. The lowest pair
+scored 91.01%. The comparator uses tolerance 10 and 10 bands and includes
+all text pixels. Of the separate viewport diagnostics, student-home at
+390 px scored 89.91% and teacher-home at 390 px scored 88.64%. Their
+full-page scores were 94.74% and 91.01%.
+
+The fixture uses the approved substitutions nguyen.an → nguyen_an,
+tran.mai → tran_mai, an → an_ and VV10A1 → A11A20262027. The account
+and class APIs confirmed the teacher states, An's active membership and
+Bình's pending request for 10A1. The review fixture confirms 2/5 scores
+block a return, 5/5 permit a new return, and the student still sees
+the committed 1.75/2.00 until publication.
+
+9 interaction checks passed. They cover the mandatory password gate,
+Markdown formatting and round-trip, the keyboard switch between
+reference editors, focus when opening and cancelling an annotation,
+reopen confirmation and focus return, both Garden filters with keyboard
+input, unread state and focus, both sides of each breakpoint, and the last
+Garden action at 390 px. Capture checks also verify fonts, image decode,
+DPR, reduced motion and document width at each viewport.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+31 passed (3.6m). T20 passed in 19.2 seconds on this local build.
+
+Evidence in the workspace outside Git
+../../validation/T35/final/REPORT.md
+../../validation/T35/final/scores.json
+../../validation/T35/final/verification.log
+../../validation/T35/final/full
+../../validation/T35/final/viewport
+../../validation/T35/final/diff-full
+../../validation/T35/final/diff-viewport
+
+OAuth, Picker and Drive use the local HTTP fake. Live Google verification
+is pending T13 and T34.

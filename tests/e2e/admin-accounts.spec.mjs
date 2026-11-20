@@ -51,7 +51,7 @@ test('T09 provisions accounts, revokes a reset session, and reconciles a Keycloa
       [teacherA.identity.id]);
 
     await operator.page.goto('/admin/accounts');
-    await expect(operator.page.getByRole('heading', { name: 'Quản lý tài khoản' })).toBeVisible();
+    await expect(operator.page.getByRole('heading', { name: 'Giáo viên', exact:true })).toBeVisible();
     const directory = await (await operator.page.request.get('/api/admin/accounts')).json();
     const entry = directory.accounts.find(account => account.id === teacherA.identity.id);
     expect(entry.drive_state).toBe('reconnect_required');
@@ -76,9 +76,35 @@ test('T09 provisions accounts, revokes a reset session, and reconciles a Keycloa
 
     const reset = { kind: 'reset_student', userId: student.identity.id, key: randomUUID() };
     expect((await call(operator.page, reset)).status()).toBe(422);
-    const resetResponse = await call(operator.page, { ...reset, identityVerified: true });
+    await operator.page.getByRole('link', { name:'Học sinh', exact:true }).click();
+    const search = operator.page.getByRole('searchbox', { name:'Tên hoặc tên đăng nhập' });
+    await search.fill(student.username);
+    await search.press('Enter');
+    await expect(operator.page.getByRole('heading',{ name:'Tài khoản đã tìm thấy' })).toBeVisible();
+    const studentRow = operator.page.getByRole('listitem').filter({ hasText:student.username });
+    const resetButton = studentRow.getByRole('button',{ name:'Đặt lại mật khẩu' });
+    const resetDialog = operator.page.getByRole('dialog',{ name:/Đặt lại mật khẩu của/ });
+    await resetButton.focus();
+    await resetButton.press('Enter');
+    await expect(resetDialog.getByRole('button',{ name:'Quay lại',exact:true })).toBeFocused();
+    const confirmReset = resetDialog.getByRole('button',{ name:'Xác nhận đặt lại',exact:true });
+    await expect(confirmReset).toBeDisabled();
+    await resetDialog.getByRole('checkbox').check();
+    await operator.page.keyboard.press('Escape');
+    await expect(resetDialog).not.toBeVisible();
+    await expect(resetButton).toBeFocused();
+    expect((await student.page.request.get('/api/me')).status()).toBe(200);
+    await resetButton.press('Enter');
+    await expect(confirmReset).toBeDisabled();
+    await resetDialog.getByRole('checkbox').check();
+    const resetSent = operator.page.waitForResponse(response => response.url() === origin + '/api/admin/accounts' &&
+      response.request().method() === 'POST' && response.request().postDataJSON()?.kind === 'reset_student',{ timeout:14_000 });
+    await confirmReset.press('Enter');
+    const resetResponse = await resetSent;
     expect(resetResponse.status()).toBe(200);
     const resetResult = await resetResponse.json();
+    await expect(resetDialog).not.toBeVisible();
+    await expect(resetButton).toBeFocused();
     expect((await student.page.request.get('/api/me')).status()).toBe(401);
     const studentProfile = await admin(`/users/${student.identity.subject}`);
     expect(studentProfile.requiredActions).toContain('UPDATE_PASSWORD');
@@ -107,7 +133,7 @@ test('T09 provisions accounts, revokes a reset session, and reconciles a Keycloa
     await compose('unpause', 'keycloak');
     paused = false;
     expect((await admin(`/users/${teacherA.identity.subject}`)).enabled).toBe(true);
-    await operator.page.reload();
+    await operator.page.getByRole('link', { name:'Quản lý tài khoản' }).click();
     const retry = operator.page.getByRole('button', { name: 'Thử đồng bộ Keycloak' });
     await expect(retry).toHaveCount(1);
     await retry.click();

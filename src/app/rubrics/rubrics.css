@@ -1,0 +1,12 @@
+.rubric-choices { gap: 8px; margin-bottom: 16px; }
+.rubric-choices button { padding-inline: 13px; text-align: start; }
+.rubric-scale {
+  display: inline-block; background: #eaf0f8; color: #355482;
+  padding: 3px 9px; border-radius: 18px; font-size: 11px;
+}
+.rubric-revision { color: var(--ink-muted); margin-inline-start: 10px; font-size: 12px; }
+.rubric-controls { gap: 8px; margin-top: 12px; }
+.rubric-definition summary { font-weight: 600; }
+.rubric-definition dl > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
+.rubric-definition dt { font-weight: 600; }
+.rubric-definition dd { margin: 0; }

@@ -13,18 +13,18 @@
   --nav-hover: #e8efdf;
   --serif: 'Lora', Georgia, serif;
   --sans: 'Be Vietnam Pro', Arial, sans-serif;
-  --content-x: 38px;
+  --content-x: 36px;
   background: var(--cream);
   color: var(--ink);
 }
 
 * { box-sizing: border-box; }
 body { margin: 0; font: 14px/1.65 var(--sans); }
-h1, h2, h3 { font-family: var(--serif); line-height: 1.3; text-wrap: balance; }
+h1, h2, h3 { font-family: var(--serif); line-height: 1.25; text-wrap: balance; }
 h1 { margin: 0 0 23px; font-size: 37px; letter-spacing: -.025em; }
 h2 { margin: 0 0 12px; font-size: 24px; }
 h3 { margin: 0 0 8px; font-size: 18px; }
-p { margin-block: 0 12px; }
+p { margin-block: 0 14px; }
 a { color: var(--green); text-underline-offset: .22em; }
 p, li, dd { overflow-wrap: anywhere; }
 button, input, select, textarea, summary { font: inherit; }
@@ -47,17 +47,21 @@ label input, label select, label textarea { margin: 6px 0 10px; }
 fieldset { border: 1px solid var(--line); border-radius: 10px; margin: 12px 0; padding: 12px; min-width: 0; }
 summary { cursor: pointer; }
 :focus-visible { outline: 2px solid #28553e; outline-offset: 4px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 ::selection { color: var(--ink); background: var(--nav-active); }
 
 .app-shell { display: grid; grid-template-columns: 235px minmax(0, 1fr); min-height: 100vh; }
 .app-sidebar {
-  position: sticky; top: 0; height: 100dvh; padding: 27px 18px 22px;
-  background: var(--surface-sidebar); border-right: 1px solid var(--line); overflow-y: auto;
+  min-width: 0; background: var(--surface-sidebar); border-right: 1px solid var(--line);
 }
-.app-brand { color: var(--ink); font: 700 27px/1.3 var(--serif); text-decoration: none; }
+.app-sidebar-content {
+  position: sticky; top: 0; height: 100dvh; padding: 30px 18px;
+  overflow-y: auto;
+}
+.app-brand { color: var(--ink); font: 600 27px/1.25 var(--serif); text-decoration: none; }
 .app-brand:hover { text-decoration: underline; }
 .app-identity { color: var(--ink-muted); font-size: 12px; margin: 10px 0 24px; }
-.app-sidebar nav { display: grid; gap: 4px; }
+.app-sidebar nav { display: grid; gap: 5px; }
 .app-sidebar nav a, .app-bottom-nav a {
   display: flex; align-items: center; color: var(--ink); font-size: 14px; text-decoration: none;
   border-radius: 10px; min-height: 44px; padding: 8px 12px;
@@ -68,7 +72,7 @@ summary { cursor: pointer; }
 .app-sidebar nav a:hover, .app-bottom-nav a:hover { background: var(--nav-hover); }
 .app-topbar {
   min-height: 76px; padding-inline: var(--content-x); display: flex; justify-content: space-between;
-  align-items: center; gap: 16px; background: #fffdf6cc; border-bottom: 1px solid var(--line);
+  align-items: center; gap: 12px; background: #fffdf6; border-bottom: 1px solid var(--line);
 }
 .app-breadcrumb, .app-account { color: var(--ink-muted); font-size: 12px; }
 .app-breadcrumb { margin: 0; }
@@ -77,8 +81,8 @@ summary { cursor: pointer; }
 .app-account button { white-space: nowrap; }
 .app-notifications { white-space: nowrap; }
 .app-notifications[aria-current="page"] { background: var(--nav-active); }
-.app-mobile-brand, .app-bottom-nav { display: none; }
-.app-main { margin-inline: auto; padding: 28px var(--content-x) 45px; max-width: 1370px; min-width: 0; }
+.app-mobile-brand, .app-mobile-account, .app-bottom-nav { display: none; }
+.app-main { margin-inline: auto; padding: 28px var(--content-x) 55px; max-width: 1300px; min-width: 0; }
 .app-standalone { max-width: 44rem; margin-inline: auto; padding: 4rem 24px; }
 .skip-link {
   position: fixed; top: 10px; left: 16px; transform: translateY(-200%); z-index: 30;
@@ -87,50 +91,72 @@ summary { cursor: pointer; }
 .skip-link:focus { transform: translateY(0); }
 
 .app-hero {
-  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); min-height: 280px;
+  display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center;
   border: 1px solid var(--line); border-radius: 16px; overflow: hidden; background: #eef3df;
 }
-.app-hero-content { align-self: center; padding: 26px; }
-.app-hero-image { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: center 57%; }
-.app-panel { padding: 23px; margin-bottom: 23px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
+.app-hero-content { padding: 25px; }
+.app-hero-image { width: 100%; height: 230px; object-fit: cover; display: block; }
+.app-panel { padding: 23px; margin-bottom: 20px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); }
 .app-panel ul { padding-inline-start: 22px; }
 .app-panel li + li { margin-top: 7px; }
 .app-panel details { padding-block: 12px; border-bottom: 1px solid var(--line); }
 .app-panel details dl { margin-bottom: 0; }
 .app-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.app-checkbox { display: flex; align-items: flex-start; gap: 8px; margin-block: 12px; }
+.app-checkbox input { margin: 4px 0 0; }
 .app-main > div > nav.app-actions { margin-bottom: 18px; }
 .app-roster-form h2:not(:first-child) { margin-top: 24px; }
 .app-error { color: #773f35; }
 dialog {
-  width: min(580px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 28px;
-  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 20px;
+  width: min(540px, calc(100vw - 32px)); max-height: calc(100dvh - 32px); padding: 24px;
+  color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 17px;
 }
-dialog::backdrop { background: #23372c66; backdrop-filter: blur(3px); }
+dialog::backdrop { background: rgb(35 55 44 / .42); }
 
 @media (max-width: 1150px) {
-  :root { --content-x: 25px; }
+  :root { --content-x: 23px; }
   .app-shell { grid-template-columns: 205px minmax(0, 1fr); }
-  .app-sidebar { padding-block: 25px 22px; }
-  .app-main { padding-top: 25px; }
+  .app-sidebar-content { padding-block: 25px 22px; }
 }
 
 @media (max-width: 760px) {
   :root { --content-x: 16px; }
   h1 { font-size: 29px; }
+  h2 { font-size: 21px; }
   .app-shell { display: block; }
   .app-sidebar, .app-breadcrumb { display: none; }
-  .app-mobile-brand { display: inline-block; font-size: 23px; flex: 0 0 auto; }
+  .app-mobile-brand { display: inline-block; font-size: 21px; flex: 0 0 auto; }
   .app-topbar { min-height: 66px; gap: 10px; }
   .app-account button { padding-inline: 9px; }
-  .app-notifications { padding-inline: 9px; }
-  .app-main { padding-top: 18px; padding-bottom: calc(85px + env(safe-area-inset-bottom)); }
-  .app-bottom-nav {
-    position: fixed; display: flex; justify-content: safe center; z-index: 10; inset: auto 0 0;
-    border-top: 1px solid var(--line); background: #fffdf6f5;
-    padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); gap: 4px; overflow-x: auto;
+  .app-notifications { padding-inline: 13px; }
+  .app-account-name, .app-logout { display: none; }
+  .app-mobile-account { display: block; position: relative; }
+  .app-mobile-account summary {
+    list-style: none; min-height: 40px; align-content: center; max-width: 125px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
-  .app-bottom-nav a { font-size: 11px; text-align: center; justify-content: center; padding-inline: 9px; }
-  .app-panel { padding: 19px; }
+  .app-mobile-account summary::-webkit-details-marker { display: none; }
+  .app-mobile-account > div {
+    position: absolute; z-index: 12; top: calc(100% + 8px); right: 0;
+    width: min(220px, calc(100vw - 32px)); padding: 12px; border: 1px solid var(--line);
+    border-radius: 10px; background: var(--surface);
+  }
+  .app-mobile-account :is(a, form) { display: block; margin-top: 10px; }
+  .app-main { padding-top: 20px; padding-bottom: calc(118px + env(safe-area-inset-bottom)); }
+  .app-bottom-nav {
+    position: fixed; display: flex; flex-wrap: wrap; justify-content: center; z-index: 10; inset: auto 0 0;
+    border-top: 1px solid var(--line); background: #fffdf6;
+    padding: 2px 10px calc(2px + env(safe-area-inset-bottom)); gap: 0 4px;
+  }
+  .app-bottom-nav a {
+    position: relative; isolation: isolate; font-size: 11px; text-align: center;
+    justify-content: center; min-height: 44px; padding-inline: 7px; white-space: nowrap;
+  }
+  .app-bottom-nav a:hover, .app-bottom-nav a[aria-current="page"] { background: none; }
+  .app-bottom-nav a:is(:hover,[aria-current="page"])::before {
+    content: ''; position: absolute; inset: 4px 0; z-index: -1; border-radius: 8px; background: var(--nav-active);
+  }
+  .app-panel { padding: 17px; }
   .app-hero { grid-template-columns: minmax(0, 1fr); min-height: 0; }
   .app-hero-image { height: 150px; }
 }

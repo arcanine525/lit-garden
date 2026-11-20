@@ -92,8 +92,9 @@ export function FocusClock({ student, assignment, clockRef }: { student: string;
   const stage = Math.min(3,Math.floor(3*ms/(clock.goal*60_000)));
 
   return <div className="focus-clock">
-    <button type="button" className="focus-clock-toggle" aria-expanded={clock.open} aria-controls={panelId} disabled={!ready} onClick={toggle}>
-      <span aria-hidden="true">◷</span> {clock.open ? 'Ẩn đồng hồ làm bài' : 'Bật đồng hồ làm bài'}
+    <button type="button" className="focus-clock-toggle" aria-expanded={clock.open} aria-controls={panelId}
+      aria-label={clock.open ? 'Ẩn đồng hồ làm bài' : 'Bật đồng hồ làm bài'} disabled={!ready} onClick={toggle}>
+      <span aria-hidden="true">◷</span> {clock.open ? 'Ẩn' : 'Bật đồng hồ làm bài'}
     </button>
     <section id={panelId} className="focus-clock-panel" aria-labelledby={titleId} hidden={!clock.open}>
       {plant(stage)}

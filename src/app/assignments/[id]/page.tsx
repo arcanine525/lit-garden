@@ -35,9 +35,9 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
   }
   if (detail.state === 'draft') {
     const rubrics = (await listRubrics(false)).map(({ id,revision,label }) => ({ id,revision,label }));
-    return <AppShell user={user} current="/assignments" title="Gieo một ý tưởng mới">
-      <p>{detail.className}</p>
-      <AssignmentEditor id={id} initial={{ draft:detail.draft, hash:detail.hash, draftVersion:detail.draftVersion }} rubrics={rubrics}/>
+    return <AppShell user={user} current="/assignments" title="Giao bài mới">
+      <AssignmentEditor id={id} className={detail.className}
+        initial={{ draft:detail.draft, hash:detail.hash, draftVersion:detail.draftVersion }} rubrics={rubrics}/>
     </AppShell>;
   }
   const timings = await submissionTimings(user.id,id);
@@ -45,12 +45,8 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
   if (user.role === 'student') {
     ownDraft = await draftVisible({ student:user.id,sessionDigest:session.sessionDigest },id).then(() => true,() => false);
   }
-  return <AppShell user={user} current="/assignments" title={detail.prompt.title}>
-    <p>{detail.className} · {detail.teacherName} · {detail.accepting ? 'Đang mở' : 'Đã đóng'}</p>
-    <p>{detail.dueAt ? `Hạn nộp ${deadlineFormat.format(new Date(detail.dueAt))}` : 'Không giới hạn hạn nộp'}</p>
-    {ownDraft && <p><a className="app-button app-primary" href={`/assignments/${id}/write`}>{detail.accepting ? 'Mở nháp bài viết' : 'Xem nháp bài viết'}</a></p>}
-    {user.role === 'teacher' && detail.classState === 'active' && <AssignmentLifecycle id={id} version={detail.version}
-      accepting={detail.accepting} dueAt={detail.dueAt} hasReference={Boolean(detail.reference)} referenceIsPublic={Boolean(detail.referencePublicAt)}/>}
+  const manages = user.role === 'teacher' && detail.classState === 'active';
+  const content = <>
     <section className="app-panel">
       <h2>Đề bài</h2>
       <MarkdownDocument source={detail.prompt.prompt}/>
@@ -78,5 +74,18 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
         {' · '}<a href={`/api/content/submissions/${item.id}?download=1`}>Tải bài nộp (.md)</a>
       </li>)}</ul>
     </section>}
+  </>;
+  return <AppShell user={user} current="/assignments" title={detail.prompt.title}>
+    {!manages && <>
+      <p>{detail.className} · {detail.teacherName} · {detail.accepting ? 'Đang mở' : 'Đã đóng'}</p>
+      <p>{detail.dueAt ? `Hạn nộp ${deadlineFormat.format(new Date(detail.dueAt))}` : 'Không giới hạn hạn nộp'}</p>
+    </>}
+    {ownDraft && <p><a className="app-button app-primary" href={`/assignments/${id}/write`}>{detail.accepting ? 'Mở nháp bài viết' : 'Xem nháp bài viết'}</a></p>}
+    {manages && <AssignmentLifecycle id={id} version={detail.version} className={detail.className}
+      accepting={detail.accepting} dueAt={detail.dueAt} hasReference={Boolean(detail.reference)} referenceIsPublic={Boolean(detail.referencePublicAt)}/>}
+    {manages && !detail.accepting ? <details className="assignment-detail">
+      <summary>Đề bài, rubric và lịch sử bản nộp</summary>
+      {content}
+    </details> : content}
   </AppShell>;
 }

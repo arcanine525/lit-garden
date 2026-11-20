@@ -64,7 +64,7 @@ test('T15 responsive role shell, local fonts, keyboard dialogs, and loading retr
 
   try {
     const teacher = await login('teacher',{ width: 1440,height: 900 });
-    await expect(teacher.getByRole('heading', { name: 'Góc vườn của giáo viên' })).toBeVisible();
+    await expect(teacher.getByRole('heading', { name: 'Góc vườn của Cô An' })).toBeVisible();
     await expect(teacher.getByText('Cô An · Giáo viên')).toBeVisible();
     await expect(nav(teacher).getByRole('link',{ name: 'Kết nối Google Drive' })).toBeVisible();
     await expect(nav(teacher).getByRole('link',{ name: 'Quản lý tài khoản' })).toHaveCount(0);
@@ -112,6 +112,7 @@ test('T15 responsive role shell, local fonts, keyboard dialogs, and loading retr
     await expect(teacher.getByRole('main').getByRole('alert')).toHaveText('Chưa tải được lớp học.');
     await saveShot(teacher,'classes-error-390');
     await teacher.getByRole('button',{ name: 'Thử lại',exact: true }).click();
+    await teacher.getByRole('region',{ name:'Lớp 10A',exact:true }).getByRole('button',{ name:'Mở lớp' }).click();
     const trigger = teacher.getByRole('button',{ name: 'Lưu trữ lớp',exact: true });
     await expect(trigger).toBeVisible();
     await trigger.focus();
@@ -135,7 +136,7 @@ test('T15 responsive role shell, local fonts, keyboard dialogs, and loading retr
     await expect(dialog).toBeHidden();
     await expect(teacher.getByRole('status')).toHaveText('Đã lưu trữ lớp.');
     await teacher.evaluate(() => window.scrollTo(0,document.documentElement.scrollHeight));
-    const lastPanel = teacher.getByText('Tạo lớp để cấp tài khoản và gửi mã tham gia.');
+    const lastPanel = teacher.getByRole('button',{ name:'Khôi phục lớp' });
     const [content, dock] = await Promise.all([lastPanel.boundingBox(),nav(teacher).boundingBox()]);
     expect(content.y + content.height).toBeLessThan(dock.y);
 

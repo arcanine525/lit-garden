@@ -4,8 +4,15 @@
   padding-block: 15px; align-items: center;
 }
 .app-panel .notification-list li + li { margin-top: 0; border-top: 1px solid var(--line); }
-.notification-list h3 { margin-bottom: 5px; }
+.notification-list h3 { font: 600 14px/1.65 var(--sans); margin-bottom: 4px; }
 .notification-list p { color: var(--ink-muted); margin-bottom: 0; font-size: 12px; }
 .notification-list .app-actions { color: var(--ink-muted); font-size: 12px; }
 .notification-state { background: var(--nav-active); color: var(--ink); border-radius: 12px; padding: 4px 10px; }
 .notification-state.read { background: #e9eef1; }
+.notification-mark {
+  position: relative; isolation: isolate; border: 0; background: none;
+  padding-inline: 9px; font-size: 11px; font-weight: 400;
+}
+.notification-mark::before {
+  content: ''; position: absolute; inset: 8px 0; z-index: -1; border-radius: 12px; background: var(--nav-active);
+}

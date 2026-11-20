@@ -104,12 +104,14 @@ export function ReplyThread({ submission, comment, publication, viewer }: { subm
     finally { working.current = false; setBusy(false); }
   }
 
-  return <details onToggle={event => { if (event.currentTarget.open) void load(true); }}>
+  return <details className="reply-thread" onToggle={event => { if (event.currentTarget.open) void load(true); }}>
     <summary>Hội thoại</summary>
     {loading && <p role="status">Đang tải hội thoại…</p>}
     {thread && <>
       {thread.messages.length > 0 && <ul className="reply-list">{thread.messages.map(message => <li key={message.id}>
-        <p><strong>{message.author}</strong> · <time dateTime={message.sentAt}>{deadlineFormat.format(new Date(message.sentAt))}</time></p>
+        <p className="reply-author"><strong>{message.author}</strong> ·{' '}
+          <time className="visually-hidden" dateTime={message.sentAt}>{deadlineFormat.format(new Date(message.sentAt))}</time>
+        </p>
         {message.body === null ? <p>Chưa đọc được tin nhắn trên Drive.</p> : <MarkdownDocument source={message.body}/>}
       </li>)}</ul>}
       {!thread.writable && <p>Hội thoại chỉ đọc.</p>}

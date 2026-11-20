@@ -3,6 +3,7 @@ import { sessionUser } from '../../../server/auth/session';
 import { uuidPattern } from '../../../server/auth/identity-operations';
 import { DriveError } from '../../../server/drive/provider';
 import { readReviewDraft } from '../../../server/reviews/drafts';
+import { publicationHistory } from '../../../server/reviews/publications';
 import { reviewSource } from '../../../server/reviews/source';
 import { reviewMessages } from '../../../shared/review';
 import { AppShell } from '../../app-shell';
@@ -19,9 +20,10 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   const id = raw.toLowerCase();
   let source;
   let draft;
+  let history;
   try {
     source = await reviewSource(user.id,id);
-    draft = await readReviewDraft(user.id,source);
+    [draft,history] = await Promise.all([readReviewDraft(user.id,source),publicationHistory(user.id,id)]);
   } catch (error) {
     if (error instanceof DriveError && error.code === 'NOT_FOUND') notFound();
     const message = error instanceof DriveError ? reviewMessages[error.code] : undefined;
@@ -34,11 +36,11 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
   }
   if ((await sessionUser())?.id !== user.id) redirect('/');
   const { submission } = source;
-  return <AppShell user={user} current="/reviews" title={source.title}>
-    <p>{submission.student_name} · {submission.class_name} · Lần nộp {submission.submission_no}</p>
-    <p><a href={`/assignments/${submission.assignment_id}`}>Xem đề bài</a></p>
+  return <AppShell user={user} current="/reviews" title="Chấm bài">
     <ReviewWorkbench key={id} id={id} teacher={user.id} markdown={source.markdown} text={source.text}
+      title={source.title} submissionLabel={`${submission.student_name} · Lớp ${submission.class_name} · Lần nộp ${submission.submission_no}`}
+      assignment={submission.assignment_id}
       explanation={source.explanation} projectionSha256={source.projectionSha256} submissionSha256={source.submissionSha256}
-      rubric={source.rubric} initial={draft}/>
+      rubric={source.rubric} initial={draft} history={history}/>
   </AppShell>;
 }

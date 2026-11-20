@@ -1,15 +1,53 @@
 import {
-  $isTableNode, addExportVisitor$, exportLexicalTreeToMdast, exportVisitors$, insertImage$, jsxComponentDescriptors$,
-  jsxIsAvailable$, realmPlugin, rootEditor$, type LexicalVisitor, type TableNode
+  $isTableNode, activeEditor$, addExportVisitor$, applyFormat$, applyListType$, convertSelectionToNode$, currentFormat$,
+  editorInTable$, exportLexicalTreeToMdast, exportVisitors$, insertImage$, insertTable$, jsxComponentDescriptors$,
+  jsxIsAvailable$, openLinkEditDialog$, realmPlugin, rootEditor$, type LexicalVisitor, type TableNode
 } from '@mdxeditor/editor';
-import { $getNearestNodeFromDOMNode, $getRoot, $isLineBreakNode, getNearestEditorFromDOMNode } from 'lexical';
+import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from '@lexical/rich-text';
+import { $createParagraphNode, $getNearestNodeFromDOMNode, $getRoot, $isLineBreakNode, getNearestEditorFromDOMNode,
+  IS_BOLD, IS_ITALIC, REDO_COMMAND, UNDO_COMMAND } from 'lexical';
 import { gfmToMarkdown } from 'mdast-util-gfm';
 import { toMarkdown } from 'mdast-util-to-markdown';
 
 type Snapshot = () => string | undefined;
+export type WorksheetFormat = { bold: boolean; italic: boolean; inTable: boolean };
+export type WorksheetActions = {
+  format: (style: 'bold' | 'italic') => void;
+  block: (kind: HeadingTagType | 'paragraph' | 'quote') => void;
+  list: (kind: 'bullet' | 'number' | '') => void;
+  table: () => void;
+  link: () => void;
+  undo: () => void;
+  redo: () => void;
+};
 
-export const editorPlugins = realmPlugin<{ install(snapshot: Snapshot, attach: (reference: string) => void): void }>({
+export const editorPlugins = realmPlugin<{
+  install(snapshot: Snapshot, attach: (reference: string) => void): void;
+  worksheet?: { install: (actions: WorksheetActions) => void; onFormat: (format: WorksheetFormat) => void };
+}>({
   init(realm, options) {
+    if (options?.worksheet) {
+      const { install,onFormat } = options.worksheet;
+      const readFormat = () => {
+        const flags = realm.getValue(currentFormat$);
+        onFormat({ bold:Boolean(flags & IS_BOLD),italic:Boolean(flags & IS_ITALIC),inTable:realm.getValue(editorInTable$) });
+      };
+      realm.sub(currentFormat$,readFormat);
+      realm.sub(editorInTable$,readFormat);
+      install({
+        format:style => realm.pub(applyFormat$,style),
+        block:kind => realm.pub(convertSelectionToNode$,() => {
+          if (kind === 'quote') return $createQuoteNode();
+          if (kind === 'paragraph') return $createParagraphNode();
+          return $createHeadingNode(kind);
+        }),
+        list:kind => realm.pub(applyListType$,kind),
+        table:() => realm.pub(insertTable$,{ rows:3,columns:3 }),
+        link:() => realm.pub(openLinkEditDialog$,undefined),
+        undo:() => realm.getValue(activeEditor$)?.dispatchCommand(UNDO_COMMAND,undefined),
+        redo:() => realm.getValue(activeEditor$)?.dispatchCommand(REDO_COMMAND,undefined)
+      });
+    }
     // MDXEditor normally emits a soft newline for a Lexical LineBreakNode.
     realm.pub(addExportVisitor$, {
       priority: 10, testLexicalNode: $isLineBreakNode,

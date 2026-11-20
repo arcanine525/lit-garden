@@ -64,30 +64,34 @@ export function RubricCatalog({ initial, editable }: { initial: Rubric[]; editab
   }
 
   return <>
-    {rubrics.length > 0 ? <label>Chọn rubric <select value={selected} disabled={busy} onChange={event => {
-      setSelected(event.target.value);
-      setMessage('');
-    }}>
-      {rubrics.map(item => <option key={revisionKey(item)} value={revisionKey(item)}>
-        {item.label} · {editable ? `v${item.revision}${item.retired ? ' (đã ngừng dùng)' : ''}` : `${point(item.definition.max)} điểm`}
-      </option>)}
-    </select></label> : <p>Chưa có rubric.</p>}
-    {editable && <p><button type="button" disabled={busy || !!draft} onClick={startNew}>Tạo rubric</button></p>}
-    {rubric && <section className="app-panel" aria-labelledby="rubric-name" key={selected}>
+    <div className="app-actions rubric-choices" role="group" aria-label="Bộ rubric">
+      {rubrics.map(item => {
+        const key = revisionKey(item);
+        const revisions = editable && rubrics.some(other => other.id === item.id && other.revision !== item.revision);
+        return <button type="button" key={key} aria-pressed={selected === key} disabled={busy} onClick={() => {
+          setSelected(key);
+          setMessage('');
+        }}>{item.label}{revisions ? ` · v${item.revision}` : ''}{item.retired ? ' · Đã ngừng dùng' : ''}</button>;
+      })}
+    </div>
+    {!rubrics.length && <p>Chưa có rubric.</p>}
+    {rubric && <section className="app-panel rubric-definition" aria-labelledby="rubric-name" key={selected}>
       <h2 id="rubric-name">{rubric.label}</h2>
-      <p>{point(rubric.definition.max)} điểm · Phiên bản {rubric.revision}{rubric.retired ? ' · Đã ngừng dùng' : ''}</p>
+      <span className="rubric-scale">Thang chuẩn {point(rubric.definition.max)} điểm</span>
+      {editable && <span className="rubric-revision">Phiên bản {rubric.revision}{rubric.retired ? ' · Đã ngừng dùng' : ''}</span>}
+      {editable && current && <div className="app-actions rubric-controls">
+        <button type="button" disabled={busy || !!draft} onClick={() => { setMessage(''); setDraft(rubric); }}>Tạo phiên bản mới</button>
+        <button type="button" disabled={busy || !!draft} onClick={() => change('retire', rubric)}>Ngừng dùng</button>
+      </div>}
       {rubric.definition.criteria.map(criterion => <details key={criterion.id}>
-        <summary>{criterion.label} · {point(criterion.max)} điểm</summary>
-        {criterion.group && <p>{criterion.group}</p>}
+        <summary>{criterion.label}</summary>
+        <p>{criterion.group ? `${criterion.group} · ` : ''}Tối đa {point(criterion.max)} điểm</p>
         <dl>{criterion.levels.map(level => <div key={level.id}>
           <dt>{point(level.score)} điểm</dt><dd>{level.description}</dd>
         </div>)}</dl>
       </details>)}
-      {editable && current && <p>
-        <button type="button" disabled={busy || !!draft} onClick={() => { setMessage(''); setDraft(rubric); }}>Tạo phiên bản mới</button>{' '}
-        <button type="button" disabled={busy || !!draft} onClick={() => change('retire', rubric)}>Ngừng dùng</button>
-      </p>}
     </section>}
+    {editable && <p><button type="button" disabled={busy || !!draft} onClick={startNew}>Tạo rubric</button></p>}
     {draft && <form className="app-panel" onSubmit={submit} aria-busy={busy}>
       <fieldset disabled={busy}>
         <legend>{draft.revision ? 'Phiên bản mới' : 'Rubric mới'}</legend>

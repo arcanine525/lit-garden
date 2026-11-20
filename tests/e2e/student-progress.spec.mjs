@@ -81,9 +81,8 @@ test('T29 home and garden filter current memberships and count each latest submi
     }
     const assignment = name => rows(page).getByRole('listitem').filter({ hasText:name });
     async function filter(name,value) {
-      const form = page.getByRole('form',{ name:'Lọc bài viết' });
+      const form = page.getByRole('group',{ name:'Lọc bài viết' });
       await form.getByRole('combobox',{ name,exact:true }).selectOption(value);
-      await form.getByRole('button',{ name:'Áp dụng' }).click();
     }
     await page.goto('/');
     await counts(page,1,1,1,4);
@@ -91,7 +90,7 @@ test('T29 home and garden filter current memberships and count each latest submi
     await expect(assignment('Giọt sương sớm').getByRole('link',{ name:'Xem nhận xét' })).toHaveCount(0);
     await expect(assignment('Màu lá non')).toContainText('10B1 · teacher_b');
     await expect(assignment('Màu lá non').getByRole('link',{ name:'Xem nhận xét' })).toHaveAttribute('href',`/results/${otherVersion.id}`);
-    await expect(assignment('Giọt mưa đầu mùa')).toContainText('Đã đóng — chưa nộp');
+    await expect(assignment('Giọt mưa đầu mùa')).toContainText('Đã đóng · chưa nộp');
     await expect(page.getByRole('link',{ name:'Hạt mầm và trang viết' })).toBeVisible();
     await filter('Lớp',roomB.classId);
     await counts(page,0,0,1,2);
@@ -140,6 +139,6 @@ test('T29 home and garden filter current memberships and count each latest submi
     await page.goto('/assignments');
     await expect(assignment('Giọt sương sớm')).toContainText('Chờ chấm');
     await page.goto(`/results/${v1.id}`);
-    await expect(page.getByRole('heading',{ name:'Kết quả đã trả' })).toBeVisible();
+    await expect(page.getByRole('heading',{ name:'Kết quả hiện hành' })).toBeVisible();
   });
 });

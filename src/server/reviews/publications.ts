@@ -141,12 +141,16 @@ async function publicationForReader(actor: string, id: string, selected: string)
       AND garden.readable_review_object($3,s.id,p.id)=o.id`,[id,selected,actor])).rows[0];
 }
 
+export async function publicationHistory(teacher: string, id: string) {
+  const { rows } = await database().query<{ id: string; revision: number; published_at: Date }>(`
+    SELECT id,revision,published_at FROM garden.review_publications WHERE submission_id=$1 AND teacher_id=$2
+      AND garden.can_read_submission($2,submission_id) ORDER BY revision DESC`,[id,teacher]);
+  return rows.map(row => ({ id:row.id,revision:row.revision,publishedAt:row.published_at.toISOString() }));
+}
+
 export async function readPublication(actor: string, id: string, requested: string | null = null) {
   const submission = await submissionForReader(database(),actor,id);
-  const teacher = submission.teacher_id === actor;
-  const history = teacher ? (await database().query<{ id: string; revision: number; published_at: Date }>(`
-    SELECT id,revision,published_at FROM garden.review_publications WHERE submission_id=$1 AND teacher_id=$2 ORDER BY revision DESC`,[id,actor])).rows
-      .map(row => ({ id:row.id,revision:row.revision,publishedAt:row.published_at.toISOString() })) : undefined;
+  const history = submission.teacher_id === actor ? await publicationHistory(actor,id) : undefined;
   const verified = await verifiedPublication(actor,submission,requested);
   return { publication:verified?.publication ?? null,...(history ? { history } : {}) };
 }

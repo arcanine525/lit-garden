@@ -20,10 +20,11 @@ export function NotificationRead({ id, read }: { id: string; read: boolean }) {
     finally { setBusy(false); }
   }
   return <>
-    <span ref={status} tabIndex={-1} className={`notification-state${complete ? ' read' : ''}`} role="status">
+    <span ref={status} tabIndex={-1} className={complete ? 'notification-state read' : 'visually-hidden'} role="status">
       {complete ? 'Đã đọc' : 'Chưa đọc'}
     </span>
-    {!complete && <button type="button" disabled={busy} onClick={markRead}>{busy ? 'Đang lưu…' : 'Đánh dấu đã đọc'}</button>}
+    {!complete && <button type="button" className="notification-mark" aria-label="Chưa đọc · Đánh dấu đã đọc"
+      disabled={busy} onClick={markRead}>{busy ? 'Đang lưu…' : 'Chưa đọc'}</button>}
     {failed && <p role="alert">Chưa đánh dấu được. Hãy thử lại.</p>}
   </>;
 }

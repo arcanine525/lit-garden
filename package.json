@@ -20,6 +20,7 @@
     "stack:down": "sh scripts/dev-stack.sh down"
   },
   "dependencies": {
+    "@lexical/rich-text": "0.48.0",
     "@mdxeditor/editor": "4.5.0",
     "csv-parse": "7.0.3",
     "google-auth-library": "11.3.4",

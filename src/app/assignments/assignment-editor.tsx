@@ -7,6 +7,7 @@ import { EditorWorkbench } from '../editor/editor-workbench';
 import type { EditorHandle } from '../editor/markdown-editor';
 import type { RubricChoice } from './create-assignment';
 import { deadlineField, deadlineValue } from './deadline-input';
+import '../editor/editor.css';
 
 type Saved = { draft: AssignmentDraft; draftVersion: string; hash: string | null };
 type Attempt = {
@@ -26,7 +27,7 @@ const messages: Record<string,string> = {
   ASSET_SCOPE: 'Có ảnh nằm ngoài phạm vi bài này.'
 };
 
-export function AssignmentEditor({ id, initial, rubrics }: { id: string; initial: Saved; rubrics: RubricChoice[] }) {
+export function AssignmentEditor({ id, className, initial, rubrics }: { id: string; className: string; initial: Saved; rubrics: RubricChoice[] }) {
   const router = useRouter();
   const [draft,setDraft] = useState(initial.draft);
   const [epoch,setEpoch] = useState('');
@@ -35,6 +36,7 @@ export function AssignmentEditor({ id, initial, rubrics }: { id: string; initial
   const [status,setStatus] = useState('Đang kiểm tra quyền sửa…');
   const [busy,setBusy] = useState(false);
   const [publishing,setPublishing] = useState(false);
+  const [referenceOpen,setReferenceOpen] = useState(false);
   const [retry,setRetry] = useState<Attempt['action'] | null>(null);
   const [paused,setPaused] = useState(false);
   const lastInput = useRef(0);
@@ -180,46 +182,76 @@ export function AssignmentEditor({ id, initial, rubrics }: { id: string; initial
   const readOnly = !epoch;
   const value = `${draft.rubricId}:${draft.rubricRevision}`;
   const old = !rubrics.some(item => `${item.id}:${item.revision}` === value);
-  return <section className="app-panel" aria-busy={busy || lockPending} onInputCapture={() => {
+  const editorProps = (field: 'prompt' | 'material' | 'reference') => ({
+    readOnly:readOnly || publishing,
+    initialMarkdown:initial.draft[field],
+    onMarkdownChange(source: string) {
+      setDraft(current => current[field] === source ? current : { ...current,[field]:source });
+      setPaused(false);
+    }
+  });
+  return <div className="assignment-author" aria-busy={busy || lockPending} onInputCapture={() => {
     lastInput.current = performance.now(); setPaused(false);
   }}>
     {!lockPending && readOnly && <p><button onClick={() => claim(held ? 'takeover' : 'acquire')}>
       {held ? 'Tiếp tục sửa tại đây' : 'Thử mở quyền sửa'}
     </button></p>}
-    <fieldset disabled={readOnly || busy} className="assignment-inputs">
-      <legend>Thông tin bài</legend>
-      <label>Tên bài <input value={draft.title} maxLength={160} onChange={event => setDraft({ ...draft,title:event.target.value })}/></label>
-      <label>Rubric <select value={value} onChange={event => {
-        const [rubricId,revision] = event.target.value.split(':');
-        setDraft({ ...draft,rubricId,rubricRevision:Number(revision) });
-        setPaused(false);
-      }}>
-        {old && <option value={value}>Rubric đã đổi · chọn phiên bản mới</option>}
-        {rubrics.map(item => <option key={item.id} value={`${item.id}:${item.revision}`}>{item.label} · v{item.revision}</option>)}
-      </select></label>
-      <label>Điểm tối đa <input type="number" min="0.25" max="100" step="0.25" required value={draft.scale}
-        onChange={event => setDraft({ ...draft,scale:event.target.value })}/></label>
-      <label>Hạn nộp (giờ Việt Nam) <input type="datetime-local" value={deadlineField(draft.dueAt)}
-        onChange={event => setDraft({ ...draft,dueAt:deadlineValue(event.target.value) })}/></label>
-    </fieldset>
-    {([
-      ['Đề bài','prompt',prompt],['Ngữ liệu','material',material],['Nội dung tham chiếu','reference',reference]
-    ] as const).map(([label,field,ref]) => <fieldset key={field}>
-      <legend>{label}</legend>
-      <EditorWorkbench role="teacher" assignmentId={id} editorRef={ref} readOnly={readOnly || publishing}
-        initialMarkdown={initial.draft[field]} onMarkdownChange={source => {
-          setDraft(current => current[field] === source ? current : { ...current,[field]:source });
+    <section className="app-panel" aria-labelledby="assignment-info">
+      <h2 id="assignment-info">Thông tin bài giao</h2>
+      <fieldset disabled={readOnly || busy} className="assignment-inputs">
+        <legend className="visually-hidden">Thông tin bài giao</legend>
+        <label>Tên bài <input value={draft.title} maxLength={160} onChange={event => setDraft({ ...draft,title:event.target.value })}/></label>
+        <label>Lớp <input value={className} readOnly/></label>
+        <label>Rubric <select value={value} onChange={event => {
+          const [rubricId,revision] = event.target.value.split(':');
+          setDraft({ ...draft,rubricId,rubricRevision:Number(revision) });
           setPaused(false);
-        }}/>
-    </fieldset>)}
-    <p role="status">{status}</p>
-    <div className="app-actions">
-      {retry ? <button onClick={() => run('retry')} disabled={busy || readOnly}>
-        {retry === 'save' ? 'Thử đồng bộ lại' : 'Thử giao lại'}
-      </button> : <>
-        <button disabled={busy || readOnly} onClick={() => run('save')}>Lưu nháp</button>
-        <button disabled={busy || readOnly} className="app-primary" onClick={() => run('publish')}>Giao bài</button>
-      </>}
-    </div>
-  </section>;
+        }}>
+          {old && <option value={value}>Rubric đã đổi · chọn phiên bản mới</option>}
+          {rubrics.map(item => <option key={item.id} value={`${item.id}:${item.revision}`}>{item.label} · v{item.revision}</option>)}
+        </select></label>
+        <label>Thang điểm của bài <input type="number" min="0.25" max="100" step="0.25" required value={draft.scale}
+          onChange={event => setDraft({ ...draft,scale:event.target.value })}/></label>
+        <label className="assignment-deadline">Hạn nộp (không bắt buộc, giờ Việt Nam) <input type="datetime-local" value={deadlineField(draft.dueAt)}
+          onChange={event => setDraft({ ...draft,dueAt:deadlineValue(event.target.value) })}/></label>
+      </fieldset>
+      <div className="assignment-supplement">
+        {referenceOpen ? <span>Tham chiếu (không bắt buộc)</span> : <label htmlFor="assignment-reference">Tham chiếu (không bắt buộc)</label>}
+        <details onToggle={event => {
+          if (!event.currentTarget.open && reference.current) {
+            const markdown = reference.current.getMarkdown();
+            setDraft(current => ({ ...current,reference:markdown }));
+          }
+          setReferenceOpen(event.currentTarget.open);
+        }}>
+          <summary aria-label="Định dạng tham chiếu">Định dạng</summary>
+          {referenceOpen && <EditorWorkbench role="teacher" assignmentId={id} editorRef={reference}
+            {...editorProps('reference')} initialMarkdown={draft.reference}/>}
+        </details>
+        <details>
+          <summary>Ngữ liệu</summary>
+          <fieldset><legend>Ngữ liệu</legend>
+            <EditorWorkbench role="teacher" assignmentId={id} editorRef={material} {...editorProps('material')}/>
+          </fieldset>
+        </details>
+      </div>
+      {!referenceOpen && <textarea className="assignment-reference" id="assignment-reference" value={draft.reference}
+        readOnly={readOnly || busy} onChange={event => setDraft({ ...draft,reference:event.target.value })}/>}
+    </section>
+    <section className="app-panel" aria-labelledby="author-prompt">
+      <h2 id="author-prompt">Đề bài</h2>
+      <fieldset className="assignment-prompt"><legend className="visually-hidden">Đề bài</legend>
+        <EditorWorkbench role="teacher" assignmentId={id} editorRef={prompt} worksheet {...editorProps('prompt')}/>
+      </fieldset>
+      <p className="assignment-sync" role="status">{status}</p>
+      <div className="app-actions">
+        {retry ? <button onClick={() => run('retry')} disabled={busy || readOnly}>
+          {retry === 'save' ? 'Thử đồng bộ lại' : 'Thử giao lại'}
+        </button> : <>
+          <button disabled={busy || readOnly} onClick={() => run('save')}>Lưu nháp</button>
+          <button disabled={busy || readOnly} className="app-primary" onClick={() => run('publish')}>Giao bài</button>
+        </>}
+      </div>
+    </section>
+  </div>;
 }

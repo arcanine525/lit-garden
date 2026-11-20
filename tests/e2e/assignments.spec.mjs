@@ -94,17 +94,18 @@ test('T17 autosaves an assignment, publishes all verified objects and keeps a ru
     await teacher.page.getByRole('combobox',{ name:'Lớp',exact:true }).selectOption(classId);
     await teacher.page.getByRole('combobox',{ name:'Rubric',exact:true }).selectOption(`${rubric}:1`);
     await teacher.page.getByRole('button',{ name:'Tạo bài nháp' }).click();
-    await expect(teacher.page.getByRole('heading',{ name:'Gieo một ý tưởng mới' })).toBeVisible();
+    await expect(teacher.page.getByRole('heading',{ name:'Giao bài mới' })).toBeVisible();
     assignment = new URL(teacher.page.url()).pathname.split('/').at(-1);
     const path = '/api/assignments/' + assignment;
     expect((await student.page.request.get(path)).status()).toBe(404);
-    await expect(teacher.page.getByLabel('Điểm tối đa')).toHaveValue('2.00');
+    await expect(teacher.page.getByLabel('Thang điểm của bài')).toHaveValue('2.00');
     const autosave = teacher.page.waitForResponse(response => response.url() === origin + path &&
       response.request().method() === 'POST' && response.request().postDataJSON()?.action === 'save', { timeout: 12_000 })
       .catch(async () => { throw Error('Autosave not sent. UI status: ' + (await teacher.page.getByRole('status').allTextContents()).filter(Boolean).join(' | ')); });
     await teacher.page.getByLabel('Tên bài').fill(title);
-    await teacher.page.getByLabel('Điểm tối đa').fill('4');
+    await teacher.page.getByLabel('Thang điểm của bài').fill('4');
     await setSource(teacher.page,'Đề bài',prompt);
+    await teacher.page.locator('summary').filter({ hasText:/^Ngữ liệu$/ }).click();
     await setSource(teacher.page,'Ngữ liệu',material);
     const saved = await autosave;
     expect(await saved.json()).toMatchObject({ state:'committed' });

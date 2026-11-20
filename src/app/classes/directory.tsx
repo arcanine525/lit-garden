@@ -1,21 +1,24 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { ActionDialog } from '../action-dialog';
+import { AppShell } from '../app-shell';
+import './classes.css';
 
 type Class = { id: string; name: string; school_year: string; teacher?: string; state: string; class_state?: string };
 type Member = { class_id: string; student_id: string; display_name: string; username: string; state: string };
 type Request = { id: string; class_id: string; display_name: string; username: string };
 type Row = { line: number; name: string; username: string; className: string; state: string; error?: string; temporaryPassword?: string };
 
-const enrollmentState: Record<string, string> = { active: 'Đã tham gia', pending: 'Đang chờ duyệt', removed: 'Đã rời lớp' };
+const enrollmentState: Record<string, string> = { active: 'Đang tham gia', pending: 'Đang chờ duyệt', removed: 'Đã rời lớp' };
 const rowState: Record<string, string> = {
   ready: 'Có thể cấp', invalid: 'Dòng chưa hợp lệ', existing: 'Đã có tài khoản, hãy dùng mã lớp',
   created: 'Đã cấp', pending: 'Chưa xác nhận, thử lại dòng này'
 };
 const initial = { classes: [] as Class[], memberships: [] as Member[], requests: [] as Request[] };
 
-export function ClassDirectory({ teacher }: { teacher: boolean }) {
+export function ClassDirectory({ user }: { user: { display_name: string; role: 'teacher' | 'student' } }) {
+  const teacher = user.role === 'teacher';
   const [data, setData] = useState(initial);
   const [feedback, setFeedback] = useState('');
   const [joinCode, setJoinCode] = useState('');
@@ -25,25 +28,37 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
   const [batch, setBatch] = useState('');
   const [busy, setBusy] = useState(false);
   const [singleKey, setSingleKey] = useState('');
-  const [archived, setArchived] = useState(false);
+  const [selected, setSelected] = useState('');
+  const [previewing, setPreviewing] = useState(false);
+  const [previewError, setPreviewError] = useState('');
+  const previewList = useRef<HTMLUListElement>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [retry, setRetry] = useState(0);
 
-  async function refresh(showArchived = archived, signal?: AbortSignal) {
-    const response = await fetch(showArchived ? '/api/classes?view=archived' : '/api/classes', { cache: 'no-store', signal });
-    if (!response.ok) throw Error('Chưa tải được lớp học.');
-    setData({ ...initial, ...await response.json() });
+  async function refresh(signal?: AbortSignal) {
+    const requested = await Promise.all([
+      fetch('/api/classes',{ cache:'no-store',signal }),
+      teacher ? fetch('/api/classes?view=archived',{ cache:'no-store',signal }) : null
+    ]);
+    if (requested.some(response => response && !response.ok)) throw Error('Chưa tải được lớp học.');
+    const current = { ...initial,...await requested[0]!.json() };
+    if (requested[1]) current.classes = [...current.classes,...(await requested[1].json()).classes];
+    setData(current);
   }
 
   useEffect(() => {
     const controller = new AbortController();
-    refresh(archived, controller.signal).then(() => {
+    refresh(controller.signal).then(() => {
       if (!controller.signal.aborted) setLoadState('ready');
     }, () => {
       if (!controller.signal.aborted) setLoadState('error');
     });
     return () => controller.abort();
-  }, [archived, retry]);
+  }, [retry,teacher]);
+
+  useEffect(() => {
+    if (previewing) previewList.current?.focus();
+  },[previewing]);
 
   async function post(payload: Record<string, unknown>) {
     const response = await fetch('/api/classes', {
@@ -84,28 +99,27 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
   }
 
   async function loadRows(preview: boolean, line?: number) {
-    await perform(async () => {
+    setBusy(true);
+    setPreviewError('');
+    try {
       const currentBatch = batch || crypto.randomUUID();
       if (!batch) setBatch(currentBatch);
       const result = await post({ action: preview ? 'preview_csv' : 'import_csv', source, batch: currentBatch, line });
       setRecords(previous => line === undefined ? result.rows : previous.map(row => row.line === line ? result.rows[0] : row));
       setFeedback(preview ? 'Đã kiểm tra CSV.' : 'Đã xử lý các dòng được chọn.');
-      if (!preview) await refresh();
-    });
+      setPreviewing(preview);
+      if (!preview) await refresh().catch(() => {});
+    } catch (error) {
+      if (!preview && line === undefined) throw error;
+      if (preview) setPreviewError((error as Error).message);
+      else setFeedback((error as Error).message);
+    } finally { setBusy(false); }
   }
 
   function clearSource(value: string) {
     setSource(value);
     setBatch('');
     setRecords([]);
-  }
-
-  function changeView(showArchived: boolean) {
-    if (archived === showArchived) return;
-    setData(initial);
-    setFeedback('');
-    setLoadState('loading');
-    setArchived(showArchived);
   }
 
   async function changeRoster(payload: Record<string, unknown>, message: string) {
@@ -116,103 +130,142 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
     });
   }
 
-  const currentClasses = data.classes.filter(item => item.class_state !== 'archived' && item.state !== 'removed');
-  const pastClasses = data.classes.filter(item => item.class_state === 'archived' || item.state === 'removed');
+  const currentClasses = data.classes.filter(item => item.state !== 'archived' && item.class_state !== 'archived' && item.state !== 'removed');
+  const pastClasses = data.classes.filter(item => item.state === 'archived' || item.class_state === 'archived' || item.state === 'removed');
+  const room = teacher ? currentClasses.find(item => item.id === selected) : undefined;
+  const title = teacher ? room ? `Lớp ${room.name}` : 'Lớp học của tôi' : 'Tham gia lớp';
 
-  return <div aria-busy={busy || loadState === 'loading'}>
-    {teacher && <nav className="app-actions" aria-label="Danh sách lớp">
-        <button disabled={busy} aria-pressed={!archived} onClick={() => changeView(false)}>Đang hoạt động</button>{' '}
-        <button disabled={busy} aria-pressed={archived} onClick={() => changeView(true)}>Đã lưu trữ</button>
-      </nav>}
+  return <AppShell user={user} current="/classes" title={title}><div aria-busy={busy || loadState === 'loading'}>
     {loadState === 'loading' && <p className="app-panel" role="status">Đang tải lớp học…</p>}
     {loadState === 'error' && <section className="app-panel">
       <p className="app-error" role="alert">Chưa tải được lớp học.</p>
       <button onClick={() => { setLoadState('loading'); setRetry(retry + 1); }}>Thử lại</button>
     </section>}
-    {loadState === 'ready' && (teacher ? <>
-      {!archived && <section className="app-panel app-roster-form">
-      <h2>Tạo lớp</h2>
-      <form onSubmit={event => handle(event, 'save_class')}>
-        <label>Tên lớp <input name="name" required maxLength={100}/></label>{' '}
-        <label>Năm học <input name="year" required maxLength={30}/></label>{' '}
-        <button disabled={busy}>Tạo lớp</button>
-      </form>
-      {joinCode && <p>Mã lớp <output>{joinCode}</output>{' '}
-        <button onClick={() => setJoinCode('')}>Đã ghi lại</button></p>}
-      <h2>Cấp tài khoản học sinh</h2>
-      <form onSubmit={event => handle(event, 'create_student')} onChange={() => setSingleKey('')}>
-        <label>Họ tên <input name="name" required maxLength={100}/></label>{' '}
-        <label>Tên đăng nhập <input name="username" required minLength={3} maxLength={30} pattern="[a-z0-9_]+"/></label>{' '}
-        <label>Lớp <select name="classId" required defaultValue="">
-          <option value="" disabled>Chọn lớp</option>
-          {data.classes.filter(item => item.state === 'active').map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
-        </select></label>{' '}
-        <button disabled={busy}>Cấp tài khoản</button>
-      </form>
-      {credentials && <p>Mật khẩu tạm <output>{credentials}</output>{' '}
-        <button onClick={() => setCredentials('')}>Đã lưu</button></p>}
-      <h2>Nhập CSV</h2>
-      <p>Dùng tiêu đề <code>ho_ten,ten_dang_nhap,lop,nam_hoc</code> và lớp đã tạo.</p>
-      <label>Tệp CSV <input type="file" accept=".csv,.tsv,text/csv" onChange={async event => {
-        const file = event.target.files?.[0];
-        if (!file) return;
-        if (file.size > 1_000_000) { setFeedback('Tệp vượt quá 1 MB.'); return; }
-        clearSource(await file.text());
-      }}/></label>
-      <p><label>Nội dung CSV <textarea value={source} onChange={event => clearSource(event.target.value)}/></label></p>
-      <button disabled={!source || busy} onClick={() => loadRows(true)}>Xem trước</button>{' '}
-      <button disabled={!records.some(row => row.state === 'ready') || busy} onClick={() => loadRows(false)}>Nhập tài khoản mới</button>
-      {records.length > 0 && <ul>{records.map(row => <li key={row.line}>
-        Dòng {row.line} · {row.name} · {row.username} · {rowState[row.state]}
-        {row.temporaryPassword && <p>Mật khẩu tạm <output>{row.temporaryPassword}</output></p>}
-        {row.state === 'pending' && <button disabled={busy} onClick={() => loadRows(false, row.line)}>Thử lại dòng {row.line}</button>}
-      </li>)}</ul>}
-      </section>}
-      <h2>{archived ? 'Lớp đã lưu trữ' : 'Danh sách lớp'}</h2>
-      {data.classes.length === 0 && <p className="app-panel">{archived ? 'Chưa có lớp đã lưu trữ.' : 'Tạo lớp để cấp tài khoản và gửi mã tham gia.'}</p>}
-      {data.classes.map(item => <section className="app-panel" aria-label={item.name} key={item.id}>
-        <h3>{item.name} · {item.school_year}</h3>
-        {item.state === 'active'
-          ? <ActionDialog trigger="Lưu trữ lớp" title={`Lưu trữ ${item.name}?`} detail="Lớp sẽ chuyển sang lịch sử. Bạn có thể khôi phục để tiếp tục quản lý lớp."
-            confirmLabel="Xác nhận lưu trữ" inactive={busy} onConfirm={async () => {
-              await post({ action: 'archive_class', classId: item.id });
-              await refresh();
-              setFeedback('Đã lưu trữ lớp.');
-            }}/>
-          : <button disabled={busy} onClick={() => changeRoster({ action: 'restore_class', classId: item.id }, 'Đã khôi phục lớp.')}>Khôi phục lớp</button>}
-        {item.state === 'active' && <form onSubmit={event => handle(event, 'save_class', {classId: item.id})}>
-          <label>Tên lớp <input name="name" required maxLength={100} defaultValue={item.name}/></label>{' '}
-          <label>Năm học <input name="year" required maxLength={30} defaultValue={item.school_year}/></label>{' '}
-          <button disabled={busy}>Lưu lớp</button>
-        </form>}
-        <ul>{data.memberships.filter(member => member.class_id === item.id).map(member => <li key={member.student_id}>
-          {member.display_name} · {member.username} · {enrollmentState[member.state]}{' '}
-          {item.state === 'active' && <button disabled={busy} onClick={() => {
+    {loadState === 'ready' && teacher && !room && <>
+      <section className="app-panel" aria-labelledby="current-classes">
+        <h2 id="current-classes">Lớp đang hoạt động</h2>
+        <details className="class-form">
+          <summary className="app-button app-primary">Tạo lớp</summary>
+          <form onSubmit={event => handle(event, 'save_class')}>
+            <label>Tên lớp <input name="name" required maxLength={100}/></label>
+            <label>Năm học <input name="year" required maxLength={30}/></label>
+            <button disabled={busy}>Tạo lớp</button>
+          </form>
+        </details>
+        {joinCode && <p>Mã lớp <output>{joinCode}</output> <button onClick={() => setJoinCode('')}>Đã ghi lại</button></p>}
+        {!currentClasses.length && <p>Tạo lớp để cấp tài khoản và gửi mã tham gia.</p>}
+        {currentClasses.map(item => <section className="class-row" aria-label={item.name} key={item.id}>
+          <div><h3>{item.name}</h3><p>Năm học {item.school_year} · {data.memberships.filter(member => member.class_id === item.id && member.state === 'active').length} thành viên</p></div>
+          <button onClick={() => { setSelected(item.id); setFeedback(''); }}>Mở lớp</button>
+        </section>)}
+      </section>
+      <section className="app-panel" aria-labelledby="past-classes">
+        <h2 id="past-classes">Đã lưu trữ</h2>
+        {!pastClasses.length && <p>Chưa có lớp đã lưu trữ.</p>}
+        {pastClasses.map(item => <section className="class-row" aria-label={item.name} key={item.id}>
+          <div><h3>{item.name}</h3><p>Năm học {item.school_year}</p></div>
+          <button disabled={busy} onClick={() => changeRoster({ action:'restore_class',classId:item.id },'Đã khôi phục lớp.')}>Khôi phục lớp</button>
+        </section>)}
+      </section>
+    </>}
+    {loadState === 'ready' && room && <>
+      <section className="app-panel" aria-labelledby="class-members">
+        <h2 id="class-members">Thành viên</h2>
+        <div className="app-actions class-member-actions">
+          <details className="class-form">
+            <summary className="app-button">Cấp tài khoản</summary>
+            <form onSubmit={event => handle(event,'create_student',{ classId:room.id })} onChange={() => setSingleKey('')}>
+              <label>Họ tên <input name="name" required maxLength={100}/></label>
+              <label>Tên đăng nhập <input name="username" required minLength={3} maxLength={30} pattern="[a-z0-9_]+"/></label>
+              <button disabled={busy}>Cấp tài khoản</button>
+            </form>
+          </details>
+          <ActionDialog trigger="Nhập CSV" title={previewing ? 'Xem trước danh sách CSV' : 'Nhập CSV'}
+            detail={previewing ? undefined : 'Dùng tiêu đề ho_ten,ten_dang_nhap,lop,nam_hoc.'}
+            cancelLabel={previewing ? 'Quay lại' : 'Hủy'}
+            confirmLabel={`Cấp ${records.filter(row => row.state === 'ready').length} tài khoản`}
+            inactive={busy} confirmInactive={busy || !previewing || !records.some(row => row.state === 'ready')}
+            onOpen={() => { setPreviewing(false); setPreviewError(''); }} onConfirm={() => loadRows(false)}>
+            {previewing ? <>
+              <ul ref={previewList} tabIndex={-1} className="csv-preview" aria-label="Các dòng trong tệp CSV">{records.map(row => <li key={row.line}>
+                <div><strong>{row.name || `Dòng ${row.line}`}</strong><small>{row.username}</small></div>
+                <span className={row.state === 'ready' ? 'csv-row-state ready' : 'csv-row-state'}>
+                  {row.state === 'ready' ? 'Hợp lệ' : row.state === 'existing' ? 'Tài khoản đã tồn tại' : rowState[row.state]}
+                </span>
+              </li>)}</ul>
+              {records.some(row => row.state === 'existing') && <p>Học sinh có thể dùng tài khoản hiện có để gửi yêu cầu tham gia lớp.</p>}
+            </> : <>
+              <label>Tệp CSV <input type="file" accept=".csv,.tsv,text/csv" onChange={async event => {
+                const file = event.target.files?.[0];
+                if (!file) return;
+                if (file.size > 1_000_000) { setPreviewError('Tệp vượt quá 1 MB.'); return; }
+                clearSource(await file.text());
+              }}/></label>
+              <p><label>Nội dung CSV <textarea value={source} onChange={event => clearSource(event.target.value)}/></label></p>
+              <p><button type="button" disabled={!source || busy} onClick={() => loadRows(true)}>Xem trước</button></p>
+            </>}
+            {previewError && <p className="app-error" role="alert">{previewError}</p>}
+          </ActionDialog>
+        </div>
+        {credentials && <p>Mật khẩu tạm <output>{credentials}</output> <button onClick={() => setCredentials('')}>Đã lưu</button></p>}
+        {!previewing && records.some(row => row.state === 'created' || row.state === 'pending') && <ul>{records.map(row => <li key={row.line}>
+          {row.name} · {row.username} · {rowState[row.state]}
+          {row.temporaryPassword && <p>Mật khẩu tạm <output>{row.temporaryPassword}</output></p>}
+          {row.state === 'pending' && <button disabled={busy} onClick={() => loadRows(false,row.line)}>Thử lại dòng {row.line}</button>}
+        </li>)}</ul>}
+        {data.memberships.filter(member => member.class_id === room.id).map(member => <div className="class-row" key={member.student_id}>
+          <div><strong>{member.display_name}</strong><p>{member.username} · {enrollmentState[member.state]}</p></div>
+          <button disabled={busy} onClick={() => {
             const remove = member.state === 'active';
-            return changeRoster({ action: remove ? 'remove_student' : 'readmit_student', classId: item.id, studentId: member.student_id },
+            return changeRoster({ action:remove ? 'remove_student' : 'readmit_student',classId:room.id,studentId:member.student_id },
               remove ? 'Đã đưa học sinh ra khỏi lớp.' : 'Đã nhận lại học sinh.');
-          }}>{member.state === 'active' ? 'Đưa ra khỏi lớp' : 'Nhận lại'} {member.display_name}</button>}
-        </li>)}</ul>
-        <ul>{data.requests.filter(request => request.class_id === item.id).map(request => <li key={request.id}>
-          {request.display_name} · {request.username}{' '}
-          {item.state === 'active' && <button disabled={busy} onClick={() =>
-            changeRoster({ action: 'approve', requestId: request.id }, 'Đã duyệt yêu cầu vào lớp.')}>Duyệt {request.display_name}</button>}
-        </li>)}</ul>
-      </section>)}
-    </> : <section className="app-panel">
-      <form onSubmit={event => handle(event, 'join')}>
-        <label>Mã lớp <input name="code" required maxLength={12}/></label>{' '}
+          }}>{member.state === 'active' ? 'Đưa ra khỏi lớp' : 'Nhận lại'} {member.display_name}</button>
+        </div>)}
+      </section>
+      <section className="app-panel" aria-labelledby="class-requests">
+        <h2 id="class-requests">Yêu cầu tham gia</h2>
+        {data.requests.filter(request => request.class_id === room.id).map(request => <div className="class-row" key={request.id}>
+          <div><strong>{request.display_name}</strong><p>{request.username}</p></div>
+          <button disabled={busy} onClick={() => changeRoster({ action:'approve',requestId:request.id },'Đã duyệt yêu cầu vào lớp.')}>Duyệt {request.display_name}</button>
+        </div>)}
+      </section>
+      <div className="app-actions class-room-nav">
+        <button onClick={() => { setSelected(''); setFeedback(''); }} disabled={busy}>Về danh sách lớp</button>
+        <ActionDialog trigger="Lưu trữ lớp" title={`Lưu trữ ${room.name}?`} detail="Lớp sẽ chuyển sang lịch sử. Bạn có thể khôi phục để tiếp tục quản lý lớp."
+          confirmLabel="Xác nhận lưu trữ" inactive={busy} onConfirm={async () => {
+            await post({ action:'archive_class',classId:room.id });
+            await refresh();
+            setSelected('');
+            setFeedback('Đã lưu trữ lớp.');
+          }}/>
+      </div>
+      <details className="class-form">
+        <summary>Cài đặt lớp</summary>
+        <form onSubmit={event => handle(event,'save_class',{ classId:room.id })}>
+          <label>Tên lớp <input name="name" required maxLength={100} defaultValue={room.name}/></label>
+          <label>Năm học <input name="year" required maxLength={30} defaultValue={room.school_year}/></label>
+          <button disabled={busy}>Lưu lớp</button>
+        </form>
+      </details>
+    </>}
+    {loadState === 'ready' && !teacher && <section className="app-panel">
+      <h2>Nhập mã lớp</h2>
+      <form className="class-join" onSubmit={event => handle(event, 'join')}>
+        <label>Mã lớp <input name="code" required maxLength={12}/></label>
         <button disabled={busy}>Gửi yêu cầu</button>
       </form>
-      <h2>Lớp của tôi</h2>
+      {currentClasses.some(item => item.state === 'active') && <h2>Lớp của tôi</h2>}
       {currentClasses.length === 0 && <p>Nhập mã giáo viên gửi để xin tham gia lớp.</p>}
-      <ul>{currentClasses.map(item => <li key={item.id}>{item.name} · {item.teacher} · {enrollmentState[item.state]}</li>)}</ul>
+      {currentClasses.length > 0 && <ul className="class-student-list">{currentClasses.map(item =>
+        <li key={item.id} className={item.state === 'pending' ? 'class-pending' : undefined}>
+          {item.name} · {item.teacher} · {enrollmentState[item.state]}
+        </li>)}</ul>}
       {pastClasses.length > 0 && <>
         <h2>Lịch sử lớp</h2>
         <ul>{pastClasses.map(item => <li key={item.id}>{item.name} · {item.teacher} · {item.class_state === 'archived'
           ? `Đã lưu trữ · ${enrollmentState[item.state]}` : enrollmentState[item.state]}</li>)}</ul>
       </>}
-    </section>)}
+    </section>}
     {loadState === 'ready' && <p role="status">{busy ? 'Đang xử lý…' : feedback}</p>}
-  </div>;
+  </div></AppShell>;
 }

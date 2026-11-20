@@ -1,4 +1,4 @@
-.app-panel .library-list { list-style: none; padding: 0; }
+.app-panel .library-list { list-style: none; padding: 0; margin-bottom: 0; }
 .library-list li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; padding-block: 14px; border-top: 1px solid var(--line); }
 .library-list li > div { min-width: 0; overflow-wrap: anywhere; }
 .library-list p { color: var(--ink-muted); margin: 4px 0 0; }
@@ -9,3 +9,8 @@
 .library-reader-actions { margin-bottom: 16px; }
 .library-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; }
 .library-pdf { width: 100%; min-height: 420px; height: 62vh; border: 0; }
+.app-panel .library-share-settings { padding: 0; border: 0; }
+.library-share-settings[open] { flex-basis: 100%; }
+.library-share-settings[open] > summary { margin-bottom: 8px; }
+.library-share-settings fieldset { margin-block: 8px; }
+.library-share-settings [role="status"]:empty { margin: 0; }

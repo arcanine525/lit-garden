@@ -89,7 +89,32 @@ test('T10 two teachers, shared student enrollment, CSV validation and crash reco
     const source = `\uFEFF${csvHeader}\r\n"Nguyễn, Linh",${csvName},${otherClass},${year}\r\nSai tên,,${otherClass},${year}\r\nHọc sinh chung,${created},${otherClass},${year}\r\nTrùng CSV,${csvName},${otherClass},${year}`;
     const preview = await collect(await call(b, { action: 'preview_csv', source }));
     expect(preview.rows.map(row => row.state)).toEqual(['ready','invalid','existing','invalid']);
-    const importResult = await collect(await call(b, { action: 'import_csv', source, batch: randomUUID() }));
+    await b.goto('/classes');
+    await b.getByRole('region',{ name:otherClass,exact:true }).getByRole('button',{ name:'Mở lớp' }).click();
+    const importButton = b.getByRole('button',{ name:'Nhập CSV',exact:true });
+    await importButton.focus();
+    await importButton.press('Enter');
+    const importDialog = b.getByRole('dialog');
+    await expect(importDialog.getByRole('button',{ name:'Hủy',exact:true })).toBeFocused();
+    await importDialog.getByLabel('Nội dung CSV').fill(source);
+    await importDialog.getByRole('button',{ name:'Xem trước',exact:true }).click();
+    await expect(importDialog.getByRole('heading',{ name:'Xem trước danh sách CSV' })).toBeVisible();
+    await expect(importDialog.getByText('Tài khoản đã tồn tại',{ exact:true })).toBeVisible();
+    await expect(importDialog.getByRole('button',{ name:'Cấp 1 tài khoản' })).toBeEnabled();
+    await b.keyboard.press('Escape');
+    await expect(importDialog).not.toBeVisible();
+    await expect(importButton).toBeFocused();
+    expect((await db.query('SELECT id FROM garden.users WHERE username=$1',[csvName])).rowCount).toBe(0);
+    await importButton.press('Enter');
+    await importDialog.getByRole('button',{ name:'Xem trước',exact:true }).click();
+    const confirmImport = importDialog.getByRole('button',{ name:'Cấp 1 tài khoản' });
+    await expect(confirmImport).toBeEnabled();
+    const imported = b.waitForResponse(response => response.url().endsWith('/api/classes') &&
+      response.request().method() === 'POST' && response.request().postDataJSON()?.action === 'import_csv',{ timeout:14_000 });
+    await confirmImport.press('Enter');
+    const importResult = await collect(await imported);
+    await expect(importDialog).not.toBeVisible();
+    await expect(importButton).toBeFocused();
     expect(importResult.rows.map(row => row.state)).toEqual(['created','invalid','existing','invalid']);
     expect(importResult.rows[0].name).toBe('Nguyễn, Linh');
     expect(importResult.rows[0].temporaryPassword).toBeTruthy();
@@ -112,10 +137,11 @@ test('T10 two teachers, shared student enrollment, CSV validation and crash reco
     const request = directory.requests.find(item => item.class_id === classB.classId && item.username === created);
     expect((await call(a, { action: 'approve', requestId: request.id })).status()).toBe(404);
     await b.goto('/classes');
+    await b.getByRole('region',{ name:otherClass,exact:true }).getByRole('button',{ name:'Mở lớp' }).click();
     await b.getByRole('button', { name: 'Duyệt Học sinh chung' }).click();
     await expect(b.getByRole('status')).toHaveText('Đã duyệt yêu cầu vào lớp.');
     await student.reload();
-    await expect(student.getByText(new RegExp(`${otherClass}.*Đã tham gia`))).toBeVisible();
+    await expect(student.getByText(new RegExp(`${otherClass}.*Đang tham gia`))).toBeVisible();
     const afterApprove = await db.query('SELECT class_id FROM garden.memberships WHERE student_id=$1', [studentId]);
     expect(afterApprove.rows.map(row => row.class_id).sort()).toEqual([classA.classId,classB.classId].sort());
 

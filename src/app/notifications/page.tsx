@@ -23,7 +23,7 @@ export default async function NotificationsPage({ searchParams }: { searchParams
   return <AppShell user={session.user} current="/notifications" title="Thông báo">
     {unavailable && <section className="app-panel"><h2>Nội dung không còn khả dụng</h2></section>}
     <section className="app-panel" aria-labelledby="notification-inbox">
-      <h2 id="notification-inbox">Hộp thư</h2>
+      <h2 id="notification-inbox">{session.user.role === 'student' ? 'Hộp thư của em' : 'Hộp thư'}</h2>
       {entries.length ? <ul className="notification-list">{entries.map(item => <li key={item.id}>
         <div>
           <h3>{labels[item.kind]}</h3>

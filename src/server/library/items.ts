@@ -228,8 +228,9 @@ export async function featuredLibrary(actor: string, classId?: string, teacherId
     FROM garden.library_featured f JOIN garden.library_items i ON i.id=f.item_id
     JOIN garden.classes c ON c.id=f.class_id AND c.state='active'
     JOIN garden.users t ON t.id=c.teacher_id
-    JOIN garden.memberships m ON m.class_id=c.id AND m.student_id=$1 AND m.state='active'
-    WHERE ($2::uuid IS NULL OR c.id=$2) AND ($3::uuid IS NULL OR c.teacher_id=$3) AND garden.can_read_library($1,i.id)
+    WHERE (c.teacher_id=$1 OR EXISTS (SELECT 1 FROM garden.memberships m
+      WHERE m.class_id=c.id AND m.student_id=$1 AND m.state='active'))
+      AND ($2::uuid IS NULL OR c.id=$2) AND ($3::uuid IS NULL OR c.teacher_id=$3) AND garden.can_read_library($1,i.id)
     ORDER BY c.name,c.id,f.slot`,[actor,classId ?? null,teacherId ?? null]);
   const featured = [];
   for (const entry of rows) {
@@ -237,8 +238,9 @@ export async function featuredLibrary(actor: string, classId?: string, teacherId
       const { manifest } = await readLibraryItem(actor,entry.id);
       const stillShared = await database().query(`SELECT 1 FROM garden.library_featured f
         JOIN garden.classes c ON c.id=f.class_id AND c.state='active'
-        JOIN garden.memberships m ON m.class_id=c.id AND m.student_id=$1 AND m.state='active'
-        WHERE f.class_id=$2 AND f.item_id=$3 AND f.slot=$4 AND garden.can_read_library($1,f.item_id)`,[actor,entry.classId,entry.id,entry.slot]);
+        WHERE f.class_id=$2 AND f.item_id=$3 AND f.slot=$4 AND garden.can_read_library($1,f.item_id)
+          AND (c.teacher_id=$1 OR EXISTS (SELECT 1 FROM garden.memberships m
+            WHERE m.class_id=c.id AND m.student_id=$1 AND m.state='active'))`,[actor,entry.classId,entry.id,entry.slot]);
       if (stillShared.rowCount) featured.push({ ...entry,title:manifest.title });
     } catch (error) {
       if (!(error instanceof DriveError)) throw error;

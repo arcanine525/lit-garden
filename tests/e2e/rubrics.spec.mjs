@@ -97,16 +97,16 @@ test('T12 shared rubric has immutable revisions, a read-only catalog and retirem
     expect((await post(operator, invalid)).status()).toBe(422);
 
     await teacher.getByRole('link', { name: 'Rubric chấm bài' }).click();
-    await teacher.getByLabel('Chọn rubric').selectOption(`${rubricId}:1`);
+    await teacher.getByRole('button', { name: label, exact: true }).press('Enter');
     await expect(teacher.getByRole('heading', { name: label })).toBeVisible();
-    await expect(teacher.getByText('2 điểm · Phiên bản 1')).toBeVisible();
+    await expect(teacher.getByText('Thang chuẩn 2 điểm')).toBeVisible();
     await expect(teacher.getByRole('button', { name: /Tạo rubric|Tạo phiên bản|Ngừng dùng/ })).toHaveCount(0);
     for (const criterion of criteria) {
       await teacher.locator('summary').filter({ hasText: criterion.label }).click();
       for (const [,description] of criterion.levels) await expect(teacher.getByText(description, { exact: true })).toBeVisible();
     }
     await student.getByRole('link', { name: 'Rubric chấm bài' }).click();
-    await student.getByLabel('Chọn rubric').selectOption(`${rubricId}:1`);
+    await student.getByRole('button', { name: label, exact: true }).click();
     await expect(student.getByRole('heading', { name: label })).toBeVisible();
     await expect(student.getByRole('button', { name: /Tạo rubric|Tạo phiên bản|Ngừng dùng/ })).toHaveCount(0);
 
@@ -134,9 +134,10 @@ test('T12 shared rubric has immutable revisions, a read-only catalog and retirem
     expect((await list(teacher)).filter(item => item.id === rubricId)).toEqual([]);
     expect((await list(student)).filter(item => item.id === rubricId)).toEqual([]);
     await teacher.reload();
-    await expect(teacher.getByRole('option', { name: new RegExp(label) })).toHaveCount(0);
-    await operator.getByLabel('Chọn rubric').selectOption(`${rubricId}:1`);
-    await expect(operator.getByText('2 điểm · Phiên bản 1')).toBeVisible();
+    await expect(teacher.getByRole('button', { name: label, exact: true })).toHaveCount(0);
+    await operator.getByRole('button', { name: `${label} · v1`, exact: true }).click();
+    await expect(operator.getByText('Thang chuẩn 2 điểm')).toBeVisible();
+    await expect(operator.getByText('Phiên bản 1', { exact: true })).toBeVisible();
     await operator.locator('summary').filter({ hasText: criteria[0].label }).click();
     await expect(operator.getByText(criteria[0].levels[0][1])).toBeVisible();
     const audit = await db.query('SELECT target_kind FROM garden.audit_events WHERE target_id=$1 ORDER BY id', [rubricId]);

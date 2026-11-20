@@ -33,7 +33,7 @@ test('T21 local focus clock pauses, blooms, stays independent between assignment
       expect(response?.status(),page.url()).toBe(200);
       // Let the streamed page and its hydration run while the test clock is paused.
       await page.clock.runFor(100);
-      await expect(page.getByRole('heading',{ name:'Viết bài',exact:true })).toBeVisible();
+      await expect(page.getByRole('heading',{ name:'Bài viết của em',exact:true })).toBeVisible();
     };
     await navigate(first.url);
     await expect(open).toBeEnabled();

@@ -9,8 +9,42 @@
   border-radius: 12px;
 }
 .garden-editor .garden-editor-text { padding: 16px; min-height: 290px; font: 17px/2 var(--serif); overflow-wrap: anywhere; }
+.garden-editor .garden-format-toolbar {
+  flex-wrap: wrap; gap: 4px; background: #f5f7f0; border-radius: 0; border-bottom: 1px solid var(--line);
+}
+.garden-editor .garden-editor-text { color: var(--ink); }
 .garden-editor .garden-editor-text img { max-width: 100%; height: auto; }
 .garden-editor .garden-editor-text :is(h1,h2,h3) { margin-block: 14px 8px; }
 .garden-editor .garden-editor-text td, .garden-editor .garden-editor-text th { min-width: 90px; }
 .garden-editor textarea { min-height: 290px; width: 100%; resize: vertical; font-family: monospace; }
 .garden-editor [role=status] { margin-top: 12px; }
+.worksheet-editor { position: relative; }
+.worksheet-toolbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 8px;
+  border: 1px solid var(--line); border-radius: 10px 10px 0 0; background: #f5f7f0;
+}
+.worksheet-toolbar :is(button,select) {
+  min-height: 35px; padding: 8px 13px; border: 1px solid var(--line);
+  background: transparent; color: var(--ink); font-size: 12px; font-weight: 600;
+}
+.worksheet-toolbar select { appearance: none; cursor: pointer; }
+.worksheet-toolbar select[aria-label="Tiêu đề"] { width: 72px; }
+.worksheet-toolbar select[aria-label="Danh sách"] { width: 91px; }
+.worksheet-toolbar .worksheet-mode { min-width: 111px; }
+.worksheet-toolbar button[aria-pressed="true"] { color: var(--ink); background: var(--nav-active); border-color: var(--green); }
+.worksheet-editor .worksheet-source, .worksheet-editor .mdxeditor {
+  border-top: 0; border-radius: 0 0 10px 10px;
+}
+.worksheet-editor .worksheet-source { margin: 0; min-height: 210px; height: 210px; padding: 16px; }
+.worksheet-editor .garden-editor-text :is(h1,h2,h3) { margin-block: 0 12px; }
+.worksheet-editor [role=status]:empty { margin: 0; }
+.app-panel .worksheet-overflow {
+  position: absolute; inset-block-start: -42px; inset-inline-end: 0; z-index: 4;
+  padding: 0; border: 0;
+}
+.worksheet-overflow summary { min-height: 34px; padding-inline: 10px; }
+.worksheet-overflow > .app-actions {
+  position: absolute; inset-inline-end: 0; top: calc(100% + 6px);
+  width: min(260px, calc(100vw - 64px)); padding: 10px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+}

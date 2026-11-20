@@ -78,6 +78,7 @@ test('T11 class and membership transitions are owner-only, preserve history and 
     expect((await read(other.page)).classes.map(item => item.id)).toEqual([second.classId]);
 
     await owner.page.goto('/classes');
+    await owner.page.getByRole('region',{ name,exact:true }).getByRole('button',{ name:'Mở lớp' }).click();
     await owner.page.getByRole('button', { name: 'Đưa ra khỏi lớp Học sinh chung' }).click();
     await expect(owner.page.getByRole('status')).toHaveText('Đã đưa học sinh ra khỏi lớp.');
     const removed = await membership(classId);
@@ -87,13 +88,13 @@ test('T11 class and membership transitions are owner-only, preserve history and 
     expect(await membership(classId)).toEqual(removed);
     await student.page.goto('/classes');
     await expect(student.page.getByText(new RegExp(`${name}.*Đã rời lớp`))).toBeVisible();
-    await expect(student.page.getByText(new RegExp(`${otherName}.*Đã tham gia`))).toBeVisible();
+    await expect(student.page.getByText(new RegExp(`${otherName}.*Đang tham gia`))).toBeVisible();
     expect(await membership(second.classId)).toEqual(unrelated);
 
     await owner.page.getByRole('button', { name: 'Lưu trữ lớp', exact: true }).click();
     await owner.page.getByRole('dialog').getByRole('button', { name: 'Xác nhận lưu trữ' }).click();
     await expect(owner.page.getByRole('status')).toHaveText('Đã lưu trữ lớp.');
-    await expect(owner.page.getByRole('heading', { name: new RegExp(name) })).toHaveCount(0);
+    await expect(owner.page.getByRole('region',{ name:'Lớp đang hoạt động' }).getByRole('heading', { name,exact:true })).toHaveCount(0);
     expect((await read(owner.page)).classes).toEqual([]);
     expect((await post(owner.page, archive)).status()).toBe(200);
     for (const action of [remove, readmit, edit, approve, issue]) {
@@ -109,12 +110,11 @@ test('T11 class and membership transitions are owner-only, preserve history and 
     expect((await read(other.page, '/api/classes?view=archived')).classes).toEqual([]);
     expect(await membership(classId)).toEqual(removed);
 
-    await owner.page.getByRole('button', { name: 'Đã lưu trữ', exact: true }).click();
-    await expect(owner.page.getByRole('heading', { name: new RegExp(name) })).toBeVisible();
+    await expect(owner.page.getByRole('region',{ name:'Đã lưu trữ' }).getByRole('heading', { name,exact:true })).toBeVisible();
     await expect(owner.page.getByRole('button', { name: /Nhận lại|Duyệt Học sinh|Lưu lớp/ })).toHaveCount(0);
     await owner.page.getByRole('button', { name: 'Khôi phục lớp' }).click();
     await expect(owner.page.getByRole('status')).toHaveText('Đã khôi phục lớp.');
-    await owner.page.getByRole('button', { name: 'Đang hoạt động' }).click();
+    await owner.page.getByRole('region',{ name,exact:true }).getByRole('button',{ name:'Mở lớp' }).click();
     await owner.page.getByRole('button', { name: 'Nhận lại Học sinh chung' }).click();
     await expect(owner.page.getByRole('status')).toHaveText('Đã nhận lại học sinh.');
     expect(await membership(classId)).toEqual({ ...original, version: '2' });

@@ -44,12 +44,7 @@ export default async function ResultPage({ params,searchParams }: Props) {
   const ranges = comments.filter((comment): comment is RangeComment => comment.kind === 'range');
   const overall = comments.find(comment => comment.kind === 'overall');
   const currentResult = !history || history[0]?.id === publication.id;
-  return <AppShell user={user} current={current} title={publication.title}>
-    <p>{publication.studentName} · {publication.className} · Lần nộp {publication.submissionNo}</p>
-    <p className="app-actions">
-      <a className="app-button" href={`/api/content/submissions/${id}?download=1`}>Tải bài nộp (.md)</a>
-      <a className="app-button" href={`/api/submissions/${id}/publication/download?publication=${publication.id}`}>Tải nhận xét (.md)</a>
-    </p>
+  return <AppShell user={user} current={current} title="Kết quả bài viết">
     {history && <section className="app-panel">
       <h2>Lịch sử trả bài</h2>
       <ul>{history.map(item => <li key={item.id}><Link href={`/results/${id}?publication=${item.id}`}
@@ -59,29 +54,47 @@ export default async function ResultPage({ params,searchParams }: Props) {
     </section>}
     <div className="review-columns">
       <section className="app-panel">
-        <h2>Bài nộp</h2>
+        <h2>{publication.title}</h2>
+        <p className="review-meta">{publication.studentName} · Lớp {publication.className} · Lần nộp {publication.submissionNo}</p>
         <article aria-label="Văn bản bài nộp"><ReviewDocument source={publication.markdown} marks={ranges}/></article>
         {publication.explanation && <><h3>Giải thích của học sinh</h3><p className="review-text">{publication.explanation}</p></>}
         {ranges.length > 0 && <section aria-label="Nhận xét theo đoạn">{ranges.map(comment => <div key={comment.id}
           id={`comment-${comment.id}`} tabIndex={-1} className="review-comment">
-          <blockquote><mark className={`review-mark-${comment.color}`}>{comment.anchor.exact}</mark></blockquote>
+          <blockquote>“{comment.anchor.exact}”</blockquote>
           {comment.body && <p className="review-text">{comment.body}</p>}
           {currentResult && <ReplyThread submission={id} comment={comment.id} publication={publication.id} viewer={user.id}/>}
         </div>)}</section>}
       </section>
       <section className="app-panel" aria-label="Kết quả đã trả">
-        <h2>Kết quả đã trả</h2>
-        <p>Lần trả {publication.revision} · {deadlineFormat.format(new Date(publication.publishedAt))}</p>
-        <p>{rubric.label} · {points.format(publication.total)} / {points.format(Number(rubric.scale))} điểm</p>
-        <dl>{scores.map(score => {
-          const criterion = rubric.criteria.find(item => item.id === score.criterionId);
-          const level = criterion?.levels.find(item => item.id === score.levelId);
-          return <div key={score.criterionId}><dt>{criterion?.label}</dt>
-            <dd>{points.format(Number(score.value))} điểm · {level?.description}</dd></div>;
-        })}</dl>
+        <h2>{currentResult ? 'Kết quả hiện hành' : 'Kết quả đã trả'}</h2>
+        <p>{rubric.label} · Thang {Number(rubric.scale).toLocaleString('vi-VN')} điểm</p>
+        <p className="result-grade">{points.format(publication.total)} / {points.format(Number(rubric.scale))}</p>
         {overall && <section aria-label="Nhận xét chung" id={`comment-${overall.id}`} tabIndex={-1}>
-          <h3>Nhận xét chung</h3><p className="review-text">{overall.body}</p>
-          {currentResult && <ReplyThread submission={id} comment={overall.id} publication={publication.id} viewer={user.id}/>}</section>}
+          <p className="review-text">{overall.body}</p>
+        </section>}
+        <div className="app-actions result-downloads">
+          <a className="app-button" aria-label="Tải nhận xét (.md)"
+            href={`/api/submissions/${id}/publication/download?publication=${publication.id}`}>Tải nhận xét</a>
+          <a className="app-button" aria-label="Tải bài nộp (.md)"
+            href={`/api/content/submissions/${id}?download=1`}>Tải bài nộp</a>
+          <details className="result-details">
+            <summary className="app-button" aria-label="Chi tiết điểm và bài nộp">Chi tiết</summary>
+            <div>
+              <h3>Điểm từng tiêu chí</h3>
+              <p>Lần trả {publication.revision} · {deadlineFormat.format(new Date(publication.publishedAt))}</p>
+              <dl>{scores.map(score => {
+                const criterion = rubric.criteria.find(item => item.id === score.criterionId);
+                const level = criterion?.levels.find(item => item.id === score.levelId);
+                return <div key={score.criterionId}><dt>{criterion?.label}</dt>
+                  <dd>{points.format(Number(score.value))} điểm · {level?.description}</dd></div>;
+              })}</dl>
+              {overall && currentResult && <section aria-label="Hội thoại nhận xét chung">
+                <h3>Hội thoại nhận xét chung</h3>
+                <ReplyThread submission={id} comment={overall.id} publication={publication.id} viewer={user.id}/>
+              </section>}
+            </div>
+          </details>
+        </div>
       </section>
     </div>
   </AppShell>;

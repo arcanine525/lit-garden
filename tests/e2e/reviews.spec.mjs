@@ -56,6 +56,7 @@ test('T24 annotates and autosaves a per-version review using the rubric snapshot
       selection.addRange(range);
       element.dispatchEvent(new PointerEvent('pointerup',{ bubbles:true }));
     });
+    await page.getByText('Chọn đoạn bằng bàn phím',{ exact:true }).click();
     await page.getByRole('combobox',{ name:'Màu đánh dấu' }).selectOption('green');
     await page.getByRole('button',{ name:'Thêm nhận xét',exact:true }).click();
     await page.getByLabel('Nhận xét cho đoạn chọn').fill('Chọn đúng lần xuất hiện thứ hai.');

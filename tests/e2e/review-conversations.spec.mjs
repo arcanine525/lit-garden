@@ -78,9 +78,10 @@ test('T26 comment replies are append-only and fence a publication already in fli
       ON o.operation_id=op.id WHERE op.idempotency_key=$1`,[rejected.request().postDataJSON().key])).rows[0];
     expect(aborted).toEqual({ state:'rejected',lifecycle:'orphan' });
     expect((await thread(author)).messages).toEqual([expect.objectContaining({ id:first.id,body:'Em sẽ thêm một âm thanh cho đoạn này.' })]);
-    await expect(inText(editor).getByText('Nhận xét đã khóa. Dùng tin nhắn mới để đính chính.')).toBeVisible();
+    await expect(inText(editor).getByText('Nhận xét đã có phản hồi và được khóa.')).toBeVisible();
     await expect(inText(editor).getByRole('button',{ name:'Bỏ đánh dấu' })).toHaveCount(0);
 
+    await editor.getByText('Quản lý nháp',{ exact:true }).press('Enter');
     await editor.getByRole('button',{ name:'Khôi phục nhận xét đã khóa',exact:true }).click();
     const restored = responseFor(editor,draftApi,'save');
     await editor.getByRole('dialog').getByRole('button',{ name:'Khôi phục nhận xét',exact:true }).click();

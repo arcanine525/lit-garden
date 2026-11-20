@@ -57,7 +57,7 @@ const messages: Record<string,string> = {
   DRIVE_INTEGRITY: 'Thông tin thư mục trên Drive đã thay đổi. Hãy kiểm tra thư mục rồi thử lại.',
   DRIVE_PICKER: 'Chưa mở được bộ chọn thư mục của Google.'
 };
-const stateLabel: Record<string,string> = { not_connected: 'Chưa kết nối', ready: 'Đã kết nối', reconnect_required: 'Cần kết nối lại', unavailable: 'Drive tạm thời không khả dụng' };
+const stateLabel: Record<string,string> = { not_connected: 'Chưa kết nối', ready: 'Đã kết nối', reconnect_required: 'Mất quyền truy cập', unavailable: 'Drive tạm thời không khả dụng' };
 
 export function DriveConnection({ status, result }: { status: Status; result?: string }) {
   const [drive, setDrive] = useState(status);
@@ -115,21 +115,26 @@ export function DriveConnection({ status, result }: { status: Status; result?: s
     } catch (error) { report(error); setBusy(false); }
   }
 
+  const reconnect = drive.state === 'reconnect_required';
   return <>
-    {drive.provider === 'fake' && <p>Môi trường local dùng Drive giả lập.</p>}
-    <p>{stateLabel[drive.state]}</p>
-    <form action="/api/drive" method="post">
-      <input type="hidden" name="action" value="authorize"/>
-      <button disabled={busy}>{drive.state === 'not_connected' ? 'Cấp quyền Drive' : 'Kết nối lại Drive'}</button>
-    </form>
-    {drive.pending === 'pick' && <p><button disabled={busy} onClick={pick}>Chọn thư mục cha</button></p>}
+    <span className={reconnect ? 'drive-state needs-access' : 'drive-state'}>{stateLabel[drive.state]}</span>
+    {drive.state !== 'not_connected' && <p>Thư mục ứng dụng <strong>Vườn Văn</strong></p>}
+    {reconnect && <p className="drive-notice">Kết nối lại bằng tài khoản Google đã liên kết để tiếp tục lưu bài.</p>}
+    <div className="app-actions drive-actions">
+      <form action="/api/drive" method="post">
+        <input type="hidden" name="action" value="authorize"/>
+        <button className="app-primary" disabled={busy}>{drive.state === 'not_connected' ? 'Cấp quyền Drive' : 'Kết nối lại Drive'}</button>
+      </form>
+      {(reconnect || drive.pending === 'pick') && <button disabled={busy || drive.pending !== 'pick'} onClick={pick}>Chọn thư mục cha</button>}
+      {drive.pending === 'verify' && <button disabled={busy} onClick={() => finish()}>Xác minh thư mục</button>}
+    </div>
     {drive.pending === 'pick' && folders.length > 0 && <p>
       <label>Thư mục cha <select value={parent} disabled={busy} onChange={event => setParent(event.target.value)}>
         {folders.map(item => <option value={item.id} key={item.id}>{item.name}</option>)}
       </select></label>{' '}
       <button disabled={busy || !parent} onClick={() => finish(parent)}>Dùng thư mục này</button>
     </p>}
-    {drive.pending === 'verify' && <p><button disabled={busy} onClick={() => finish()}>Xác minh thư mục</button></p>}
+    {drive.provider === 'fake' && <small className="drive-provider">Drive giả lập trên môi trường local</small>}
     <p role="status">{message}</p>
   </>;
 }

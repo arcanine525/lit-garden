@@ -8,12 +8,14 @@ import {
 import '@mdxeditor/editor/style.css';
 import { useCallback, useEffect, useImperativeHandle, useRef, useState, type ClipboardEvent, type DragEvent, type Ref } from 'react';
 import { prepareMarkdown, inspectMarkdown, type EditorRole } from '../../shared/editor-markdown';
-import { editorPlugins } from './editor-plugins';
+import { editorPlugins, type WorksheetActions, type WorksheetFormat } from './editor-plugins';
 import { assetBlob } from './asset-client';
+import { WorksheetToolbar } from './worksheet-toolbar';
 
 export type EditorHandle = { getMarkdown(): string; setMarkdown(markdown: string): boolean };
 export type EditorProps = { initialMarkdown?: string; role: EditorRole; assignmentId?: string; libraryId?: string;
-  onMarkdownChange?: (source: string) => void; editorRef?: Ref<EditorHandle>; validate?: boolean; readOnly?: boolean };
+  onMarkdownChange?: (source: string) => void; editorRef?: Ref<EditorHandle>; validate?: boolean; readOnly?: boolean;
+  worksheet?: boolean };
 
 const errors: Record<string,string> = {
   PRIVATE_ASSET_REQUIRED: 'Chỉ dùng ảnh đã tải vào bài này.',
@@ -33,7 +35,8 @@ const errors: Record<string,string> = {
   DRIVE_UNAVAILABLE: 'Chưa đọc hoặc lưu được ảnh trên Drive. Hãy thử lại.'
 };
 
-export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, libraryId, onMarkdownChange, editorRef, validate, readOnly }: EditorProps) {
+export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, libraryId, onMarkdownChange, editorRef, validate, readOnly,
+  worksheet }: EditorProps) {
   const [initial] = useState(() => {
     try { return { source: prepareMarkdown(initialMarkdown,role), invalid: false }; }
     catch { return { source: initialMarkdown, invalid: true }; }
@@ -47,6 +50,8 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, libra
   const [retryFile,setRetryFile] = useState<File | null>(null);
   const editor = useRef<MDXEditorMethods>(null);
   const tableSnapshot = useRef<() => string | undefined>(() => undefined);
+  const worksheetActions = useRef<WorksheetActions>(null);
+  const [format,setFormat] = useState<WorksheetFormat>({ bold:false,italic:false,inTable:false });
   const attach = useRef<(reference: string) => void>(() => {});
   const fileInput = useRef<HTMLInputElement>(null);
   const initialText = useRef(initial.invalid ? '' : initial.source);
@@ -192,32 +197,44 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, libra
     finally { setChecking(false); }
   }
 
-  return <div className="garden-editor" onKeyDownCapture={event => {
+  function changeMode() {
+    if (mode === 'source') apply(source);
+    else { setSource(current()); setMode('source'); }
+  }
+
+  const utility = <>
+    <button type="button" onPointerDown={event => event.preventDefault()} onClick={download}>Tải Markdown</button>
+    {validate && <button type="button" disabled={checking} onClick={check}>Kiểm tra Markdown</button>}
+    {retryFile && mode === 'rich' && <button type="button" disabled={uploading} onClick={() => insertImage(retryFile)}>Thử tải ảnh lên lại</button>}
+    {canInsertImages && <button type="button" disabled={uploading || mode === 'source'} onClick={() => {
+      initialText.current = current();
+      previews.current = new Map();
+      for (const url of previewUrls.current) URL.revokeObjectURL(url);
+      previewUrls.current.clear();
+      setMessage('');
+      setEpoch(value => value + 1);
+    }}>Tải lại ảnh</button>}
+  </>;
+  const sourceInput = mode === 'source' && <textarea className={worksheet ? 'worksheet-source' : undefined}
+    rows={12} aria-label="Mã Markdown" value={source} readOnly={readOnly} onChange={event => {
+      setSource(event.target.value);
+      onMarkdownChange?.(event.target.value);
+    }}/>;
+  return <div className={worksheet ? 'garden-editor worksheet-editor' : 'garden-editor'} onKeyDownCapture={event => {
     if (!(event.ctrlKey || event.metaKey)) return;
     if (event.key.toLowerCase() === 'u') { event.preventDefault(); event.stopPropagation(); notify(Error('UNSUPPORTED_UNDERLINE')); }
     if (event.key.toLowerCase() === 's') { event.preventDefault(); event.stopPropagation(); download(); }
   }}>
-    <div className="app-actions">
+    {worksheet ? <WorksheetToolbar actions={worksheetActions} format={format} source={mode === 'source'}
+      disabled={Boolean(readOnly || uploading)} toggle={changeMode} menu={utility}
+      image={canInsertImages ? () => fileInput.current?.click() : undefined}/> : <div className="app-actions">
       <button type="button" aria-pressed={mode === 'rich'} disabled={uploading} onClick={() => { if (mode === 'source') apply(source); }}>Trực quan</button>
       <button type="button" aria-pressed={mode === 'source'} disabled={uploading} onPointerDown={event => event.preventDefault()} onClick={() => {
         setSource(current()); setMode('source');
       }}>Mã Markdown</button>
-      <button type="button" onPointerDown={event => event.preventDefault()} onClick={download}>Tải Markdown</button>
-      {validate && <button type="button" disabled={checking} onClick={check}>Kiểm tra Markdown</button>}
-      {retryFile && mode === 'rich' && <button type="button" disabled={uploading} onClick={() => insertImage(retryFile)}>Thử tải ảnh lên lại</button>}
-      {canInsertImages && <button type="button" disabled={uploading || mode === 'source'} onClick={() => {
-        initialText.current = current();
-        previews.current = new Map();
-        for (const url of previewUrls.current) URL.revokeObjectURL(url);
-        previewUrls.current.clear();
-        setMessage('');
-        setEpoch(value => value + 1);
-      }}>Tải lại ảnh</button>}
-    </div>
-    {mode === 'source' && <label>Mã Markdown<textarea rows={12} value={source} readOnly={readOnly} onChange={event => {
-      setSource(event.target.value);
-      onMarkdownChange?.(event.target.value);
-    }}/></label>}
+      {utility}
+    </div>}
+    {mode === 'source' && (worksheet ? sourceInput : <label>Mã Markdown{sourceInput}</label>)}
     <input ref={fileInput} type="file" accept="image/png,image/jpeg,image/webp" aria-label="Chọn ảnh riêng tư" hidden onChange={event => {
       const file = event.target.files?.[0];
       if (file) void insertImage(file);
@@ -236,14 +253,15 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, libra
             onMarkdownChange?.(value);
           }
         }} plugins={[
-          editorPlugins({ install: (snapshot, insert) => { tableSnapshot.current = snapshot; attach.current = insert; } }),
+          editorPlugins({ install: (snapshot, insert) => { tableSnapshot.current = snapshot; attach.current = insert; },
+            worksheet:worksheet ? { install:actions => { worksheetActions.current = actions; },onFormat:setFormat } : undefined }),
           headingsPlugin(),listsPlugin(),quotePlugin(),tablePlugin(),linkPlugin(),linkDialogPlugin(),
           ...(role === 'teacher' ? [imagePlugin({ imagePreviewHandler: preview, disableImageResize: true,
             allowSetImageDimensions: false, disableImageSettingsButton: true })] : []),
-          toolbarPlugin({ toolbarContents: () => <><UndoRedo/><BoldItalicUnderlineToggles options={['Bold','Italic']}/>
+          ...(!worksheet ? [toolbarPlugin({ toolbarClassName:'garden-format-toolbar',toolbarContents: () => <><UndoRedo/><BoldItalicUnderlineToggles options={['Bold','Italic']}/>
             <BlockTypeSelect/><ListsToggle options={['bullet','number']}/><CreateLink/><InsertTable/>
             {canInsertImages && <button type="button" disabled={uploading} onPointerDown={event => event.preventDefault()}
-              onClick={() => fileInput.current?.click()}>Chèn ảnh</button>}</> })
+              onClick={() => fileInput.current?.click()}>Chèn ảnh</button>}</> })] : [])
         ]}/>
     </div>
     <p role="status">{message}</p>

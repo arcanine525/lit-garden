@@ -2,31 +2,39 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { ActionDialog } from '../../../action-dialog';
+import { AppShell } from '../../../app-shell';
 import { EditorWorkbench } from '../../../editor/editor-workbench';
+import { MarkdownDocument } from '../../../editor/markdown-document';
 import type { EditorHandle } from '../../../editor/markdown-editor';
 import type { DraftBody } from '../../../../server/student-drafts/access';
 import { deadlineFormat } from '../../deadline-input';
 import { deviceDrafts, downloadDraft, keepDeviceCopy, syncedBranch, type DeviceCopy } from './draft-device';
 import { FocusClock, type FocusClockHandle } from './focus-clock';
 import { useSubmission } from './use-submission';
+import './writing.css';
 
 type Head = { draft: DraftBody; writable: boolean; version: string; hash: string | null };
 type Lease = { epoch: string; version: string };
 type Attempt = { action: 'save'; key: string; epoch: string; baseVersion: string; draft: DraftBody };
+type Prompt = { state: 'published'; prompt: { title: string; prompt: string }; dueAt: string | null };
 const empty = { markdown:'',explanation:'' };
 const synced = 'Đã đồng bộ nháp lên Drive.';
 const stale = 'Quyền viết đã chuyển. Bạn vẫn có thể tải phần chưa đồng bộ.';
+const shortDeadline = new Intl.DateTimeFormat('vi-VN',{
+  day:'2-digit',month:'2-digit',year:'numeric',timeZone:'Asia/Ho_Chi_Minh'
+});
 const same = (a: DraftBody, b: DraftBody) => a.markdown === b.markdown && a.explanation === b.explanation;
 const inaccessible = (code: string) => ['UNAUTHENTICATED','FORBIDDEN','DRAFT_NOT_FOUND'].includes(code);
 const fenced = (code: string) => inaccessible(code) || ['STALE_WRITER','DRAFT_READ_ONLY','DRAFT_CHANGED'].includes(code);
 
-export function StudentWriter({ assignment, student }: { assignment: string; student: string }) {
+export function StudentWriter({ assignment, student, displayName }: { assignment: string; student: string; displayName: string }) {
   const path = `/api/assignments/${assignment}/draft`;
   const submission = useSubmission(student,assignment);
   const [initial,setInitial] = useState<DraftBody>(empty);
   const [explanation,setExplanation] = useState('');
   const [renderKey,remountEditor] = useState(0);
   const [ready,setReady] = useState(false);
+  const [assignmentPrompt,setAssignmentPrompt] = useState<Prompt | null>(null);
   const [writable,setWritable] = useState(true);
   const [epoch,setEpoch] = useState('');
   const [held,setHeld] = useState(false);
@@ -53,6 +61,16 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
   const frame = useRef(0);
   const autosave = useRef<() => void>(() => {});
   const reconnect = useRef<() => void>(() => {});
+  useEffect(() => {
+    if (!ready) return;
+    const controller = new AbortController();
+    void fetch(`/api/assignments/${assignment}`,{ cache:'no-store',signal:controller.signal }).then(async response => {
+      if (!response.ok) return;
+      const detail: Prompt = await response.json();
+      if (!controller.signal.aborted && detail.state === 'published') setAssignmentPrompt(detail);
+    }).catch(() => {});
+    return () => controller.abort();
+  },[assignment,ready]);
 
   async function request<T>(data?: Record<string,unknown>): Promise<T> {
     const response = await fetch(path,data ? { method:'POST',headers:{ 'Content-Type':'application/json' },
@@ -293,7 +311,8 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
     cancelAnimationFrame(frame.current);
     frame.current = requestAnimationFrame(() => capture(current()));
   }}>
-    <p role="status">{status}</p>
+    <h2>Bài viết của em</h2>
+    {!ready && <p role="status">{status}</p>}
     {deviceError && <p role="alert">Chưa lưu được bản trên thiết bị. Hãy tải Markdown để giữ nội dung.</p>}
     {ready && !epoch && writable && !submission.attempt && (held ? <ActionDialog trigger="Tiếp tục viết tại đây" title="Chuyển quyền viết"
       detail="Thiết bị trước có thể còn nội dung chưa đồng bộ. Bạn sẽ bắt đầu từ bản đã đồng bộ gần nhất."
@@ -312,19 +331,16 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
         }}/>}
     </div>}
     {ready && <>
-      <EditorWorkbench key={renderKey} role="student" assignmentId={assignment} editorRef={editor} readOnly={!epoch}
+      <EditorWorkbench key={renderKey} role="student" assignmentId={assignment} editorRef={editor} readOnly={!epoch} worksheet
         initialMarkdown={initial.markdown} onMarkdownChange={markdown => capture({ ...body.current,markdown })}/>
-      <label>Giải thích (tùy chọn)<textarea value={explanation} readOnly={!epoch} onChange={event => {
+      <p className="writing-sync" role="status">{status}</p>
+      <label className="writing-explanation">Giải thích (tùy chọn)<textarea value={explanation} readOnly={!epoch} onChange={event => {
         setExplanation(event.target.value);
         capture({ ...current(),explanation:event.target.value });
       }}/></label>
-      <div className="app-actions">
-        <button type="button" onClick={() => downloadDraft(epoch ? current() : body.current)}>Tải nháp của tôi (.md)</button>
-        {epoch && <>
-          <button type="button" disabled={busy || submission.busy || (!dirty && !retry)} onPointerDown={event => event.preventDefault()}
-            onClick={() => void save()}>{retry ? 'Thử đồng bộ lại' : 'Đồng bộ nháp'}</button>
-          <button type="button" disabled={busy || submission.busy || !!submission.attempt} onClick={() => void release()}>Ngừng viết ở đây</button>
-        </>}
+      <div className="app-actions writing-actions">
+        <button type="button" aria-label="Tải nháp của tôi (.md)"
+          onClick={() => downloadDraft(epoch ? current() : body.current)}>Tải nháp</button>
         {submission.attempt ? <>
           <button type="button" className="app-primary" disabled={submission.busy || busy} onClick={() => void submission.act('submit')}>Thử nộp lại</button>
           <button type="button" onClick={() => { if (submission.attempt) downloadDraft(submission.attempt.draft); }}>Tải lần nộp đang chờ (.md)</button>
@@ -335,6 +351,14 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
           onPointerDown={event => event.preventDefault()} onClick={startSubmission}>
           {submission.history.length ? 'Nộp bản mới' : 'Nộp bài'}
         </button>}
+        {epoch && <div className="writing-lease-actions">
+          <button type="button" disabled={busy || submission.busy || (!dirty && !retry)} onPointerDown={event => event.preventDefault()}
+            aria-label={retry ? 'Thử đồng bộ lại' : 'Đồng bộ nháp'} onClick={() => void save()}>
+            {retry ? 'Đồng bộ lại' : 'Đồng bộ'}
+          </button>
+          <button type="button" disabled={busy || submission.busy || !!submission.attempt} aria-label="Ngừng viết ở đây"
+            onClick={() => void release()}>Ngừng viết</button>
+        </div>}
       </div>
       <p role="status">{submission.status}</p>
       {submission.history.length > 0 && <section>
@@ -347,8 +371,22 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
       </section>}
     </>}
   </section>;
-  return <>
-    <FocusClock student={student} assignment={assignment} clockRef={clock}/>
-    {draftPanel}
-  </>;
+  return <AppShell user={{ display_name:displayName,role:'student' }} current="/assignments"
+    title={assignmentPrompt?.prompt.title ?? 'Viết bài'}>
+    <div className="writing-layout">
+      {draftPanel}
+      <aside aria-label="Đề bài và đồng hồ">
+        <section className="app-panel writing-prompt">
+          <h2><a href={`/assignments/${assignment}`}>Đề bài</a></h2>
+          {assignmentPrompt && <>
+            <MarkdownDocument source={assignmentPrompt.prompt.prompt}/>
+            {assignmentPrompt.dueAt && <span className="writing-deadline">
+              Hạn {shortDeadline.format(new Date(assignmentPrompt.dueAt))}
+            </span>}
+          </>}
+        </section>
+        <section className="app-panel"><FocusClock student={student} assignment={assignment} clockRef={clock}/></section>
+      </aside>
+    </div>
+  </AppShell>;
 }

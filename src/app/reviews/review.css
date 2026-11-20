@@ -1,31 +1,78 @@
-.review-columns { display: grid; grid-template-columns: minmax(0,1.2fr) minmax(320px,1fr); gap: 24px; }
+.review-columns { display: grid; grid-template-columns: minmax(0,3fr) minmax(0,2fr); gap: 16px; align-items: start; }
 .review-columns article {
-  min-height: 250px;
-  padding: 15px 16px;
-  border: 1px solid var(--line);
-  border-radius: 12px;
+  margin-bottom: 16px;
   font: 17px/2 var(--serif);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
-  background: var(--surface-input);
 }
-.review-tools { margin-block: 12px; }
+.review-meta { color: var(--ink-muted); font-size: 12px; }
+.review-meta-tools { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 14px; }
+.review-title { text-decoration: none; color: inherit; }
+.review-title:hover { text-decoration: underline; }
+.review-score-status { background: #edf2e6; padding: 11px 13px; border-radius: 10px; }
+.result-grade { font: 27px var(--serif); font-variant-numeric: tabular-nums; }
+.app-panel .result-details { padding: 0; border: 0; }
+.result-downloads { gap: 8px; }
+.result-downloads .app-button { padding-inline: 11px; }
+.result-details[open] { flex-basis: 100%; }
+.result-details > div { margin-top: 14px; }
+.publication-history { margin-top: 16.5px; }
+.publication-history ul { list-style: none; padding: 0; margin: 0; }
+.publication-history li {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  padding-block: 14px; border-top: 1px solid var(--line);
+}
+.publication-history a { font-weight: 600; }
+.publication-history small { display: block; margin-top: 4px; color: var(--ink-muted); }
+.publication-current { background: #eef3e6; color: #3b5833; padding: 3px 9px; border-radius: 18px; font-size: 11px; }
+.review-tools { margin-block: 14px 10px; gap: 8px; }
+.app-panel > section:has(.reply-thread) + .review-tools { margin-bottom: 13px; }
+.review-tools button { padding-inline: 13px; }
+.app-panel .range-settings { padding: 0; border: 0; }
+.range-settings[open] { flex-basis: 100%; }
+.range-settings label { display: block; }
 .review-note, .review-comment { padding: 14px; margin-block: 13px; border-radius: 0 9px 9px 0; }
 .review-note { background: #f3f6e9; }
-.review-comment { border-inline-start: 3px solid #d2bca0; background: #faf5e8; }
+.review-comment { position: relative; border: 1px solid #e8ddc6; border-radius: 10px; background: #faf5e8; margin-block: 14px; }
 .review-comment blockquote, .review-note blockquote { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.review-comment blockquote { font: italic 16px/1.5 var(--serif); margin-bottom: 14px; }
+.review-comment-head { display: flex; align-items: start; justify-content: space-between; gap: 6px; }
+.review-comment-head button { padding: 0 6px; min-height: 24px; }
+.review-comment small { display: block; margin-top: 9px; color: var(--ink-muted); }
+.review-comment:has(> .reply-thread) blockquote { padding-inline-end: 66px; }
+.review-comment > .reply-thread > summary { position: absolute; inset-block-start: 14px; inset-inline-end: 14px; }
+.review-comment:has(> .reply-thread[open] > form) blockquote { padding-inline-end: 0; }
+.review-comment > .reply-thread[open]:has(> form) { position: relative; }
+.review-comment > .reply-thread[open]:has(> form) > summary {
+  inset-block-start: auto; inset-block-end: 10px; inset-inline-end: 0;
+}
+.review-comment .reply-thread form .app-actions { padding-inline-end: 65px; }
 .review-text { white-space: pre-wrap; }
 .review-mark-yellow { background: #f5e799; color: var(--ink); }
 .review-mark-green { background: #cae4b6; color: var(--ink); }
 .review-mark-pink { background: #f5d2de; color: var(--ink); }
 .review-mark-blue { background: #cdddf5; color: var(--ink); }
-.review-criterion { display: block; }
-.review-criterion select { display: block; width: 100%; }
-.app-panel .review-queue { list-style: none; padding: 0; }
-.app-panel .review-queue li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
-.review-queue li > div { flex: 1 1 200px; min-width: 0; }
-.review-queue li p { color: var(--ink-muted); margin: 4px 0 0; }
-.app-panel .reply-list { list-style: none; padding: 0; }
-.reply-list li { padding-block: 8px; border-bottom: 1px solid var(--line); }
-.reply-list li p { margin-bottom: 4px; }
-@media (max-width: 1150px) { .review-columns { grid-template-columns: minmax(0,1fr); } }
+.review-criterion, .review-overall { display: block; }
+.review-criterion select { display: block; width: 100%; margin-bottom: 14px; font-weight: 400; }
+.review-columns textarea { width: 100%; min-height: 86px; font-weight: 400; }
+.review-overall textarea { margin-bottom: 13px; }
+.review-grade-actions { margin-bottom: 12px; }
+.app-panel .review-draft-controls { padding: 0; border: 0; }
+.review-draft-controls[open] { flex-basis: 100%; }
+.review-draft-controls > div { margin-top: 8px; }
+.review-saving { font-size: 12px; color: var(--ink-muted); }
+.app-panel .review-queue { list-style: none; padding: 0; margin: 0; }
+.app-panel .review-queue li { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px 16px; padding: 14px 0; margin: 0; border-top: 1px solid var(--line); }
+.review-queue li > div { min-width: 0; }
+.review-row-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.review-row-actions a { padding-inline: 13px; }
+.review-queue li p { color: var(--ink-muted); margin: 4px 0 0; font-size: 12px; }
+.review-queue-state { padding: 3px 9px; border-radius: 18px; font-size: 11px; background: #f9eae4; color: #773f35; }
+.review-queue-state.returned { background: #eaf0f8; color: #355482; }
+.app-panel .reply-thread { padding: 0; border: 0; }
+.reply-thread summary { font-size: 12px; }
+.app-panel .reply-list { list-style: none; padding: 0; margin: 0 0 14px; }
+.reply-list li :is(.reply-author,.markdown-document,.markdown-document > p:first-child) { display: inline; font: inherit; }
+.reply-list li .markdown-document > :not(p:first-child) { margin-block: 6px; }
+.reply-list li + li { padding-top: 7px; border-top: 1px solid var(--line); }
+@media (max-width: 1150px) { .review-columns { grid-template-columns: minmax(0,1fr); gap: 0; } }

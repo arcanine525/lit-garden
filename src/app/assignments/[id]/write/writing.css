@@ -1,0 +1,30 @@
+.writing-layout { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+.writing-layout .garden-editor :is(textarea,.garden-editor-text) { min-height: 210px; }
+.writing-layout .worksheet-editor .garden-editor-text { min-height: 209px; }
+.writing-layout .garden-editor textarea { height: 210px; font-weight: 400; }
+.writing-layout .garden-editor .garden-editor-text h1 { font-size: 18px; }
+.writing-layout .focus-clock { margin: 0; position: relative; }
+.writing-layout .focus-clock-toggle { min-height: 40px; box-shadow: none; font-size: 12px; padding: 8px 13px; }
+.writing-layout .focus-clock-toggle[aria-expanded="true"] { position: absolute; inset-inline-end: 0; inset-block-start: 0; }
+.writing-layout .focus-clock-panel:not([hidden]) { display: block; padding: 0; border: 0; background: none; margin: 0; }
+.writing-layout .focus-clock-panel svg { position: absolute; inset-inline-end: 0; inset-block-end: 0; }
+.writing-layout .focus-clock-content { padding-inline-end: 66px; }
+.writing-layout .focus-clock-panel h2 { font-size: 21px; }
+.writing-layout .focus-clock-panel input { height: 32px; min-height: 0; padding-block: 4px; margin-block: 5px; }
+.writing-layout .focus-clock-panel [role="timer"] { font: 23px var(--serif); }
+.writing-layout .writing-explanation textarea { width: 100%; min-height: 86px; font-weight: 400; }
+.writing-sync { border-radius: 10px; background: #edf2e6; padding: 11px 13px; margin: 13px 0; }
+.writing-actions { gap: 8px; }
+.writing-lease-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.writing-actions button { padding-inline: 10px; }
+.writing-lease-actions button { padding-inline: 6px; font-size: 11px; }
+.writing-prompt h2 a { color: inherit; text-decoration: none; }
+.writing-prompt h2 a:hover { text-decoration: underline; }
+.writing-prompt .markdown-document { font: inherit; }
+.writing-deadline { display: inline-block; border-radius: 18px; padding: 3px 9px; background: #eaf0f8; color: #355482; font-size: 11px; }
+@media (max-width: 1150px) {
+  .writing-layout { grid-template-columns: minmax(0, 1fr); gap: 0; }
+}
+@media (max-width: 760px) {
+  .writing-layout .focus-clock-panel input { height: 28px; }
+}

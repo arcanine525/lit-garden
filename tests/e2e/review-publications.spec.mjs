@@ -105,7 +105,7 @@ test('T25 publishes and republishes immutable reviews, while students see only t
     await responseBody(await edited);
     expect(await published(student,v1.id)).toEqual(previous);
     await student.page.goto(`/results/${v1.id}`);
-    await expect(student.page.getByRole('heading',{ name:'Kết quả đã trả' })).toBeVisible();
+    await expect(student.page.getByRole('heading',{ name:'Kết quả hiện hành' })).toBeVisible();
     await expect(student.page.getByText('Góp ý từ lần trả thứ hai.')).toHaveCount(0);
     const republished = waitForReturn(page,v1.id);
     await button('Trả lại bài').click();
