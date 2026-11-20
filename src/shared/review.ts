@@ -37,6 +37,9 @@ export const reviewMessages: Record<string,string> = {
   SOURCE_UNVERIFIED:'Chưa xác minh được bản nộp. Mở lại bàn chấm để kiểm tra.',
   ANCHOR_CONFLICT:'Đoạn được chọn không còn khớp với bản nộp đã xác minh.',
   INVALID_REVIEW_DRAFT:'Kiểm tra mức điểm và nhận xét trước khi lưu nháp chấm.',
+  RUBRIC_INCOMPLETE:'Chấm đủ tiêu chí để trả bài.',
+  REVIEW_REJECTED:'Lần trả bài này đã bị chặn. Mở lại bàn chấm để thử lại.',
+  COMMENT_LOCKED:'Nhận xét đã có phản hồi hoặc đang được phản hồi.',
   DRAFT_CHANGED:'Nháp chấm đã thay đổi. Tải lại để mở bản mới nhất.',
   DRIVE_INTEGRITY:'Tệp chấm hoặc rubric trên Drive không còn khớp với bản đã lưu.'
 };

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RubricSnapshot } from '../../../server/assignments/bundle';
+import type { PublicationSnapshot } from '../../../server/reviews/publications';
 import { reviewAnchor, reviewColors, reviewMessages, reviewTotal, type RangeComment, type ReviewColor, type ReviewDraft,
   type ReviewComment } from '../../../shared/review';
 import { ActionDialog } from '../../action-dialog';
@@ -9,17 +10,20 @@ import { ReviewDocument, selectedReviewRange } from '../review-document';
 import { keepDeviceReview, latestDeviceReview, type DeviceReview } from '../review-device';
 import { reviewSuggestions, type WritingSuggestion } from '../review-rules';
 
-type Head = { version: string; hash: string | null; draft: ReviewDraft };
+type Head = { version: string; hash: string | null; draft: ReviewDraft; currentPublicationId: string | null };
 type Attempt = { action: 'save'; key: string; epoch: string; baseVersion: string; draft: ReviewDraft };
 const format = new Intl.NumberFormat('vi-VN',{ minimumFractionDigits:2,maximumFractionDigits:2 });
 const saved = 'Đã lưu nháp chấm trên Drive.';
 const unavailable = new Set(['SUBMISSION_CONFLICT','SUBMISSION_MISSING','SUBMISSION_UNAVAILABLE','SOURCE_UNVERIFIED','CLASS_INACTIVE','DRIVE_INTEGRITY']);
 const same = (a: ReviewDraft,b: ReviewDraft) => JSON.stringify(a) === JSON.stringify(b);
 
-export function ReviewWorkbench({ id, teacher, markdown, text, explanation, projectionSha256, rubric, initial }: {
-  id: string; teacher: string; markdown: string; text: string; explanation: string; projectionSha256: string; rubric: RubricSnapshot; initial: Head;
+export function ReviewWorkbench({ id, teacher, markdown, text, explanation, projectionSha256, submissionSha256, rubric, initial }: {
+  id: string; teacher: string; markdown: string; text: string; explanation: string; projectionSha256: string; submissionSha256: string;
+  rubric: RubricSnapshot; initial: Head;
 }) {
   const path = `/api/submissions/${id}/review`;
+  const publicationPath = `/api/submissions/${id}/publication`;
+  const publicationKey = `garden:publication:${teacher}:${id}`;
   const baseline = useRef(initial);
   const current = useRef(initial.draft);
   const [draft,setDraft] = useState(initial.draft);
@@ -36,11 +40,16 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
   const [note,setNote] = useState<RangeComment | null>(null);
   const [selectionStatus,setSelectionStatus] = useState('');
   const [suggestions,setSuggestions] = useState<WritingSuggestion[] | null>(null);
+  const [currentPublication,setCurrentPublication] = useState(initial.currentPublicationId);
+  const [publishing,setPublishing] = useState(false);
+  const [publishRetry,setPublishRetry] = useState(false);
   const article = useRef<HTMLElement>(null);
   const client = useRef('');
   const branch = useRef('');
   const restored = useRef<string | null>(null);
   const pending = useRef<Attempt | null>(null);
+  const pendingPublication = useRef<PublicationSnapshot | null>(null);
+  const returning = useRef(false);
   const working = useRef(false);
   const writer = useRef('');
   const writes = useRef(Promise.resolve());
@@ -51,8 +60,8 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
 
   function setWriter(next: string) { writer.current = next; setEpoch(next); }
 
-  async function request<T>(data?: object): Promise<T> {
-    const response = await fetch(path,data ? { method:'POST',headers:{ 'Content-Type':'application/json' },
+  async function request<T>(data?: object, endpoint = path): Promise<T> {
+    const response = await fetch(endpoint,data ? { method:'POST',headers:{ 'Content-Type':'application/json' },
       body:JSON.stringify({ clientId:client.current,...data }) } : { cache:'no-store' });
     const value = await response.json();
     if (!response.ok) throw Error(value.error);
@@ -97,6 +106,7 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
           restored.current = null;
         }
         baseline.current = fresh;
+        setCurrentPublication(fresh.currentPublicationId);
         current.current = fresh.draft;
         setDraft(fresh.draft);
       }
@@ -115,7 +125,15 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
     client.current ||= crypto.randomUUID();
     branch.current ||= crypto.randomUUID();
     void latestDeviceReview(teacher,id).then(setDevice,() => setDeviceError(true));
-    void claim('acquire');
+    try {
+      const saved = sessionStorage.getItem(publicationKey);
+      if (saved) pendingPublication.current = JSON.parse(saved);
+    } catch { /* A pending attempt can still be retried while this page stays open. */ }
+    if (pendingPublication.current) {
+      setPublishRetry(true);
+      setBusy(false);
+      setStatus('Chưa xác nhận đã trả bài.');
+    } else void claim('acquire');
     const timer = window.setInterval(() => autosave.current(),350);
     return () => window.clearInterval(timer);
   },[teacher,id]);
@@ -131,7 +149,8 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
   },[id,epoch]);
 
   async function save() {
-    if (!writer.current || working.current || (!pending.current && same(current.current,baseline.current.draft))) return;
+    if (!writer.current || working.current) return false;
+    if (!pending.current && same(current.current,baseline.current.draft)) return true;
     const attempt = pending.current ?? { action:'save',key:crypto.randomUUID(),epoch:writer.current,baseVersion:baseline.current.version,
       draft:current.current };
     pending.current = attempt;
@@ -141,9 +160,9 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
     try {
       await writes.current;
       const result = await request<{ version: string; hash: string; state: string }>(attempt);
-      if (writer.current !== attempt.epoch) return;
-      if (result.state === 'unknown') { setRetry(true); setStatus('Chưa xác nhận lưu nháp chấm trên Drive.'); return; }
-      baseline.current = { version:result.version,hash:result.hash,draft:attempt.draft };
+      if (writer.current !== attempt.epoch) return false;
+      if (result.state === 'unknown') { setRetry(true); setStatus('Chưa xác nhận lưu nháp chấm trên Drive.'); return false; }
+      baseline.current = { ...baseline.current,version:result.version,hash:result.hash,draft:attempt.draft };
       pending.current = null;
       setRetry(false);
       if (same(current.current,attempt.draft)) {
@@ -152,28 +171,69 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
         if (restored.current) { persist(restored.current,null); restored.current = null; setDevice(null); }
         setStatus(saved);
       } else setStatus('Nháp chấm có thay đổi chưa đồng bộ.');
+      return true;
     } catch (error) {
       const code = (error as Error).message;
       if (writer.current === attempt.epoch) {
         showFailure(code);
-        if (['ANCHOR_CONFLICT','INVALID_REVIEW_DRAFT','KEY_REUSED'].includes(code)) {
+        if (['ANCHOR_CONFLICT','INVALID_REVIEW_DRAFT','KEY_REUSED','COMMENT_LOCKED'].includes(code)) {
           pending.current = null;
           invalidDraft.current = true;
           setRetry(false);
         } else if (writer.current) setRetry(true);
       }
+      return false;
     } finally { working.current = false; setBusy(false); }
+  }
+
+  function keepPublication(attempt: PublicationSnapshot | null) {
+    pendingPublication.current = attempt;
+    try {
+      if (attempt) sessionStorage.setItem(publicationKey,JSON.stringify(attempt));
+      else sessionStorage.removeItem(publicationKey);
+    } catch { /* This page still retains the exact publication request. */ }
+  }
+
+  async function publish() {
+    if (returning.current || working.current || (!pendingPublication.current && !writer.current)) return;
+    returning.current = true;
+    setPublishing(true);
+    try {
+      if (!pendingPublication.current) {
+        if (current.current.scores.length !== rubric.criteria.length || !await save()) return;
+        const { version,hash,currentPublicationId } = baseline.current;
+        if (!hash || !same(current.current,baseline.current.draft)) return;
+        keepPublication({ key:crypto.randomUUID(),clientId:client.current,baseVersion:version,epoch:writer.current,
+          draftHash:hash,basePublication:currentPublicationId,submissionSha256 });
+      }
+      setStatus('Đang trả bài…');
+      const result = await request<{ state: string; id: string }>(pendingPublication.current!,publicationPath);
+      if (result.state === 'unknown') { setPublishRetry(true); setStatus('Chưa xác nhận đã trả bài.'); return; }
+      const repeat = pendingPublication.current?.basePublication !== null;
+      keepPublication(null);
+      setPublishRetry(false);
+      baseline.current = { ...baseline.current,currentPublicationId:result.id };
+      setCurrentPublication(result.id);
+      setStatus(repeat ? 'Đã trả lại bài.' : 'Đã trả bài.');
+    } catch (error) {
+      const code = (error as Error).message;
+      if (unavailable.has(code) || ['COMMENT_LOCKED','DRAFT_CHANGED','RUBRIC_INCOMPLETE','STALE_WRITER','REVIEW_REJECTED','KEY_REUSED'].includes(code)) {
+        keepPublication(null);
+        setPublishRetry(false);
+        showFailure(code);
+      } else { setPublishRetry(true); setStatus('Chưa xác nhận đã trả bài.'); }
+    } finally { returning.current = false; setPublishing(false); }
   }
 
   useEffect(() => {
     autosave.current = () => {
       const now = performance.now();
-      if (!retry && !invalidDraft.current && writer.current && !working.current &&
+      if (!retry && !returning.current && !pendingPublication.current && !invalidDraft.current && writer.current && !working.current &&
           (now-lastChange.current >= 2000 || (firstChange.current && now-firstChange.current >= 10000))) void save();
     };
   });
 
-  const editing = !!epoch && !blocked;
+  const editing = !!epoch && !blocked && !publishing && !publishRetry;
   const marks = draft.comments.filter((comment): comment is RangeComment => comment.kind === 'range');
   const overall = draft.comments.find(comment => comment.kind === 'overall');
   const dirty = !same(draft,baseline.current.draft);
@@ -279,14 +339,19 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
               comments:(id ? [...comments,{ id,kind:'overall' as const,body }] : comments).sort((a,b) => a.id.localeCompare(b.id)) });
           }}/></label>
         <p>{draft.scores.length}/{rubric.criteria.length} tiêu chí đã chấm · {format.format(reviewTotal(draft.scores,rubric))} / {format.format(Number(rubric.scale))} điểm</p>
+        {draft.scores.length < rubric.criteria.length && <p>Chấm đủ tiêu chí để trả bài.</p>}
+        {currentPublication && <p><a href={`/results/${id}`}>Xem lịch sử trả bài</a></p>}
         <p role={blocked ? 'alert' : 'status'}>{status}</p>
         {deviceError && <p role="alert">Chưa lưu được bản nháp trên thiết bị.</p>}
         <div className="app-actions">
           {editing && <button type="button" disabled={busy || (!dirty && !retry)} onClick={() => void save()}>{retry ? 'Thử lưu lại' : 'Lưu nháp chấm'}</button>}
+          {(editing || publishing || publishRetry) && <button type="button" className="app-primary"
+            disabled={busy || publishing || (!publishRetry && (retry || draft.scores.length !== rubric.criteria.length))}
+            onClick={() => void publish()}>{publishRetry ? 'Thử trả lại' : currentPublication ? 'Trả lại bài' : 'Trả bài'}</button>}
           {held && <ActionDialog trigger="Tiếp tục chấm tại đây" title="Chuyển quyền sửa nháp chấm"
             detail="Phiên trước có thể còn thay đổi chưa đồng bộ. Phiên này sẽ mở bản đã lưu gần nhất trên Drive."
             confirmLabel="Chuyển quyền chấm" inactive={busy} onConfirm={() => claim('takeover')}/>}
-          {!editing && !blocked && !held && !busy && <button type="button" onClick={() => claim('acquire')}>Thử mở quyền chấm</button>}
+          {!editing && !blocked && !held && !busy && !publishing && !publishRetry && <button type="button" onClick={() => claim('acquire')}>Thử mở quyền chấm</button>}
           {blocked && <a href={`/reviews/${id}`}>Mở lại bàn chấm</a>}
           {device && editing && !dirty && <ActionDialog trigger="Khôi phục nháp chấm trên thiết bị" title="Khôi phục nháp trên thiết bị"
             detail="Các chỉnh sửa trong bản lưu trên thiết bị sẽ được đưa vào bàn chấm này." confirmLabel="Khôi phục nháp chấm"

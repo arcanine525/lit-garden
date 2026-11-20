@@ -1,0 +1,44 @@
+T25 | Immutable review releases and per-submission publication history
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. Migrations were
+current and the local OIDC client was verified.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+21 passed (2.1m), including the T25 test (12.1s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/review-publications.spec.mjs
+1 passed (16.8s, 14.6s test body).
+
+- The teacher can return v1 while v2 is still pending. With four of five
+  criteria graded, the UI disables Return and the API rejects the request.
+  All five scores allow a first publication with an empty overall comment.
+- The fake Drive creates the first publication file and returns 504. A DB
+  trigger fails publication insertion on the next request. The operation
+  retains its Drive file ID, expected digest and key. History, the current
+  pointer and the notification are absent until the retry commits. Rapid
+  repeated activation and replay return one publication ID and one event.
+- The teacher autosaves a revised score and overall comment as a private
+  draft. The student still sees the original publication. A new explicit
+  return writes a separate Markdown file, changes the current pointer and
+  produces one additional event. The student sees only the current result
+  and gets 404 for the former publication ID in the API and page. The
+  teacher can open both from the history and sees the old result unchanged.
+- The test modifies v1 directly in the fake provider while the teacher has
+  the saved review open. Clicking Return again sends an actual publication
+  request and detects the source conflict before another autosave. The
+  current pointer, history and notifications stay unchanged. v2 receives
+  its own release and notification. The three published files are Markdown.
+
+The test uses real local Keycloak sessions and PostgreSQL, along with an
+HTTP fake Drive and a DB fault injector scoped to the test submission. T25
+covers publication UI and the single-current reader. T26 covers sending
+replies and exercising the comment pin against a concurrent writer. Live
+Google Drive was outside this verification.

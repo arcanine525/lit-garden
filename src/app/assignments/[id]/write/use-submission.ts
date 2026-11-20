@@ -3,7 +3,7 @@
 import { useRef, useState } from 'react';
 import { keepSubmission, pendingSubmission, type PendingSubmission } from './draft-device';
 
-type Timing = { id: string; number: number; submittedAt: string; late: boolean };
+type Timing = { id: string; number: number; submittedAt: string; late: boolean; returned: boolean };
 type Status = { state: 'missing' | 'rejected' | 'pending' | 'unknown' } | { state: 'committed'; id: string };
 const waiting = 'Chưa xác nhận đã nộp. Bạn có thể thử lại lần nộp này.';
 const rejection = 'Chưa nộp. Nháp vẫn được giữ trên thiết bị.';

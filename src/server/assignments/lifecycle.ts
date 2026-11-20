@@ -69,13 +69,13 @@ export async function extendDeadline(teacher: string, id: string, key: string, e
 }
 
 export async function submissionTimings(actor: string, assignment: string) {
-  const { rows } = await database().query<{ id: string; submission_no: number; student_name: string; submitted_at: Date; late: boolean }>(`
+  const { rows } = await database().query<{ id: string; submission_no: number; student_name: string; submitted_at: Date; late: boolean; returned: boolean }>(`
     SELECT s.id,s.submission_no,student.display_name AS student_name,s.submitted_at,
-      COALESCE(s.submitted_at>a.due_at,false) AS late FROM garden.submissions s
+      COALESCE(s.submitted_at>a.due_at,false) AS late,s.current_publication_id IS NOT NULL AS returned FROM garden.submissions s
       JOIN garden.recipients r ON r.id=s.recipient_id JOIN garden.assignments a ON a.id=r.assignment_id
       JOIN garden.users student ON student.id=r.student_id
     WHERE a.id=$2 AND garden.can_read_submission($1,s.id)
     ORDER BY s.submitted_at,s.id`,[actor,assignment]);
   return rows.map(row => ({ id:row.id, number:row.submission_no, student:row.student_name,
-    submittedAt:row.submitted_at.toISOString(), late:row.late }));
+    submittedAt:row.submitted_at.toISOString(), late:row.late,returned:row.returned }));
 }

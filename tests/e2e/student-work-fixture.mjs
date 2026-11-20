@@ -11,6 +11,30 @@ export async function responseBody(response,status = 200) {
   return body;
 }
 
+async function clearFixturePublications(db,teachers) {
+  if (!(await db.query('SELECT 1 FROM garden.review_publications WHERE teacher_id=ANY($1) LIMIT 1',[teachers])).rowCount) return;
+  const connection = await db.connect();
+  try {
+    await connection.query('BEGIN');
+    // Temporarily bypass append-only guards in one local fixture cleanup transaction.
+    await connection.query(`ALTER TABLE garden.review_publications DISABLE TRIGGER publication_immutable;
+      ALTER TABLE garden.publication_comments DISABLE TRIGGER publication_comment_immutable`);
+    await connection.query('UPDATE garden.submissions SET current_publication_id=NULL WHERE teacher_id=ANY($1)',[teachers]);
+    await connection.query('DELETE FROM garden.review_drafts WHERE teacher_id=ANY($1)',[teachers]);
+    await connection.query(`DELETE FROM garden.publication_comments c USING garden.review_publications p
+      WHERE c.publication_id=p.id AND p.teacher_id=ANY($1)`,[teachers]);
+    await connection.query('DELETE FROM garden.review_publications WHERE teacher_id=ANY($1)',[teachers]);
+    await connection.query(`DELETE FROM garden.review_comments c USING garden.submissions s
+      WHERE c.submission_id=s.id AND s.teacher_id=ANY($1)`,[teachers]);
+    await connection.query(`ALTER TABLE garden.review_publications ENABLE TRIGGER publication_immutable;
+      ALTER TABLE garden.publication_comments ENABLE TRIGGER publication_comment_immutable`);
+    await connection.query('COMMIT');
+  } catch (error) {
+    await connection.query('ROLLBACK');
+    throw error;
+  } finally { connection.release(); }
+}
+
 export async function withStudentWork(browser, run, options = {}) {
   const db = migrationPool();
   const kc = await keycloakAdmin();
@@ -88,6 +112,7 @@ export async function withStudentWork(browser, run, options = {}) {
     try {
       for (const context of contexts) await context.close();
       const ids = accounts.map(account => account.id);
+      await clearFixturePublications(db,ids);
       for (const [table,column] of [
         ['audit_events','actor_id'],['notifications','teacher_id'],['review_drafts','teacher_id'],['submissions','teacher_id'],
         ['student_drafts','teacher_id'],['recipients','teacher_id'],['assignment_deadlines','changed_by'],['assignments','teacher_id'],

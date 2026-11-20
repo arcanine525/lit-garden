@@ -50,19 +50,19 @@ export function reviewDraftInput(input: unknown, source: ReviewSource): ReviewDr
   return { scores,comments,overallCommentId:overall[0]?.id ?? null };
 }
 
-function metadata(source: ReviewSource) {
+export function reviewMetadata(source: ReviewSource) {
   return { submissionId:source.submission.id,version:source.submission.submission_no,rubricId:source.rubric.id,
     rubricSha256:source.rubricHash,submissionSha256:source.submissionSha256,textProjection:source.textProjection };
 }
 
 export function encodeReviewDraft(source: ReviewSource, stream: string, generation: string, draft: ReviewDraft) {
-  return encodeDocument('garden.review-draft/1',stream,{ ...metadata(source),generation,...draft });
+  return encodeDocument('garden.review-draft/1',stream,{ ...reviewMetadata(source),generation,...draft });
 }
 
 export function decodeReviewDraft(bytes: Buffer, source: ReviewSource, stream: string, generation: string) {
   const decoded = decodeDocument<Record<string,unknown>>(bytes,'garden.review-draft/1',stream);
   const { fields,body } = decoded;
-  if (body || fields.generation !== generation || Object.entries(metadata(source)).some(([key,value]) => fields[key] !== value)) {
+  if (body || fields.generation !== generation || Object.entries(reviewMetadata(source)).some(([key,value]) => fields[key] !== value)) {
     throw new DriveError('REVIEW_DRAFT_CONFLICT',409);
   }
   const { scores,comments,overallCommentId } = fields;

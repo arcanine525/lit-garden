@@ -342,6 +342,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
         <ul>{submission.history.map(item => <li key={item.id}>
           <a href={`/api/content/submissions/${item.id}`} target="_blank" rel="noreferrer">Lần nộp {item.number}</a>
           {' · '}{deadlineFormat.format(new Date(item.submittedAt))}{item.late && ' · Nộp muộn'}
+          {item.returned && <> · <a href={`/results/${item.id}`}>Xem nhận xét</a></>}
         </li>)}</ul>
       </section>}
     </>}

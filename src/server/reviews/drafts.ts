@@ -9,6 +9,7 @@ import { assertReviewSource, verifyReviewSource } from '../drive/submission-inte
 import type { Snapshot, Writer } from '../student-drafts/writer';
 import { decodeReviewDraft, encodeReviewDraft, reviewDraftInput } from './draft-format';
 import { reviewSource, reviewSubmission, type ReviewSource } from './source';
+import { assertPinnedComments } from './comments';
 
 export type ReviewActor = { teacher: string; sessionDigest: string };
 type Stream = { id: string; version: string; head_object_id: string | null; lease_actor_id: string | null;
@@ -31,7 +32,7 @@ export async function lockReview(db: PoolClient, actor: ReviewActor, submissionI
   if (!auth.rowCount) throw new DriveError('UNAUTHENTICATED',401);
   await db.query('SELECT id FROM garden.recipients WHERE id=$1 FOR UPDATE',[first.recipient_id]);
   let stream = await streamFor(db,actor.teacher,submissionId,true);
-  await db.query('SELECT id FROM garden.submissions WHERE id=$1 FOR UPDATE',[submissionId]);
+  const locked = await db.query<{ current_publication_id: string | null }>('SELECT current_publication_id FROM garden.submissions WHERE id=$1 FOR UPDATE',[submissionId]);
   if (initialize && !stream) {
     const made = await db.query<{ id: string }>(`INSERT INTO garden.document_streams(teacher_id,kind)
       VALUES($1,'review') RETURNING id`,[actor.teacher]);
@@ -39,7 +40,7 @@ export async function lockReview(db: PoolClient, actor: ReviewActor, submissionI
     stream = await streamFor(db,actor.teacher,submissionId,true);
   }
   if (!stream) throw new DriveError('LEASE_REQUIRED',409);
-  return stream;
+  return { ...stream,currentPublicationId:locked.rows[0].current_publication_id };
 }
 
 export function assertReviewWriter(stream: Stream, teacher: string, writer: Writer, live = true) {
@@ -83,7 +84,8 @@ export async function reviewLease(actor: ReviewActor, id: string, action: 'acqui
 
 export async function readReviewDraft(teacher: string, source: ReviewSource) {
   const stream = await streamFor(database(),teacher,source.submission.id);
-  if (!stream?.head_object_id) return { version:stream?.version ?? '0',hash:null,draft:emptyReview };
+  const currentPublicationId = source.submission.current_publication_id;
+  if (!stream?.head_object_id) return { version:stream?.version ?? '0',hash:null,draft:emptyReview,currentPublicationId };
   const { rows } = await database().query<DriveObject>(`SELECT * FROM garden.drive_objects
     WHERE id=$1 AND teacher_id=$2 AND lifecycle='referenced' AND slot='document' AND mime_type='text/markdown'`,[stream.head_object_id,teacher]);
   if (!rows[0]) throw new DriveError('DRIVE_MISSING',404);
@@ -91,7 +93,7 @@ export async function readReviewDraft(teacher: string, source: ReviewSource) {
   const current = await streamFor(database(),teacher,source.submission.id);
   await assertReviewSource(database(),teacher,source.submission.id,source.submissionSha256);
   if (current?.head_object_id !== stream.head_object_id) throw new DriveError('DRAFT_CHANGED',409);
-  return { version:stream.version,hash:rows[0].expected_sha256,draft:decodeReviewDraft(file.bytes,source,stream.id,stream.version) };
+  return { version:stream.version,hash:rows[0].expected_sha256,draft:decodeReviewDraft(file.bytes,source,stream.id,stream.version),currentPublicationId };
 }
 
 async function known(db: PoolClient, actor: ReviewActor, stream: string, key: string, digest: string) {
@@ -114,6 +116,7 @@ export async function saveReviewDraft(actor: ReviewActor, id: string, snapshot: 
     if (previous?.state === 'committed') return { stream,op:previous };
     assertReviewWriter(stream,actor.teacher,snapshot);
     if (stream.version !== snapshot.baseVersion) throw new DriveError('DRAFT_CHANGED',409);
+    await assertPinnedComments(db,id,stream.currentPublicationId,draft.comments);
     if (previous) return { stream,op:previous };
     const { rows } = await db.query<Operation>(`INSERT INTO garden.operations
       (actor_id,teacher_id,kind,target_kind,target_id,idempotency_key,request_digest,expected_version,lease_epoch,client_session_id)
@@ -139,6 +142,7 @@ export async function saveReviewDraft(actor: ReviewActor, id: string, snapshot: 
       await assertReviewSource(db,actor.teacher,id,source.submissionSha256);
       assertReviewWriter(current,actor.teacher,snapshot);
       if (current.version !== snapshot.baseVersion) throw new DriveError('DRAFT_CHANGED',409);
+      await assertPinnedComments(db,id,current.currentPublicationId,draft.comments);
       await db.query('SELECT garden.commit_draft_head($1,$2,$3,$4,$5,$6)',[stream.id,actor.teacher,snapshot.clientId,
         snapshot.epoch,snapshot.baseVersion,object]);
       await db.query("UPDATE garden.operations SET state='committed',result_id=$2,error_code=NULL WHERE id=$1",[op.id,object]);

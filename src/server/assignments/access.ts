@@ -66,10 +66,10 @@ async function rubricSnapshot(row: AssignmentRow) {
   return { rubric:{ id:row.rubric_template_id,...rubric },rubricHash:snapshot.hash };
 }
 
-export async function assignmentReviewContext(teacher: string, id: string) {
-  const row = await assignmentForActor(teacher,id);
-  if (row.teacher_id !== teacher || row.state !== 'published' || !row.prompt_object_id) throw new DriveError('NOT_FOUND',404);
-  const [prompt, rubric] = await Promise.all([assignmentObject(teacher,row.prompt_object_id),rubricSnapshot(row)]);
+export async function assignmentReviewContext(actor: string, id: string) {
+  const row = await assignmentForActor(actor,id);
+  if (row.state !== 'published' || !row.prompt_object_id) throw new DriveError('NOT_FOUND',404);
+  const [prompt, rubric] = await Promise.all([assignmentObject(row.teacher_id,row.prompt_object_id),rubricSnapshot(row)]);
   return { ...rubric,title:decodeAssignment<AssignmentPrompt>(prompt.bytes,'garden.assignment-prompt/1',id).title };
 }
 

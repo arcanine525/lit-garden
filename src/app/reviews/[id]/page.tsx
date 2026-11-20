@@ -38,6 +38,7 @@ export default async function ReviewPage({ params }: { params: Promise<{ id: str
     <p>{submission.student_name} · {submission.class_name} · Lần nộp {submission.submission_no}</p>
     <p><a href={`/assignments/${submission.assignment_id}`}>Xem đề bài</a></p>
     <ReviewWorkbench key={id} id={id} teacher={user.id} markdown={source.markdown} text={source.text}
-      explanation={source.explanation} projectionSha256={source.projectionSha256} rubric={source.rubric} initial={draft}/>
+      explanation={source.explanation} projectionSha256={source.projectionSha256} submissionSha256={source.submissionSha256}
+      rubric={source.rubric} initial={draft}/>
   </AppShell>;
 }
