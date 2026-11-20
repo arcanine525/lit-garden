@@ -1,26 +1,13 @@
 import { appOrigin } from '../../../../../server/auth/oidc';
-import { currentSession } from '../../../../../server/auth/session';
-import { uuidPattern } from '../../../../../server/auth/identity-operations';
 import { driveFailure, driveJson } from '../../../../../server/drive/http';
-import { DriveError } from '../../../../../server/drive/provider';
 import { readDraft } from '../../../../../server/student-drafts/access';
+import { isId, isVersion, studentActor } from '../../../../../server/student-drafts/http';
 import { saveStudentDraft, studentDraftInput, studentLease } from '../../../../../server/student-drafts/writer';
 
 type Params = { params: Promise<{ id: string }> };
-const isId = (value: unknown): value is string => typeof value === 'string' && uuidPattern.test(value);
-const isVersion = (value: unknown): value is string => typeof value === 'string' && /^(0|[1-9][0-9]{0,18})$/.test(value) &&
-  BigInt(value) < 9_223_372_036_854_775_807n;
-
-async function student() {
-  const session = await currentSession();
-  if (!session) throw new DriveError('UNAUTHENTICATED',401);
-  if (session.user.role !== 'student') throw new DriveError('FORBIDDEN',403);
-  return { student:session.user.id, sessionDigest:session.sessionDigest };
-}
-
 export async function GET(_request: Request, { params }: Params) {
   try {
-    const actor = await student();
+    const actor = await studentActor();
     const { id } = await params;
     if (!isId(id)) return driveJson({ error:'DRAFT_NOT_FOUND' },404);
     return driveJson(await readDraft(actor,id.toLowerCase()));
@@ -30,7 +17,7 @@ export async function GET(_request: Request, { params }: Params) {
 export async function POST(request: Request, { params }: Params) {
   try {
     if (request.headers.get('origin') !== appOrigin()) return driveJson({ error:'FORBIDDEN' },403);
-    const actor = await student();
+    const actor = await studentActor();
     const { id } = await params;
     const body = await request.json().catch(() => null);
     if (!isId(id) || !body || !isId(body.clientId)) return driveJson({ error:'INVALID' },422);

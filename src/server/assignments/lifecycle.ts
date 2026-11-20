@@ -1,27 +1,11 @@
 import { createHash } from 'node:crypto';
-import type { PoolClient } from 'pg';
 import { database } from '../db';
 import { DriveError } from '../drive/provider';
+import { fenceStudentWrites } from '../student-drafts/policy';
 import { assignmentDetails, lockAssignment, transaction, type AssignmentRow } from './access';
 
 function published(row: AssignmentRow) {
   if (row.state !== 'published') throw new DriveError('ASSIGNMENT_DRAFT',409);
-}
-
-async function stopStudentWrites(db: PoolClient, assignment: string) {
-  await db.query(`UPDATE garden.document_streams SET lease_epoch=lease_epoch+1,lease_actor_id=NULL,lease_session_id=NULL,lease_until=NULL
-    WHERE id IN (SELECT sd.stream_id FROM garden.student_drafts sd JOIN garden.recipients r ON r.id=sd.recipient_id WHERE r.assignment_id=$1)
-      AND lease_session_id IS NOT NULL`,[assignment]);
-  await db.query(`WITH target AS (
-    SELECT r.id AS recipient, draft.stream_id FROM garden.recipients r
-    LEFT JOIN garden.student_drafts draft ON draft.recipient_id=r.id WHERE r.assignment_id=$1
-  ), rejected AS (
-    UPDATE garden.operations SET state='rejected',error_code='POLICY'
-    WHERE ((kind='submit' AND target_kind='recipient' AND target_id IN (SELECT recipient FROM target)) OR
-      (kind='autosave' AND target_kind='stream' AND target_id IN (SELECT stream_id FROM target)))
-    AND state IN ('reserved','writing','unknown','needs_client','drive_verified') RETURNING id
-  ) UPDATE garden.drive_objects SET lifecycle='orphan'
-  WHERE operation_id IN (SELECT id FROM rejected) AND lifecycle='candidate'`,[assignment]);
 }
 
 export async function changeAccepting(teacher: string, id: string, accepting: boolean, expectedVersion: string) {
@@ -31,7 +15,7 @@ export async function changeAccepting(teacher: string, id: string, accepting: bo
     if (accepting && row.reference_public_at) throw new DriveError('REFERENCE_ALREADY_PUBLIC',409);
     if (row.accepting === accepting) return { accepting,version:row.version };
     if (row.version !== expectedVersion) throw new DriveError('ASSIGNMENT_CHANGED',409);
-    if (!accepting) await stopStudentWrites(db,id);
+    if (!accepting) await fenceStudentWrites(db,{ teacher,assignment:id });
     const updated = await db.query<{ version: string }>('UPDATE garden.assignments SET accepting=$2,version=version+1 WHERE id=$1 RETURNING version',[id,accepting]);
     return { accepting,version:updated.rows[0].version };
   });

@@ -36,6 +36,7 @@ export async function lockDraft(db: PoolClient, actor: DraftActor, assignment: s
   await db.query('SELECT id FROM garden.users WHERE id=$1 FOR UPDATE',[located.teacher_id]);
   await db.query('SELECT id FROM garden.classes WHERE id=$1 FOR UPDATE',[located.class_id]);
   await db.query('SELECT id FROM garden.assignments WHERE id=$1 FOR UPDATE',[assignment]);
+  await db.query('SELECT id FROM garden.users WHERE id=$1 FOR UPDATE',[actor.student]);
   await db.query('SELECT 1 FROM garden.memberships WHERE class_id=$1 AND student_id=$2 FOR UPDATE',[located.class_id,actor.student]);
   await db.query('SELECT id FROM garden.recipients WHERE id=$1 FOR UPDATE',[located.recipient_id]);
   let current = await queryContext(db,actor,assignment);

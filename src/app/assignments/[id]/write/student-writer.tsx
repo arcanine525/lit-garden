@@ -5,7 +5,9 @@ import { ActionDialog } from '../../../action-dialog';
 import { EditorWorkbench } from '../../../editor/editor-workbench';
 import type { EditorHandle } from '../../../editor/markdown-editor';
 import type { DraftBody } from '../../../../server/student-drafts/access';
+import { deadlineFormat } from '../../deadline-input';
 import { deviceDrafts, downloadDraft, keepDeviceCopy, syncedBranch, type DeviceCopy } from './draft-device';
+import { useSubmission } from './use-submission';
 
 type Head = { draft: DraftBody; writable: boolean; version: string; hash: string | null };
 type Lease = { epoch: string; version: string };
@@ -19,6 +21,7 @@ const fenced = (code: string) => inaccessible(code) || ['STALE_WRITER','DRAFT_RE
 
 export function StudentWriter({ assignment, student }: { assignment: string; student: string }) {
   const path = `/api/assignments/${assignment}/draft`;
+  const submission = useSubmission(student,assignment);
   const [initial,setInitial] = useState<DraftBody>(empty);
   const [explanation,setExplanation] = useState('');
   const [renderKey,remountEditor] = useState(0);
@@ -100,14 +103,14 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
       (head.current.hash ? synced : 'Nháp sẽ tự đồng bộ khi có thay đổi.') : 'Có thay đổi chưa đồng bộ.');
   }
 
-  async function claim(action: 'acquire' | 'takeover') {
+  async function claim(action: 'acquire' | 'takeover' | 'read') {
     if (working.current) return;
     working.current = true;
     setBusy(true);
     const local = !ready ? deviceDrafts(student,assignment).catch(() => { setDeviceError(true); return null; }) : null;
     try {
       const previous = await request<Head>();
-      const granted = previous.writable ? await request<Lease>({ action }).catch(error => {
+      const granted = previous.writable && action !== 'read' ? await request<Lease>({ action }).catch(error => {
         if (error.message === 'LEASE_HELD') return null;
         throw error;
       }) : null;
@@ -130,7 +133,8 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
       pending.current = null;
       pause.current = false;
       setRetry(false);
-      setStatus(!latest.writable ? 'Bài đang ở chế độ chỉ đọc.' : !granted ? 'Nháp đang được viết ở nơi khác.' :
+      setStatus(!latest.writable ? 'Bài đang ở chế độ chỉ đọc.' : action === 'read' ? 'Hãy xử lý lần nộp đang chờ để tiếp tục viết.' :
+        !granted ? 'Nháp đang được viết ở nơi khác.' :
         latest.hash ? synced : 'Nháp sẽ tự đồng bộ khi có thay đổi.');
     } catch (error) {
       const code = (error as Error).message;
@@ -159,7 +163,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
   useEffect(() => {
     client.current ||= crypto.randomUUID();
     branch.current ||= crypto.randomUUID();
-    void claim('acquire');
+    void submission.load().then(pending => claim(pending ? 'read' : 'acquire'));
     const timer = window.setInterval(() => autosave.current(),350);
     const onOnline = () => reconnect.current();
     window.addEventListener('online',onOnline);
@@ -214,6 +218,14 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
     return { ...body.current,markdown:editor.current?.getMarkdown() ?? body.current.markdown };
   }
 
+  function startSubmission() {
+    if (!lease.current || working.current || submission.busy || submission.attempt) return;
+    const snapshot = current();
+    capture(snapshot);
+    void submission.act('submit',{ action:'submit',key:crypto.randomUUID(),clientId:client.current,epoch:lease.current,
+      baseVersion:head.current.version,draft:snapshot });
+  }
+
   async function save() {
     if (!lease.current || working.current) return;
     capture(current());
@@ -262,13 +274,14 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
 
   useEffect(() => {
     autosave.current = () => {
-      if (!lease.current || working.current || retry || pause.current || !dirty) return;
+      if (!lease.current || working.current || submission.busy || retry || pause.current || !dirty) return;
       const now = performance.now();
       if (now - updatedAt.current < 2_000 && now - dirtySince.current < 10_000) return;
       void save();
     };
     reconnect.current = () => {
       if (lease.current) void renew(lease.current);
+      submission.reconnect();
     };
   });
 
@@ -279,7 +292,7 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
   }}>
     <p role="status">{status}</p>
     {deviceError && <p role="alert">Chưa lưu được bản trên thiết bị. Hãy tải Markdown để giữ nội dung.</p>}
-    {ready && !epoch && writable && (held ? <ActionDialog trigger="Tiếp tục viết tại đây" title="Chuyển quyền viết"
+    {ready && !epoch && writable && !submission.attempt && (held ? <ActionDialog trigger="Tiếp tục viết tại đây" title="Chuyển quyền viết"
       detail="Thiết bị trước có thể còn nội dung chưa đồng bộ. Bạn sẽ bắt đầu từ bản đã đồng bộ gần nhất."
       confirmLabel="Chuyển quyền viết" inactive={busy} onConfirm={() => claim('takeover')}/> :
       <button type="button" disabled={busy} onClick={() => claim('acquire')}>Thử mở quyền viết</button>)}
@@ -305,11 +318,29 @@ export function StudentWriter({ assignment, student }: { assignment: string; stu
       <div className="app-actions">
         <button type="button" onClick={() => downloadDraft(epoch ? current() : body.current)}>Tải nháp của tôi (.md)</button>
         {epoch && <>
-          <button type="button" disabled={busy || (!dirty && !retry)} onPointerDown={event => event.preventDefault()}
+          <button type="button" disabled={busy || submission.busy || (!dirty && !retry)} onPointerDown={event => event.preventDefault()}
             onClick={() => void save()}>{retry ? 'Thử đồng bộ lại' : 'Đồng bộ nháp'}</button>
-          <button type="button" disabled={busy} onClick={() => void release()}>Ngừng viết ở đây</button>
+          <button type="button" disabled={busy || submission.busy || !!submission.attempt} onClick={() => void release()}>Ngừng viết ở đây</button>
         </>}
+        {submission.attempt ? <>
+          <button type="button" className="app-primary" disabled={submission.busy || busy} onClick={() => void submission.act('submit')}>Thử nộp lại</button>
+          <button type="button" onClick={() => { if (submission.attempt) downloadDraft(submission.attempt.draft); }}>Tải lần nộp đang chờ (.md)</button>
+          {submission.knownPending && <ActionDialog trigger="Hủy lần nộp đang chờ" title="Hủy lần nộp đang chờ"
+            detail="Bạn vẫn có thể giữ nháp và chủ động nộp một lần khác." confirmLabel="Hủy lần nộp"
+            inactive={submission.busy || busy} onConfirm={() => submission.act('cancel')}/>}
+        </> : epoch && <button type="button" className="app-primary" disabled={busy || submission.busy}
+          onPointerDown={event => event.preventDefault()} onClick={startSubmission}>
+          {submission.history.length ? 'Nộp bản mới' : 'Nộp bài'}
+        </button>}
       </div>
+      <p role="status">{submission.status}</p>
+      {submission.history.length > 0 && <section>
+        <h2>Lịch sử bản nộp</h2>
+        <ul>{submission.history.map(item => <li key={item.id}>
+          <a href={`/api/content/submissions/${item.id}`} target="_blank" rel="noreferrer">Lần nộp {item.number}</a>
+          {' · '}{deadlineFormat.format(new Date(item.submittedAt))}{item.late && ' · Nộp muộn'}
+        </li>)}</ul>
+      </section>}
     </>}
   </section>;
 }

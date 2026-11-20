@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import type { PoolClient } from 'pg';
 import { database } from '../db';
 import { requiredEnv } from '../config';
+import { fenceStudentWrites } from '../student-drafts/policy';
 import { userManagement } from './iam';
 
 export const uuidPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
@@ -93,6 +94,8 @@ async function reserve(actor: string, input: Mutation) {
       await connection.query('UPDATE garden.users SET status=$2, auth_epoch=auth_epoch+1 WHERE id=$1',
         [target, role === 'student' ? 'provisioning' : 'suspended']);
       await connection.query('DELETE FROM garden.app_sessions WHERE user_id=$1', [target]);
+      if (input.kind === 'suspend_teacher') await fenceStudentWrites(connection,{ teacher:target });
+      if (input.kind === 'reset_student') await fenceStudentWrites(connection,{ student:target });
     }
     const { rows } = await connection.query<Operation>(`
       INSERT INTO garden.identity_operations(actor_id,target_user_id,kind,idempotency_key,request_digest)

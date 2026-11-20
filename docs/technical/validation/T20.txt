@@ -1,0 +1,50 @@
+T20 | Explicit immutable submissions and retry through a process restart
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the local fake Drive provider were healthy. Migrations
+were current and the local OIDC client was verified.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+16 passed (1.3m), including the T20 test (19.1s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/submissions.spec.mjs
+1 passed (46.7s including startup and teardown, 19.8s test).
+
+- The student explicitly submits version 1 before the persisted deadline.
+  Autosave sends no submit requests. Double activation sends one request.
+  Replaying the key returns the original result. A changed body under that
+  key receives 409 KEY_REUSED.
+- Version 1 has an in-progress review fixture. Version 2 is submitted after
+  the deadline, with the last table cell still focused and before another
+  autosave. The first upload creates a file and returns an injected 504. A
+  PostgreSQL trigger fails the final insert on retry. The response remains
+  unconfirmed, the original file ID/hash/time are pinned, history still
+  shows version 1, and the next sequence remains 2.
+- A second local Next.js process using the production build is stopped and
+  restarted. The page reloads and restores the attempted payload from
+  IndexedDB. The stored Markdown and explanation are downloadable while
+  the attempt is pending. Going offline and online never sends a submit.
+- The student retries explicitly. The app commits, and the test drops the
+  successful browser response. The next explicit retry returns the same
+  receipt. Every retry uses the identical key and body. Exactly two official
+  files and two DB history entries remain. Reads through the adapter check
+  the original bytes of version 1 and the complete version 2 Markdown and
+  explanation, including the last Vietnamese character from the table.
+- Version 1 stays linked to its review draft. Only version 2 is initially
+  late. After the teacher extends the deadline, both become on time and
+  keep their original accepted times. An in-flight third upload whose class
+  is archived and restored before its reply becomes an orphan and never
+  enters submission history.
+
+Keycloak and PostgreSQL ran locally. Drive was the local HTTP fake, including
+upload faults. The review-in-progress fixture was seeded in PostgreSQL. The
+browser response loss was injected by Playwright after the real local app
+confirmed its commit. Physical devices, a native Vietnamese IME and live
+Google Drive were outside this verification. T13 and T34 track live Google.

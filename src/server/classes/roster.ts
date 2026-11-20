@@ -4,6 +4,7 @@ import { database } from '../db';
 import { requiredEnv } from '../config';
 import { userManagement } from '../auth/iam';
 import { grantOpenAssignments } from '../assignments/recipients';
+import { fenceStudentWrites } from '../student-drafts/policy';
 import { csvStudents, type CsvRow } from './csv';
 
 export class RosterError extends Error {
@@ -98,6 +99,7 @@ export function setClassState(teacher: string, classId: string, state: ClassStat
     const current = await ownedClass(connection, teacher, classId, false);
     if (current !== state) {
       await connection.query('UPDATE garden.classes SET state=$2,version=version+1 WHERE id=$1', [classId,state]);
+      if (state === 'archived') await fenceStudentWrites(connection,{ teacher,classId });
       await connection.query(`
         INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,outcome)
         VALUES($1,$2,'class',$3,'success')
@@ -127,7 +129,7 @@ export function setMembershipState(teacher: string, classId: string, studentId: 
           WHERE class_id=$1 AND student_id=$2 AND state='pending'
         `, [classId,studentId,teacher]);
         await grantOpenAssignments(connection,teacher,classId,studentId);
-      }
+      } else await fenceStudentWrites(connection,{ teacher,classId,student:studentId });
       await connection.query(`
         INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,class_id,outcome)
         VALUES($1,$2,'membership',$3,$4,'success')

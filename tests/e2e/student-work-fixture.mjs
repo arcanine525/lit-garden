@@ -90,7 +90,7 @@ export async function withStudentWork(browser, run) {
       for (const context of contexts) await context.close();
       const ids = accounts.map(account => account.id);
       for (const [table,column] of [
-        ['audit_events','actor_id'],['notifications','teacher_id'],['submissions','teacher_id'],
+        ['audit_events','actor_id'],['notifications','teacher_id'],['review_drafts','teacher_id'],['submissions','teacher_id'],
         ['student_drafts','teacher_id'],['recipients','teacher_id'],['assignment_deadlines','changed_by'],['assignments','teacher_id'],
         ['document_streams','teacher_id'],['drive_objects','teacher_id'],['operations','teacher_id']
       ]) await db.query(`DELETE FROM garden.${table} WHERE ${column}=ANY($1)`,[ids]);
