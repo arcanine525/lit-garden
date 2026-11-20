@@ -8,6 +8,7 @@ import { reviewMessages, type RangeComment } from '../../../shared/review';
 import { AppShell } from '../../app-shell';
 import { deadlineFormat } from '../../assignments/deadline-input';
 import { ReviewDocument } from '../../reviews/review-document';
+import { ReplyThread } from '../../reviews/reply-thread';
 import '../../editor/editor.css';
 import '../../reviews/review.css';
 
@@ -42,6 +43,7 @@ export default async function ResultPage({ params,searchParams }: Props) {
   const { rubric,scores,comments } = publication;
   const ranges = comments.filter((comment): comment is RangeComment => comment.kind === 'range');
   const overall = comments.find(comment => comment.kind === 'overall');
+  const currentResult = !history || history[0]?.id === publication.id;
   return <AppShell user={user} current={current} title={publication.title}>
     <p>{publication.studentName} · {publication.className} · Lần nộp {publication.submissionNo}</p>
     {history && <section className="app-panel">
@@ -59,6 +61,7 @@ export default async function ResultPage({ params,searchParams }: Props) {
         {ranges.length > 0 && <section aria-label="Nhận xét theo đoạn">{ranges.map(comment => <div key={comment.id} className="review-comment">
           <blockquote><mark className={`review-mark-${comment.color}`}>{comment.anchor.exact}</mark></blockquote>
           {comment.body && <p className="review-text">{comment.body}</p>}
+          {currentResult && <ReplyThread submission={id} comment={comment.id} publication={publication.id} viewer={user.id}/>}
         </div>)}</section>}
       </section>
       <section className="app-panel" aria-label="Kết quả đã trả">
@@ -71,7 +74,8 @@ export default async function ResultPage({ params,searchParams }: Props) {
           return <div key={score.criterionId}><dt>{criterion?.label}</dt>
             <dd>{points.format(Number(score.value))} điểm · {level?.description}</dd></div>;
         })}</dl>
-        {overall && <><h3>Nhận xét chung</h3><p className="review-text">{overall.body}</p></>}
+        {overall && <section aria-label="Nhận xét chung"><h3>Nhận xét chung</h3><p className="review-text">{overall.body}</p>
+          {currentResult && <ReplyThread submission={id} comment={overall.id} publication={publication.id} viewer={user.id}/>}</section>}
       </section>
     </div>
   </AppShell>;

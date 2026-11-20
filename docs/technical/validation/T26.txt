@@ -1,0 +1,44 @@
+T26 | Append-only conversations on published review comments
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. Migrations were
+current and the local OIDC client was verified.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+22 passed (2.8m), including the final T26 test with cancellation (13.2s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/review-conversations.spec.mjs
+1 passed (18.5s, 14.6s test body) before adding the cancel assertion.
+
+- Only the owner teacher and the author student can read or reply to a
+  current comment. A different student in the same class and an admin
+  cannot read the thread. The test addresses a specific submission and
+  comment and verifies that the overall comment has its own empty thread.
+- The teacher saves an edit and starts republishing. The provider holds
+  the upload response after creating the publication candidate. The author
+  replies to the old, still-current comment and commits first. The final
+  publication transaction rejects COMMENT_LOCKED, leaves the current ID
+  unchanged, and marks the candidate as an orphan. The retained response
+  freezes the comment. The teacher restores the original published text
+  and republishes with the same comment identity and conversation.
+- A reply file is created and the fake Drive returns 504. Explicit retry
+  with the same key and body keeps the same file ID, adds one message and
+  one notification, and supports replay. Canceling a separate ambiguous
+  reply clears its pin and orphans its file without adding a message.
+- Three messages are written as individual Markdown files, read back via
+  the authenticated adapter with original order and authors, and attributed
+  to the correct comment. A database attempt to edit a sent message fails.
+  The closed assignment still permits replies. Archive and student removal
+  preserve the existing thread in read-only mode for the student.
+
+The test uses real local application sessions and PostgreSQL. File writes,
+read-backs and delayed responses use the HTTP fake Drive. The append-only
+DB triggers are restored within the test's scoped cleanup transaction.
+Live Google Drive was outside this verification.

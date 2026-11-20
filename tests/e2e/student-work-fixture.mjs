@@ -18,16 +18,19 @@ async function clearFixturePublications(db,teachers) {
     await connection.query('BEGIN');
     // Temporarily bypass append-only guards in one local fixture cleanup transaction.
     await connection.query(`ALTER TABLE garden.review_publications DISABLE TRIGGER publication_immutable;
-      ALTER TABLE garden.publication_comments DISABLE TRIGGER publication_comment_immutable`);
+      ALTER TABLE garden.publication_comments DISABLE TRIGGER publication_comment_immutable;
+      ALTER TABLE garden.conversation_messages DISABLE TRIGGER message_immutable`);
     await connection.query('UPDATE garden.submissions SET current_publication_id=NULL WHERE teacher_id=ANY($1)',[teachers]);
     await connection.query('DELETE FROM garden.review_drafts WHERE teacher_id=ANY($1)',[teachers]);
     await connection.query(`DELETE FROM garden.publication_comments c USING garden.review_publications p
       WHERE c.publication_id=p.id AND p.teacher_id=ANY($1)`,[teachers]);
     await connection.query('DELETE FROM garden.review_publications WHERE teacher_id=ANY($1)',[teachers]);
+    await connection.query('DELETE FROM garden.conversation_messages WHERE teacher_id=ANY($1)',[teachers]);
     await connection.query(`DELETE FROM garden.review_comments c USING garden.submissions s
       WHERE c.submission_id=s.id AND s.teacher_id=ANY($1)`,[teachers]);
     await connection.query(`ALTER TABLE garden.review_publications ENABLE TRIGGER publication_immutable;
-      ALTER TABLE garden.publication_comments ENABLE TRIGGER publication_comment_immutable`);
+      ALTER TABLE garden.publication_comments ENABLE TRIGGER publication_comment_immutable;
+      ALTER TABLE garden.conversation_messages ENABLE TRIGGER message_immutable`);
     await connection.query('COMMIT');
   } catch (error) {
     await connection.query('ROLLBACK');

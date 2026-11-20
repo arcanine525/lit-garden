@@ -10,7 +10,7 @@ import { ReviewDocument, selectedReviewRange } from '../review-document';
 import { keepDeviceReview, latestDeviceReview, type DeviceReview } from '../review-device';
 import { reviewSuggestions, type WritingSuggestion } from '../review-rules';
 
-type Head = { version: string; hash: string | null; draft: ReviewDraft; currentPublicationId: string | null };
+type Head = { version: string; hash: string | null; draft: ReviewDraft; currentPublicationId: string | null; lockedComments: string[] };
 type Attempt = { action: 'save'; key: string; epoch: string; baseVersion: string; draft: ReviewDraft };
 const format = new Intl.NumberFormat('vi-VN',{ minimumFractionDigits:2,maximumFractionDigits:2 });
 const saved = 'Đã lưu nháp chấm trên Drive.';
@@ -43,6 +43,7 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
   const [currentPublication,setCurrentPublication] = useState(initial.currentPublicationId);
   const [publishing,setPublishing] = useState(false);
   const [publishRetry,setPublishRetry] = useState(false);
+  const [lockedComments,setLockedComments] = useState(initial.lockedComments);
   const article = useRef<HTMLElement>(null);
   const client = useRef('');
   const branch = useRef('');
@@ -107,6 +108,7 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
         }
         baseline.current = fresh;
         setCurrentPublication(fresh.currentPublicationId);
+        setLockedComments(fresh.lockedComments);
         current.current = fresh.draft;
         setDraft(fresh.draft);
       }
@@ -180,6 +182,7 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
           pending.current = null;
           invalidDraft.current = true;
           setRetry(false);
+          if (code === 'COMMENT_LOCKED') void refreshLocks();
         } else if (writer.current) setRetry(true);
       }
       return false;
@@ -192,6 +195,24 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
       if (attempt) sessionStorage.setItem(publicationKey,JSON.stringify(attempt));
       else sessionStorage.removeItem(publicationKey);
     } catch { /* This page still retains the exact publication request. */ }
+  }
+
+  async function refreshLocks() {
+    try { setLockedComments((await request<Head>()).lockedComments); }
+    catch { /* The app retains its last known lock list until the next read. */ }
+  }
+
+  async function restoreLocked() {
+    const [currentHead,result] = await Promise.all([request<Head>(),
+      request<{ publication: ReviewDraft | null }>(undefined,publicationPath)]);
+    if (!result.publication) throw Error('Chưa đọc được nhận xét đã trả.');
+    setLockedComments(currentHead.lockedComments);
+    const locked = new Set(currentHead.lockedComments);
+    const previous = result.publication.comments.filter(comment => locked.has(comment.id));
+    const frozenOverall = previous.find(comment => comment.kind === 'overall');
+    const comments = current.current.comments.filter(comment => !locked.has(comment.id) && (!frozenOverall || comment.kind !== 'overall'));
+    edit({ ...current.current,comments:[...comments,...previous].sort((a,b) => a.id.localeCompare(b.id)),
+      overallCommentId:frozenOverall?.id ?? current.current.overallCommentId });
   }
 
   async function publish() {
@@ -221,6 +242,7 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
         keepPublication(null);
         setPublishRetry(false);
         showFailure(code);
+        if (code === 'COMMENT_LOCKED') void refreshLocks();
       } else { setPublishRetry(true); setStatus('Chưa xác nhận đã trả bài.'); }
     } finally { returning.current = false; setPublishing(false); }
   }
@@ -293,17 +315,18 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
         {selectionStatus && <p role="status">{selectionStatus}</p>}
         {note && <form className="review-note" onSubmit={event => { event.preventDefault(); updateComment(note); setNote(null); }}>
           <blockquote>{note.anchor.exact}</blockquote>
-          <label>Nhận xét cho đoạn chọn<textarea value={note.body} maxLength={3000} disabled={!editing}
+          <label>Nhận xét cho đoạn chọn<textarea value={note.body} maxLength={3000} disabled={!editing || lockedComments.includes(note.id)}
             onChange={event => setNote({ ...note,body:event.target.value })}/></label>
-          <div className="app-actions"><button className="app-primary" disabled={!editing}>Lưu nhận xét</button>
+          <div className="app-actions"><button className="app-primary" disabled={!editing || lockedComments.includes(note.id)}>Lưu nhận xét</button>
             <button type="button" onClick={() => setNote(null)}>Hủy</button></div>
         </form>}
         {marks.length > 0 && <section aria-label="Nhận xét theo đoạn">
           {marks.map(mark => <div key={mark.id} className="review-comment">
             <blockquote><mark className={`review-mark-${mark.color}`}>{mark.anchor.exact}</mark></blockquote>
             {mark.body && <p className="review-text">{mark.body}</p>}
-            {editing && <div className="app-actions"><button type="button" onClick={() => setNote(mark)}>Sửa nhận xét</button>
-              <button type="button" onClick={() => edit({ ...draft,comments:draft.comments.filter(item => item.id !== mark.id) })}>Bỏ đánh dấu</button></div>}
+            {lockedComments.includes(mark.id) ? <p>Nhận xét đã khóa. Dùng tin nhắn mới để đính chính.</p> : editing &&
+              <div className="app-actions"><button type="button" onClick={() => setNote(mark)}>Sửa nhận xét</button>
+                <button type="button" onClick={() => edit({ ...draft,comments:draft.comments.filter(item => item.id !== mark.id) })}>Bỏ đánh dấu</button></div>}
           </div>)}
         </section>}
         {suggestions && <section aria-label="Gợi ý rà lỗi" className="review-note">
@@ -330,7 +353,8 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
             {criterion.levels.map(level => <option key={level.id} value={level.id}>{format.format(Number(level.score))} điểm · {level.description}</option>)}
           </select>
         </label>)}
-        <label>Nhận xét chung (không bắt buộc)<textarea disabled={!editing} maxLength={3000} value={overall?.body ?? ''}
+        <label>Nhận xét chung (không bắt buộc)<textarea disabled={!editing || !!(overall && lockedComments.includes(overall.id))}
+          maxLength={3000} value={overall?.body ?? ''}
           onChange={event => {
             const body = event.target.value;
             const id = body.trim() ? overall?.id ?? crypto.randomUUID() : null;
@@ -345,6 +369,9 @@ export function ReviewWorkbench({ id, teacher, markdown, text, explanation, proj
         {deviceError && <p role="alert">Chưa lưu được bản nháp trên thiết bị.</p>}
         <div className="app-actions">
           {editing && <button type="button" disabled={busy || (!dirty && !retry)} onClick={() => void save()}>{retry ? 'Thử lưu lại' : 'Lưu nháp chấm'}</button>}
+          {editing && lockedComments.length > 0 && <ActionDialog trigger="Khôi phục nhận xét đã khóa" title="Khôi phục nhận xét đã khóa"
+            detail="Các nhận xét đã khóa trong nháp sẽ lấy lại nguyên văn và vùng đánh dấu từ lần trả hiện hành."
+            confirmLabel="Khôi phục nhận xét" inactive={busy} onConfirm={restoreLocked}/>}
           {(editing || publishing || publishRetry) && <button type="button" className="app-primary"
             disabled={busy || publishing || (!publishRetry && (retry || draft.scores.length !== rubric.criteria.length))}
             onClick={() => void publish()}>{publishRetry ? 'Thử trả lại' : currentPublication ? 'Trả lại bài' : 'Trả bài'}</button>}

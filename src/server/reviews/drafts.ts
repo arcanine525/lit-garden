@@ -85,7 +85,11 @@ export async function reviewLease(actor: ReviewActor, id: string, action: 'acqui
 export async function readReviewDraft(teacher: string, source: ReviewSource) {
   const stream = await streamFor(database(),teacher,source.submission.id);
   const currentPublicationId = source.submission.current_publication_id;
-  if (!stream?.head_object_id) return { version:stream?.version ?? '0',hash:null,draft:emptyReview,currentPublicationId };
+  const { rows:locks } = await database().query<{ id: string }>(`SELECT c.id FROM garden.review_comments c
+    JOIN garden.submissions s ON s.id=c.submission_id WHERE c.submission_id=$1 AND s.teacher_id=$2
+    AND (c.frozen_digest IS NOT NULL OR c.pending_reply_operation IS NOT NULL) ORDER BY c.id`,[source.submission.id,teacher]);
+  const lockedComments = locks.map(item => item.id);
+  if (!stream?.head_object_id) return { version:stream?.version ?? '0',hash:null,draft:emptyReview,currentPublicationId,lockedComments };
   const { rows } = await database().query<DriveObject>(`SELECT * FROM garden.drive_objects
     WHERE id=$1 AND teacher_id=$2 AND lifecycle='referenced' AND slot='document' AND mime_type='text/markdown'`,[stream.head_object_id,teacher]);
   if (!rows[0]) throw new DriveError('DRIVE_MISSING',404);
@@ -93,7 +97,7 @@ export async function readReviewDraft(teacher: string, source: ReviewSource) {
   const current = await streamFor(database(),teacher,source.submission.id);
   await assertReviewSource(database(),teacher,source.submission.id,source.submissionSha256);
   if (current?.head_object_id !== stream.head_object_id) throw new DriveError('DRAFT_CHANGED',409);
-  return { version:stream.version,hash:rows[0].expected_sha256,draft:decodeReviewDraft(file.bytes,source,stream.id,stream.version),currentPublicationId };
+  return { version:stream.version,hash:rows[0].expected_sha256,draft:decodeReviewDraft(file.bytes,source,stream.id,stream.version),currentPublicationId,lockedComments };
 }
 
 async function known(db: PoolClient, actor: ReviewActor, stream: string, key: string, digest: string) {

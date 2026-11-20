@@ -25,4 +25,7 @@
 .app-panel .review-queue li { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; padding: 14px 0; border-top: 1px solid var(--line); }
 .review-queue li > div { flex: 1 1 200px; min-width: 0; }
 .review-queue li p { color: var(--ink-muted); margin: 4px 0 0; }
+.app-panel .reply-list { list-style: none; padding: 0; }
+.reply-list li { padding-block: 8px; border-bottom: 1px solid var(--line); }
+.reply-list li p { margin-bottom: 4px; }
 @media (max-width: 1150px) { .review-columns { grid-template-columns: minmax(0,1fr); } }

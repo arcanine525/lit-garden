@@ -3,7 +3,7 @@ import type { PoolClient } from 'pg';
 import { database } from '../db';
 import { requiredEnv } from '../config';
 import { fenceStudentWrites } from '../student-drafts/policy';
-import { fenceReviewWrites } from '../reviews/policy';
+import { fenceReplyWrites, fenceReviewWrites } from '../reviews/policy';
 import { userManagement } from './iam';
 
 export const uuidPattern = /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i;
@@ -99,7 +99,10 @@ async function reserve(actor: string, input: Mutation) {
         await fenceStudentWrites(connection,{ teacher:target });
         await fenceReviewWrites(connection,target);
       }
-      if (input.kind === 'reset_student') await fenceStudentWrites(connection,{ student:target });
+      if (input.kind === 'reset_student') {
+        await fenceStudentWrites(connection,{ student:target });
+        await fenceReplyWrites(connection,{ student:target });
+      }
     }
     const { rows } = await connection.query<Operation>(`
       INSERT INTO garden.identity_operations(actor_id,target_user_id,kind,idempotency_key,request_digest)

@@ -5,7 +5,7 @@ import { requiredEnv } from '../config';
 import { userManagement } from '../auth/iam';
 import { grantRecipients } from '../assignments/recipients';
 import { fenceStudentWrites } from '../student-drafts/policy';
-import { fenceReviewWrites } from '../reviews/policy';
+import { fenceReplyWrites, fenceReviewWrites } from '../reviews/policy';
 import { csvStudents, type CsvRow } from './csv';
 
 export class RosterError extends Error {
@@ -133,7 +133,10 @@ export function setMembershipState(teacher: string, classId: string, studentId: 
           WHERE class_id=$1 AND student_id=$2 AND state='pending'
         `, [classId,studentId,teacher]);
         await grantRecipients(connection,{ teacher,classId,student:studentId });
-      } else await fenceStudentWrites(connection,{ teacher,classId,student:studentId });
+      } else {
+        await fenceStudentWrites(connection,{ teacher,classId,student:studentId });
+        await fenceReplyWrites(connection,{ teacher,classId,student:studentId });
+      }
       await connection.query(`
         INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,class_id,outcome)
         VALUES($1,$2,'membership',$3,$4,'success')
