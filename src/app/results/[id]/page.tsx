@@ -46,6 +46,10 @@ export default async function ResultPage({ params,searchParams }: Props) {
   const currentResult = !history || history[0]?.id === publication.id;
   return <AppShell user={user} current={current} title={publication.title}>
     <p>{publication.studentName} · {publication.className} · Lần nộp {publication.submissionNo}</p>
+    <p className="app-actions">
+      <a className="app-button" href={`/api/content/submissions/${id}?download=1`}>Tải bài nộp (.md)</a>
+      <a className="app-button" href={`/api/submissions/${id}/publication/download?publication=${publication.id}`}>Tải nhận xét (.md)</a>
+    </p>
     {history && <section className="app-panel">
       <h2>Lịch sử trả bài</h2>
       <ul>{history.map(item => <li key={item.id}><Link href={`/results/${id}?publication=${item.id}`}

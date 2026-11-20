@@ -1,5 +1,6 @@
 import type { DraftBody } from '../../../../server/student-drafts/access';
 import type { Snapshot } from '../../../../server/student-drafts/writer';
+import { formatDraftMarkdown } from '../../../../shared/draft-markdown';
 
 export type DeviceCopy = DraftBody & { branch: string; savedAt: number; version: string; hash: string | null };
 export type PendingSubmission = Snapshot & { action: 'submit'; draft: DraftBody };
@@ -90,9 +91,8 @@ export async function keepDeviceCopy(student: string, assignment: string, branch
   } finally { db.close(); }
 }
 
-export function downloadDraft({ markdown, explanation }: DraftBody) {
-  const prefix = explanation ? `---\nexplanation: ${JSON.stringify(explanation)}\n---\n\n` : '';
-  const url = URL.createObjectURL(new Blob([prefix,markdown],{ type:'text/markdown;charset=utf-8' }));
+export function downloadDraft(draft: DraftBody) {
+  const url = URL.createObjectURL(new Blob([formatDraftMarkdown(draft)],{ type:'text/markdown;charset=utf-8' }));
   const link = document.createElement('a');
   link.href = url;
   link.download = 'vuon-van-nhap.md';

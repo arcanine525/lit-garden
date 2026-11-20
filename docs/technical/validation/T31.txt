@@ -1,0 +1,48 @@
+T31 | Role-scoped CSV and Markdown downloads
+
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. The schema was
+current.
+
+$ npm run test:db
+2 passed, including fresh and upgrade schema tests.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+27 passed (3.7m), including the T31 scenario (7.9s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/gradebook-downloads.spec.mjs
+1 passed (10.3s).
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/gradebook-downloads.spec.mjs
+1 passed (14.7s) with the Playwright-pinned Chromium.
+
+- The teacher exports both submission versions. Version 1 has a published
+  score of 0.51 on a 2.00 scale (half-up from 1.01 out of 4.00). Version 2
+  is awaiting return and has a blank score. Revising the catalog rubric
+  to 10 did not change the assignment's 4-point snapshot or the result.
+- The actual CSV download equals the scoped API export. The parsing test
+  checks UTF-8 BOM, Vietnamese letters, commas, doubled quotes and the
+  apostrophe before a formula-like title. The CSV contains no focus time.
+- A Drive quota error returns 503 and the on-page error. The retry creates
+  the expected CSV. A different teacher has no rows and cannot export the
+  assignment by ID. Student and admin accounts cannot export gradebooks.
+- The submission and review downloads are exact verified Markdown
+  envelope bytes. Digests match the pinned submission and current
+  publication. Student, teacher and admin checks cover another
+  student's submission, an unpublished review and an old publication.
+  The owning teacher can still read that old release in history.
+- The downloaded draft on a closed assignment matches the student's
+  download API, including the explanation. Another student sees only
+  their own draft, and the teacher cannot download the student draft.
+  After membership removal, the student's draft API denies access but
+  their submitted Markdown and current returned review remain readable.
+
+PostgreSQL and Keycloak were real local services. The adapter read and
+verified files in the HTTP fake Drive. Browser downloads used Chromium.
+The review envelope embeds structured annotation data inside the .md.

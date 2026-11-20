@@ -4,6 +4,7 @@ import { listAssignments } from '../../server/assignments/access';
 import { sessionUser } from '../../server/auth/session';
 import { reviewQueue } from '../../server/reviews/source';
 import { AppShell } from '../app-shell';
+import { DownloadGradebook } from './download-gradebook';
 import './review.css';
 
 export default async function ReviewQueuePage({ searchParams }: { searchParams: Promise<{ waiting?: string }> }) {
@@ -17,6 +18,7 @@ export default async function ReviewQueuePage({ searchParams }: { searchParams: 
     <section className="app-panel">
       <h2>{waiting ? 'Bản mới nhất chờ chấm' : 'Các bài viết'}</h2>
       {waiting && <p><Link href="/reviews">Xem tất cả lần nộp</Link></p>}
+      <DownloadGradebook/>
       {entries.length ? <ul className="review-queue">{entries.map(item => <li key={item.id}>
         <div><strong>{titles.get(item.assignment_id) || 'Đề bài chưa khả dụng'}</strong>
           <p>{item.student_name} · {item.class_name} · Lần nộp {item.submission_no}</p></div>

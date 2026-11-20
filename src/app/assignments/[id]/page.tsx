@@ -11,6 +11,7 @@ import { AssignmentLifecycle } from '../assignment-lifecycle';
 import { deadlineFormat } from '../deadline-input';
 import { submissionTimings } from '../../../server/assignments/lifecycle';
 import { draftVisible } from '../../../server/student-drafts/access';
+import { DownloadGradebook } from '../../reviews/download-gradebook';
 import '../assignment.css';
 
 export default async function AssignmentPage({ params }: { params: Promise<{ id: string }> }) {
@@ -68,11 +69,13 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
     </section>
     {timings.length > 0 && <section className="app-panel">
       <h2>Lịch sử bản nộp</h2>
+      {user.role === 'teacher' && <DownloadGradebook assignment={id}/>}
       <ul>{timings.map(item => <li key={item.id}>
         {user.role === 'teacher' && `${item.student} · `}Lần nộp {item.number} · {deadlineFormat.format(new Date(item.submittedAt))}
         {item.late && ' · Nộp muộn'}
         {user.role === 'teacher' && <> · <a href={`/reviews/${item.id}`}>Mở bàn chấm</a></>}
         {item.returned && <> · <a href={`/results/${item.id}`}>{user.role === 'teacher' ? 'Lịch sử trả bài' : 'Xem nhận xét'}</a></>}
+        {' · '}<a href={`/api/content/submissions/${item.id}?download=1`}>Tải bài nộp (.md)</a>
       </li>)}</ul>
     </section>}
   </AppShell>;

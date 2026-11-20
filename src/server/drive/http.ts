@@ -16,6 +16,13 @@ export function driveJson(body: unknown, status = 200) {
   return Response.json(body, { status, headers: privateHeaders });
 }
 
+export function markdownAttachment(bytes: string | Uint8Array<ArrayBuffer>, filename: string) {
+  return new Response(bytes,{
+    headers:{ ...privateHeaders,'Content-Type':'text/markdown; charset=utf-8',
+      'Content-Disposition':`attachment; filename="${filename}"`,'Cross-Origin-Resource-Policy':'same-origin' }
+  });
+}
+
 export function driveFailure(error: unknown) {
   return error instanceof DriveError ? driveJson({ error: error.code }, error.status) : driveJson({ error: 'DRIVE_UNAVAILABLE' }, 503);
 }

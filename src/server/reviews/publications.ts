@@ -144,11 +144,17 @@ async function publicationForReader(actor: string, id: string, selected: string)
 export async function readPublication(actor: string, id: string, requested: string | null = null) {
   const submission = await submissionForReader(database(),actor,id);
   const teacher = submission.teacher_id === actor;
-  const selected = requested ?? submission.current_publication_id;
   const history = teacher ? (await database().query<{ id: string; revision: number; published_at: Date }>(`
     SELECT id,revision,published_at FROM garden.review_publications WHERE submission_id=$1 AND teacher_id=$2 ORDER BY revision DESC`,[id,actor])).rows
       .map(row => ({ id:row.id,revision:row.revision,publishedAt:row.published_at.toISOString() })) : undefined;
-  if (!selected) return { publication:null,...(history ? { history } : {}) };
+  const verified = await verifiedPublication(actor,submission,requested);
+  return { publication:verified?.publication ?? null,...(history ? { history } : {}) };
+}
+
+export async function verifiedPublication(actor: string, submission: Awaited<ReturnType<typeof submissionForReader>>, requested: string | null = null) {
+  const id = submission.id;
+  const selected = requested ?? submission.current_publication_id;
+  if (!selected) return null;
   const object = await publicationForReader(actor,id,selected);
   if (!object) throw new DriveError('NOT_FOUND',404);
   const [file,source] = await Promise.all([readVerifiedObject(object),publicationSource(actor,submission)]);
@@ -161,8 +167,7 @@ export async function readPublication(actor: string, id: string, requested: stri
   complete(draft,source);
   const final = await publicationForReader(actor,id,selected);
   if (final?.id !== object.id) throw new DriveError('NOT_FOUND',404);
-  return { publication:{ id:selected,submissionId:id,revision:object.revision,publishedAt:object.published_at.toISOString(),
+  return { bytes:file.bytes,publication:{ id:selected,submissionId:id,revision:object.revision,publishedAt:object.published_at.toISOString(),
     title:source.title,studentName:submission.student_name,className:submission.class_name,submissionNo:submission.submission_no,
-    markdown:source.markdown,explanation:source.explanation,rubric:source.rubric,total:reviewTotal(draft.scores,source.rubric),...draft },
-    ...(history ? { history } : {}) };
+    markdown:source.markdown,explanation:source.explanation,rubric:source.rubric,total:reviewTotal(draft.scores,source.rubric),...draft } };
 }

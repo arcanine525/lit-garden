@@ -1,16 +1,21 @@
 import { appOrigin } from '../../../../../server/auth/oidc';
-import { driveFailure, driveJson } from '../../../../../server/drive/http';
+import { driveFailure, driveJson, markdownAttachment } from '../../../../../server/drive/http';
+import { formatDraftMarkdown } from '../../../../../shared/draft-markdown';
 import { readDraft } from '../../../../../server/student-drafts/access';
 import { isId, isVersion, studentActor } from '../../../../../server/student-drafts/http';
 import { saveStudentDraft, studentDraftInput, studentLease } from '../../../../../server/student-drafts/writer';
 
 type Params = { params: Promise<{ id: string }> };
-export async function GET(_request: Request, { params }: Params) {
+export async function GET(request: Request, { params }: Params) {
   try {
     const actor = await studentActor();
     const { id } = await params;
     if (!isId(id)) return driveJson({ error:'DRAFT_NOT_FOUND' },404);
-    return driveJson(await readDraft(actor,id.toLowerCase()));
+    const result = await readDraft(actor,id.toLowerCase());
+    if (new URL(request.url).searchParams.get('download') === '1') {
+      return markdownAttachment(formatDraftMarkdown(result.draft),'vuon-van-nhap.md');
+    }
+    return driveJson(result);
   } catch (error) { return driveFailure(error); }
 }
 
