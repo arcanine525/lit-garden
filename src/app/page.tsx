@@ -11,6 +11,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       <p>{user.display_name} · {roleName[user.role]}</p>
       {user.role === 'admin' && <p><a href="/admin/accounts">Quản lý tài khoản</a></p>}
       {user.role !== 'admin' && <p><a href="/classes">{user.role === 'teacher' ? 'Lớp học' : 'Tham gia lớp'}</a></p>}
+      <p><a href="/rubrics">{user.role === 'admin' ? 'Quản lý rubric mẫu' : 'Rubric chấm bài'}</a></p>
       <form action="/auth/logout" method="post"><button type="submit">Đăng xuất</button></form>
     </> : <>
       <p>Không gian dạy và học viết.</p>

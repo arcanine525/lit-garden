@@ -1,0 +1,33 @@
+T12 | Shared rubric catalog and versions
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL and Keycloak healthy. Applied 007-rubric-versioning.sql and verified
+that it is current on a second run. Drive readiness uses the local stub.
+
+$ npm run test:db
+2 passed, covering fresh migrations and upgrade with preexisting data.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+8 passed (49.3s) on the full local application stack.
+The browser test builds a two-point rubric with all five criteria and 13
+scoring levels. The operator opens the editing form, creates a revision, and
+retires it through the UI. The teacher and student open the current rubric.
+The teacher opens all five criteria and reads every description. Direct create,
+revise, and retire requests from both read-only roles return 403. Cross-origin
+mutation returns 403. Duplicate scores for a criterion return 422.
+
+The previously stored definition stays unchanged. Revision edits with a stale
+expected version return 409. Retrying identical create, revise, or retire
+requests inserts no extra revision or audit event. The database rejects edits
+to an older definition or reactivation of a retired revision. Retirement hides
+the entire rubric from the teacher and student catalog, even though the admin
+can select and read previous versions. The audit contains one event per action.
+
+The rubric fixture is created and removed by the browser test. Production
+rubrics are entered by the operator. The catalog exposes only the current
+active revision for new assignments. Assignment pages and immutable Drive
+snapshots are part of T17. No live Google service was used.

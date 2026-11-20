@@ -358,6 +358,8 @@ Giáo viên dùng **Lớp học** để tạo lớp, lấy mã lớp và quản 
 
 Giáo viên quản lý vòng đời lớp tại **Đang hoạt động** và **Đã lưu trữ**. Lưu trữ ẩn lớp khỏi danh sách hoạt động. Khôi phục lớp cho phép quản lý danh sách lại. Khi đưa học sinh ra, hồ sơ ghi danh và lịch sử vẫn được giữ để nhận lại vào cùng lớp, kể cả khi học sinh đang tham gia lớp khác. [Kiểm chứng T11](docs/technical/validation/T11.txt).
 
+Quản trị viên tạo, sửa theo phiên bản và ngừng dùng rubric trong **Quản lý rubric mẫu**. Giáo viên và học sinh có thể chọn xem rubric đang dùng và mở mô tả từng mức điểm. Một rubric có thể có nhiều tiêu chí và mức điểm. Tổng điểm mẫu được tính từ điểm cao nhất của từng tiêu chí. Rubric ngừng dùng vẫn nằm trong lịch sử quản trị. [Kiểm chứng T12](docs/technical/validation/T12.txt).
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash
