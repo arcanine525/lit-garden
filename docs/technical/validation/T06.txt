@@ -35,3 +35,15 @@ GitHub Actions runs npm ci, typecheck, build, stack boot, and the same smoke
 test on hosted Linux Chromium. Hosted CI starts after pushing this commit.
 Scope: real local PostgreSQL and Keycloak OIDC discovery. Drive is a local
 readiness stub. Login/session and Google integration are later tasks.
+
+Hosted runner correction
+GitHub Actions run 44691973611 passed npm ci, typecheck and build, then failed
+before smoke. ubuntu-latest resolved to Ubuntu 26.04, which Playwright 1.58.2
+did not support. Teardown also failed because stack:up had not generated the env
+file. The authorized T06 fix pins ubuntu-24.04 and skips teardown only if the
+env file is absent.
+
+Repeated locally: npm run stack:up, npm run typecheck, npm run build, and
+PLAYWRIGHT_CHANNEL=chrome npm run test:e2e. All passed (1/1 E2E, 4.8s).
+Cleanup in a temporary checkout without .env.local exited 0. With .env.local
+present and DOCKER_HOST pointing at an unavailable socket, cleanup exited 1.

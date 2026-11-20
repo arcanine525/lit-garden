@@ -45,6 +45,8 @@ case "${1:-}" in
     wait_for 'Keycloak OIDC discovery' "$KEYCLOAK_ISSUER/.well-known/openid-configuration"
     wait_for 'Drive mock' "$DRIVE_MOCK_URL/health"
     ;;
-  down) compose down ;;
+  down)
+    if [ -f .env.local ]; then compose down; fi
+    ;;
   *) printf 'Usage: %s setup|up|down\n' "$0" >&2; exit 2 ;;
 esac
