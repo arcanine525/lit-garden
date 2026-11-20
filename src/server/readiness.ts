@@ -1,5 +1,6 @@
 import { requiredEnv } from './config';
 import { database } from './db';
+import { metadataReady } from './metadata';
 
 const jsonOptions: RequestInit = {
   cache: 'no-store',
@@ -13,8 +14,7 @@ async function probeJson(url: string): Promise<unknown> {
 }
 
 async function checkDatabase() {
-  const result = await database().query<{ ready: number }>('SELECT 1 AS ready');
-  return result.rows[0]?.ready === 1;
+  return metadataReady(database());
 }
 
 async function checkOidc() {

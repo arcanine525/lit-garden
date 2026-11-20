@@ -312,10 +312,11 @@ Dùng Node theo `.nvmrc`, Docker Compose v2, OpenSSL và curl. Chạy từ gốc
 ```bash
 npm ci
 npm run stack:up
+npm run db:migrate
 npm run dev
 ```
 
-Mở ứng dụng ở `http://127.0.0.1:3000`. Endpoint `/api/health` trả HTTP 200 khi app kết nối được PostgreSQL, đọc OIDC discovery và khóa công khai của Keycloak, và gọi được Drive giả lập. Khi một dịch vụ mất kết nối, app trả 503 và mã kiểm tra theo từng dịch vụ. Keycloak chạy ở cổng 8186, PostgreSQL ở 5546 và Drive giả lập ở 8187. Tất cả cổng trên máy chủ dùng loopback cho cấu hình dev.
+Mở ứng dụng ở `http://127.0.0.1:3000`. Endpoint `/api/health` trả HTTP 200 khi app kết nối được PostgreSQL, xác nhận schema metadata đã migrate, đọc OIDC discovery và khóa công khai của Keycloak, và gọi được Drive giả lập. Khi một dịch vụ mất kết nối, app trả 503 và mã kiểm tra theo từng dịch vụ. Keycloak chạy ở cổng 8186, PostgreSQL ở 5546 và Drive giả lập ở 8187. Tất cả cổng trên máy chủ dùng loopback cho cấu hình dev.
 
 `npm run stack:up` tạo `.env.local` nếu chưa có, điền mật khẩu ngẫu nhiên vào tệp đã được Git bỏ qua. Có thể chỉnh cổng và endpoint trong cùng tệp trước khi khởi động. `npm run stack:down` dừng các container và giữ volume PostgreSQL. Giữ tệp cấu hình cùng volume để các mật khẩu vẫn khớp sau lần chạy đầu tiên.
 
@@ -325,8 +326,11 @@ Dừng tiến trình `npm run dev` trước khi chạy E2E từ bản build:
 npx playwright install chromium
 npm run typecheck
 npm run build
+npm run test:db
 npm run test:e2e
 ```
+
+`npm run db:migrate` áp migration SQL theo thứ tự, khóa các lượt chạy đồng thời và từ chối lịch sử bị sửa. `npm run test:db` tạo rồi dọn các database thử riêng trên PostgreSQL local để kiểm cài mới, nâng cấp có dữ liệu và ràng buộc. [Kiểm chứng T07](docs/technical/validation/T07.txt).
 
 Playwright khởi động bản build tại cổng 3000 và kiểm qua trình duyệt. Nếu máy đã có Chrome, có thể chạy `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. GitHub Actions chạy các bước tương đương với Chromium trên Linux. T06 dùng realm dev và kiểm kết nối OIDC. Đăng nhập theo phiên thuộc T08, còn Google OAuth và Drive thật thuộc các mốc tích hợp sau. [Kiểm chứng T06](docs/technical/validation/T06.txt).
 

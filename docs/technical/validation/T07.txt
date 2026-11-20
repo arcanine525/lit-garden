@@ -1,0 +1,42 @@
+T07 | PostgreSQL metadata migrations and access layer
+
+$ npm run stack:up
+PostgreSQL 16.15 healthy, Keycloak discovery and Drive mock ready.
+
+$ npm run db:migrate
+Applied 001-metadata.sql and 002-tenant-constraints.sql on the empty application
+database. A repeat reported "Migrations already current."
+
+$ npm run test:db
+2 integration tests passed against two freshly created and removed databases.
+The empty DB case ran two migrators in parallel and verified both ordered
+migrations applied exactly once, then ran the 60 reference SQL checks and four
+additional database assertions. These cover unique usernames and memberships,
+unique recipients and submission ordinals, pending operation and idempotency
+keys, ownership constraints and the absence of an operation content column.
+The column inventory contains JSON content only in rubric_templates.definition.
+The actor-scoped read adapter returned the latest submission ID, ordinal and
+current publication reference without any body or score. Admin, unrelated
+student and unrelated teacher received no row. The transaction was rolled back
+and no fixture operation remained.
+
+The upgrade fixture applied migration 001, inserted a notification and library
+deletion record, then attempted migration 002 with a cross-tenant notification.
+The FK error rolled back the migration without replacing existing rows. After
+correcting the synthetic teacher ID, 002 backfilled the deletion owner and
+rejected subsequent cross-tenant updates. A mismatched applied checksum blocked
+a repeat migration.
+
+$ npm run typecheck
+Passed.
+
+$ npm run build
+Passed with the metadata adapter and readiness gate.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
+1 passed. The built application served the home page and readiness API through
+the full local stack. The database check requires the applied metadata version.
+
+Scope: real PostgreSQL constraints, migrations, actor-scoped DB queries and local
+application smoke. HTTP session enforcement and full content-operation failure
+handling are tested in subsequent tasks. Drive remains mocked.

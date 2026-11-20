@@ -24,6 +24,8 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run stack:up
+      - run: npm run db:migrate
+      - run: npm run test:db
       - run: npm run test:e2e
       - if: always()
         run: npm run stack:down
