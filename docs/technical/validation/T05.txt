@@ -1,0 +1,29 @@
+T05 | Baseline catalog and fixed fixtures | Chrome 157.0.8103.79 on macOS
+Review: all 29 scenes / 87 images approved for T35 under the revised manifest below. The coordinator reviewed the 18 revised images and verified the SHA-256 of all 87 files.
+Prior manifest SHA-256 1992f1da6c4151f4fc8056d1d45e5259f042df5746843ef00519a43d79c75486.
+Revised manifest SHA-256 9bbd164f0c97c0a016fd7cf53801a3c02fa9e9b7fd816ccd578d47e3763838fd.
+Verified that all 69 approved image hashes match the prior manifest. Only the 18 requested image hashes changed.
+
+$ npm --prefix prototypes/editor run dev
+Vite and the existing mock adapter listening at http://127.0.0.1:4311.
+GET / and /baselines/?scene=password returned HTTP 200 before the full run.
+
+$ CAPTURE_BASELINES=password,student-home,garden,review-draft,review-republish,assignment-author npm --prefix prototypes/editor run test:browser -- baselines.spec.js
+3 passed (15.3s). Each test rendered all 29 scenes at one viewport and recaptured the six requested scenes.
+1440×900, 768×1024 and 390×844. Fonts, image decode, scroll position, shell and layout checked.
+Revised cases also assert:
+- Password gate exposes no app links or navigation at any viewport.
+- Home and garden filter the same four rows and update counts. Closed, unsubmitted work stays in the list and does not count as a sprout.
+- All five rubric criteria expose only allowed levels. Blank scores block both publication buttons, zero counts as a completed score, and the overall comment is optional.
+- Assignment scale starts at 2 and enforces 0.25 to 100 in steps of 0.25.
+
+$ npm --prefix prototypes/editor test
+20 passed, 0 failed.
+
+$ npm --prefix prototypes/editor run test:browser
+13 passed (49.1s) against the running prototype. Includes the three render matrices and ten existing editor and review-adapter cases.
+
+$ npm --prefix prototypes/editor run build
+Succeeded. Existing Vite warnings for client directives and the large editor chunk remain.
+
+Scope: fixed design fixtures and local editor prototype. Google OAuth and Drive remain outside this verification.

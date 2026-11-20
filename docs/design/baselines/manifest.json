@@ -1,0 +1,1133 @@
+[
+  {
+    "scene": "admin-reset",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "admin-reset-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "cd669519fd0ab995dfe55724b1d846116fa6f3bcdcffa977274224aa6c4b8a04"
+  },
+  {
+    "scene": "admin-reset",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "admin-reset-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "0e0e2c4342f92a9091f02eb733ed44e8c18c275ebd8cf3d7f9ccdebd3665c42e"
+  },
+  {
+    "scene": "admin-reset",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "admin-reset-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "e6f58892184519a24ca7340022645b193e1b06bfd5c6d17c3073357e40be4ac9"
+  },
+  {
+    "scene": "admin-rubrics",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "admin-rubrics-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "ee50aaa941f0d6eba5408d1b80d2f67bc9bddfde33c97707c82bd072f8ffde7c"
+  },
+  {
+    "scene": "admin-rubrics",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "admin-rubrics-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "188d60ffceb75afb6a3e02d304bdf7b845bd2421b31c3324a4ce2a49f4ec2b0a"
+  },
+  {
+    "scene": "admin-rubrics",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "admin-rubrics-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "28e1d2644163ddf9b2a8306859e12a9c0f1a338240e5fed3801995d41ecd0f4b"
+  },
+  {
+    "scene": "admin-teachers",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "admin-teachers-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "1879310166c5c983a7177dec40e5d461ff78a72b8c4524b92de1517b1fff02fa"
+  },
+  {
+    "scene": "admin-teachers",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "admin-teachers-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "6f01f0f1f6f0b453531df84ac58d96d8206839720fd20ec957c31ba2d54a2030"
+  },
+  {
+    "scene": "admin-teachers",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "admin-teachers-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "cf16e1a77124d3f446d6e5ad15fa23f51876ce72d17f39ee62d3b63ddfd6497a"
+  },
+  {
+    "scene": "assignment-author",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "assignment-author-1440.png",
+    "pixels": [
+      1440,
+      1221
+    ],
+    "sha256": "0869e422fb3a565652eee89369178ddc334fcf638d3f6701813e688228b9b831"
+  },
+  {
+    "scene": "assignment-author",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "assignment-author-390.png",
+    "pixels": [
+      390,
+      1316
+    ],
+    "sha256": "648b54945152737af676f2bd3fb82e5b6fed599163beb31ac00f6ac8144f0b9c"
+  },
+  {
+    "scene": "assignment-author",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "assignment-author-768.png",
+    "pixels": [
+      768,
+      1267
+    ],
+    "sha256": "ff14e1d209c70061bab7aae02a325a4f01f2ed0a6e27956c26e7cdc39d44faf5"
+  },
+  {
+    "scene": "assignment-reopen",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "assignment-reopen-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "31bd8b09ec9c278c8d3193ab2edf39b435b05d1242b48dcca965515bc01bd50a"
+  },
+  {
+    "scene": "assignment-reopen",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "assignment-reopen-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "17facdc39261966d5628d2cc046dbdcbe825b06c15b7d65644d2ec0e6554f4a6"
+  },
+  {
+    "scene": "assignment-reopen",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "assignment-reopen-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "672778220d11055cd6d02bc01d8726c7efd3dbd0058e0a832a4ab183840bb649"
+  },
+  {
+    "scene": "class-import",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "class-import-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "668e926e4523ab2e53b07171a93f37b2624e0ee925391539f4070a686ebc3395"
+  },
+  {
+    "scene": "class-import",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "class-import-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "19f17fe469279f79b180416f4df42b0f3eb6668c26dcc03741192d4915663912"
+  },
+  {
+    "scene": "class-import",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "class-import-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "9f06d4db56182b7cdeb3d024a79b63425ba50ccae727a287b93be91b4fb9ff4d"
+  },
+  {
+    "scene": "class-members",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "class-members-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "fad2899043908ed33e0ff824428946551d71e950ae0470888b42265f186af457"
+  },
+  {
+    "scene": "class-members",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "class-members-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "7835b76170dae4e3e4ffc09bed8110ac1d20eb64f312048453ab371e5ab1d5ec"
+  },
+  {
+    "scene": "class-members",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "class-members-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "96994c2acb7a6cca020901a96e5a9f87cb0b2ece66fa9a8e2d53173fdcc0f285"
+  },
+  {
+    "scene": "classes",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "classes-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "d0f30aa4c800aa3fc59a9383b3a58ce6c75d3c6b7c269c7653448f6a5cb1c903"
+  },
+  {
+    "scene": "classes",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "classes-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "c7e9656ac583297d577f11c441d059f09d022fb85549f68a3a252df1cc0ee6df"
+  },
+  {
+    "scene": "classes",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "classes-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "1a41e921b06b64142c271a8aaa5e36279cbfcc7659c090c2e9dc0a06cbc490c5"
+  },
+  {
+    "scene": "drive",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "drive-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "86188e88c163a7e87d24d53c101a895798fdd4c8a81882c8414cc5bddd797678"
+  },
+  {
+    "scene": "drive",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "drive-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "3d920846bd281483dc9a3cab1db7c45f3e8d0f73cf45ddf581d038180b810971"
+  },
+  {
+    "scene": "drive",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "drive-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "44cdf33c5d8d9c0ab8e7796f847143fd2cae304ecb57fcfe13fdb4fef553fa47"
+  },
+  {
+    "scene": "garden",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "garden-1440.png",
+    "pixels": [
+      1440,
+      1008
+    ],
+    "sha256": "d79dc5cbfeca0aaccd7dbf1d7201d1560e6be786d4b485e47cf93c075a3d1ec8"
+  },
+  {
+    "scene": "garden",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "garden-390.png",
+    "pixels": [
+      390,
+      1170
+    ],
+    "sha256": "f4da3134aa3ca9ff2d4c1d8009ad2a8cf59f40b028d64082ec94c0845920638f"
+  },
+  {
+    "scene": "garden",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "garden-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "8bf6fd9999d6abce813fc56a4903e511fb839b8eb2a7a6c6e8386c08bc7636ce"
+  },
+  {
+    "scene": "join-class",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "join-class-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "9486e6247577f147f6c92ebf082b1ae3b206ddfde0085ee1da88f59656169d7c"
+  },
+  {
+    "scene": "join-class",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "join-class-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "95d6f87c272d9dc8e817d37a896dfabd0e935a6068f9b174bbd6a43497f4aae0"
+  },
+  {
+    "scene": "join-class",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "join-class-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "9781452eaf84857bdf0d4c468321c13d06f0b6bbb6f087c8d6883047879bbd28"
+  },
+  {
+    "scene": "library-reader",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "library-reader-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "08ee602ee802f15859e5e368b04d5288e286ab0334a2374eb7d2d6c1dec9fe56"
+  },
+  {
+    "scene": "library-reader",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "library-reader-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "cb3c8d285c01260f955a8133a4794dbb274929be0b989903a20050393a9b9619"
+  },
+  {
+    "scene": "library-reader",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "library-reader-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "fdca43aa5b289ef152a1492bc62b43b4b5087adff72834ab4567195b45e948d7"
+  },
+  {
+    "scene": "login",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "login-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "de488408dd095f8bcb023afe2b11c77d4dd9e241cda3e87e2e17194e9e591603"
+  },
+  {
+    "scene": "login",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "login-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "2aa5474424d123cf3814974750fd8ee218c9564c774020e396e62db3eeb0cbd3"
+  },
+  {
+    "scene": "login",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "login-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "a007a144b4c14ffcd1c0501e7016bc8fe869960051fc3ea2c6e63ffc22847b47"
+  },
+  {
+    "scene": "notifications",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "notifications-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "302b5751deaea326cdb44e49a216b83bf93c355de0f549e9f6b29b0d35cfa6b4"
+  },
+  {
+    "scene": "notifications",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "notifications-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "a2a150c5e966d1b42ded9226f80475234a8fe57b37fdecb0c4124630962fba09"
+  },
+  {
+    "scene": "notifications",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "notifications-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "dfc754c0098a2d54b5b68093ccc3b27bef9507272dcf07ff0d95ba5eefb7eb62"
+  },
+  {
+    "scene": "password",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "password-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "df2d92ee3becd593aa97f4871cc999e2bc3ccdf451b3da271a6e69298804367f"
+  },
+  {
+    "scene": "password",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "password-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "3d26acff907035fd07badf16429f31cebf6b4e220bf634de6566ab6552b961db"
+  },
+  {
+    "scene": "password",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "password-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "39465775a4d0c7ea31c6b877c3b084f182570ee4109b9feb70277e21ba13668d"
+  },
+  {
+    "scene": "review-draft",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "review-draft-1440.png",
+    "pixels": [
+      1440,
+      1077
+    ],
+    "sha256": "90c89aedbe611a4ac3a09fbf8c2b8564636abe416d1680eb9537c3d1a53bba5e"
+  },
+  {
+    "scene": "review-draft",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "review-draft-390.png",
+    "pixels": [
+      390,
+      1582
+    ],
+    "sha256": "ffeb31d54e04f2df4ee67633926a8a56d8575033612fd60cf7a8574bfc713bd0"
+  },
+  {
+    "scene": "review-draft",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "review-draft-768.png",
+    "pixels": [
+      768,
+      1497
+    ],
+    "sha256": "2c7b51d3fb1101e1753fc6c9bee52abb5ab02cd9576092f4522df4040fd51bfb"
+  },
+  {
+    "scene": "review-republish",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "review-republish-1440.png",
+    "pixels": [
+      1440,
+      1187
+    ],
+    "sha256": "50097fb4843b6cba079d6911b0228e2df0107236d3fc52305a78cfb22cdb332e"
+  },
+  {
+    "scene": "review-republish",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "review-republish-390.png",
+    "pixels": [
+      390,
+      1926
+    ],
+    "sha256": "759a83505e133b04860170a20cdee3a4563ed398b742035e7538ef097218490a"
+  },
+  {
+    "scene": "review-republish",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "review-republish-768.png",
+    "pixels": [
+      768,
+      1818
+    ],
+    "sha256": "9994cddcb4e3e4ec30cc4c5df69507d949e12c6db4ef40ee3be2522821055db3"
+  },
+  {
+    "scene": "student-assignments",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-assignments-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "a71bf268ef9223a040438748b9ab604b4e1811b682d04c0ffa02bda5fca47168"
+  },
+  {
+    "scene": "student-assignments",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-assignments-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "bf2bc93e2185d7c24e06ecb77ac6b749fb2aca6faed53f717454eebc963d55e0"
+  },
+  {
+    "scene": "student-assignments",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-assignments-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "7f4cbbac05146b78ebf44f131835f9db9d0e4b0cb4e731509c36990746410f50"
+  },
+  {
+    "scene": "student-editor",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-editor-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "00430e42cdc0d217a1fd3e72955a2e17c5a7b61063ecc380228e606902d8256b"
+  },
+  {
+    "scene": "student-editor",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-editor-390.png",
+    "pixels": [
+      390,
+      1338
+    ],
+    "sha256": "a0ddb2c8eb4528786e57e0b0ffaaec25fc3e79c137443d3793e7ff375f92e7b8"
+  },
+  {
+    "scene": "student-editor",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-editor-768.png",
+    "pixels": [
+      768,
+      1282
+    ],
+    "sha256": "cf8d6563c9e7e6a6f05a1ff8ca818efb9883e23cd8b2e077ee517b32b009fbdc"
+  },
+  {
+    "scene": "student-home",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-home-1440.png",
+    "pixels": [
+      1440,
+      1290
+    ],
+    "sha256": "9032044c0e5269328e53d49bcbe680230a62af38f6ef06b065cf2125280e045f"
+  },
+  {
+    "scene": "student-home",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-home-390.png",
+    "pixels": [
+      390,
+      1618
+    ],
+    "sha256": "00c3c8c6697f995d7303fa3de8eb349f43879f8daaed1bcba3813201e5ab54fa"
+  },
+  {
+    "scene": "student-home",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-home-768.png",
+    "pixels": [
+      768,
+      1313
+    ],
+    "sha256": "319ae7855bc0b63b8be3c420c6f14f09cfd2c624f1649b73b6940a28d1f22135"
+  },
+  {
+    "scene": "student-library",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-library-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "2ace80b540a72874b80a817f8b4a7665275a785dda0be5ea4fcb70d09c541c59"
+  },
+  {
+    "scene": "student-library",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-library-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "ec1db60383db84643012c4ecc3ac9caa40427788e725ca8e45a3a1fe047596df"
+  },
+  {
+    "scene": "student-library",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-library-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "ac166595577212c40c5c435ce92f9e44e8b67f41b09146a308089c20eb14474b"
+  },
+  {
+    "scene": "student-result",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-result-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "e2fd15b7745fa8fcb61621f3156e40db998862bff2eed3b1fffe35abb175e5fa"
+  },
+  {
+    "scene": "student-result",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-result-390.png",
+    "pixels": [
+      390,
+      1110
+    ],
+    "sha256": "709fa0886848b211b636bfb10c07553f1bd71dcee84b578279230da91f564269"
+  },
+  {
+    "scene": "student-result",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-result-768.png",
+    "pixels": [
+      768,
+      1073
+    ],
+    "sha256": "54031934af59f73b181aa224c901a48116a2b4e6cd43e1c96a0c056c4993dbdd"
+  },
+  {
+    "scene": "student-rubrics",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-rubrics-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "3ae9956d34a692c6d3e82142179e238717a3bef7606d3217c548bc390f1a3420"
+  },
+  {
+    "scene": "student-rubrics",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-rubrics-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "3528490f9ba36b31f32acf1e732f9799b1aae173ff7d5a56ac91f8584420f46c"
+  },
+  {
+    "scene": "student-rubrics",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-rubrics-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "7a6ba589b189d1add3b5dbcffea79dd620c2a990cce30be3b44890b4b5ee0e30"
+  },
+  {
+    "scene": "student-source",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "student-source-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "4f97de12d735784f2a5d4ff748ce3436e0167e784a733278a69c7c794bf2b39f"
+  },
+  {
+    "scene": "student-source",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "student-source-390.png",
+    "pixels": [
+      390,
+      1338
+    ],
+    "sha256": "f7ba113e0877972abe6cc4484a6bf748e543f1619e58852ebd53b02dce7d4904"
+  },
+  {
+    "scene": "student-source",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "student-source-768.png",
+    "pixels": [
+      768,
+      1282
+    ],
+    "sha256": "ffba3e92975701a0d6e4c226f780e094087f04a8899c37fc4478cc8de314d628"
+  },
+  {
+    "scene": "teacher-assignments",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "teacher-assignments-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "794fec63cb4f803da3082129a5b2d3a9d512baadee7bea604861202fdd8db5ef"
+  },
+  {
+    "scene": "teacher-assignments",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "teacher-assignments-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "8821951866add5bdfe3b99c008793ca1f9b12af7d87660fa6b282cc0e8e93431"
+  },
+  {
+    "scene": "teacher-assignments",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "teacher-assignments-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "96fb4600f5286443643b4b78d0dbfa981ad3c13e4af6f01dab363984571e5cd9"
+  },
+  {
+    "scene": "teacher-grading",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "teacher-grading-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "bbb00876a5750cfba365566d9e1c005b00b6dc4494c9560bdb0c1c65662fc607"
+  },
+  {
+    "scene": "teacher-grading",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "teacher-grading-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "cc14420e7b52d18ec44f6a877ea7f630858fd96190f3551086a3be790efa9ba7"
+  },
+  {
+    "scene": "teacher-grading",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "teacher-grading-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "888a48e3056683c0d709f8ef9b32477847be240c9de7d15cefa0fcf4903c3f90"
+  },
+  {
+    "scene": "teacher-home",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "teacher-home-1440.png",
+    "pixels": [
+      1440,
+      928
+    ],
+    "sha256": "5b86c49dd2c2f8a62442f7af6aadbfcbb3ac8dd62e912b1e03653f4965650d56"
+  },
+  {
+    "scene": "teacher-home",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "teacher-home-390.png",
+    "pixels": [
+      390,
+      1067
+    ],
+    "sha256": "7e52455e87b063fb273d988a5203949d5532daa4c5743f5ee02d13abdb5dad06"
+  },
+  {
+    "scene": "teacher-home",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "teacher-home-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "fb43b34100747fb7200b720e929b6a941714d3eb2099b4dea40455112c041c0b"
+  },
+  {
+    "scene": "teacher-library",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "teacher-library-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "ea398ad1f93002db5e1a0a045b44e77758849a38700f02c3ce1c8a54a6866168"
+  },
+  {
+    "scene": "teacher-library",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "teacher-library-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "481defdfa4e74b6cd29bc1026e3b73b5a3ec7ed1477170f5e480ea49015d5a0e"
+  },
+  {
+    "scene": "teacher-library",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "teacher-library-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "9328b3763dc3e885e6f2d72d84602ffb3078c7d4408daa7ba5914659f2725332"
+  },
+  {
+    "scene": "teacher-rubrics",
+    "viewport": [
+      1440,
+      900
+    ],
+    "file": "teacher-rubrics-1440.png",
+    "pixels": [
+      1440,
+      900
+    ],
+    "sha256": "c60e25227c776eba11ece7bf02fc1694a872fd945fb1d8e00916d34c92a39c99"
+  },
+  {
+    "scene": "teacher-rubrics",
+    "viewport": [
+      390,
+      844
+    ],
+    "file": "teacher-rubrics-390.png",
+    "pixels": [
+      390,
+      844
+    ],
+    "sha256": "205f50459adf423ef59d9b17bb75d72ee1a375f3960bd5e3a3ce9d04f28a0742"
+  },
+  {
+    "scene": "teacher-rubrics",
+    "viewport": [
+      768,
+      1024
+    ],
+    "file": "teacher-rubrics-768.png",
+    "pixels": [
+      768,
+      1024
+    ],
+    "sha256": "9a990c1f61dadd2179d236ee7f76d5c3c987321a848e814a36bf48ec47e4cdfa"
+  }
+]
