@@ -5,6 +5,7 @@ import { requiredEnv } from '../config';
 import { userManagement } from '../auth/iam';
 import { grantRecipients } from '../assignments/recipients';
 import { fenceStudentWrites } from '../student-drafts/policy';
+import { fenceReviewWrites } from '../reviews/policy';
 import { csvStudents, type CsvRow } from './csv';
 
 export class RosterError extends Error {
@@ -99,7 +100,10 @@ export function setClassState(teacher: string, classId: string, state: ClassStat
     const current = await ownedClass(connection, teacher, classId, false);
     if (current !== state) {
       await connection.query('UPDATE garden.classes SET state=$2,version=version+1 WHERE id=$1', [classId,state]);
-      if (state === 'archived') await fenceStudentWrites(connection,{ teacher,classId });
+      if (state === 'archived') {
+        await fenceStudentWrites(connection,{ teacher,classId });
+        await fenceReviewWrites(connection,teacher,classId);
+      }
       await connection.query(`
         INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,outcome)
         VALUES($1,$2,'class',$3,'success')

@@ -71,6 +71,7 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
       <ul>{timings.map(item => <li key={item.id}>
         {user.role === 'teacher' && `${item.student} · `}Lần nộp {item.number} · {deadlineFormat.format(new Date(item.submittedAt))}
         {item.late && ' · Nộp muộn'}
+        {user.role === 'teacher' && <> · <a href={`/reviews/${item.id}`}>Mở bàn chấm</a></>}
       </li>)}</ul>
     </section>}
   </AppShell>;

@@ -5,7 +5,7 @@ import { ensureFolder } from './folders';
 import { DriveError, DriveFiles } from './provider';
 
 type FolderKind = 'class' | 'assignment' | 'student' | 'assets';
-type Address = { classId: string; assignmentId?: string; studentId?: string; assets?: boolean };
+type Address = { classId: string; assignmentId?: string; studentId?: string; assets?: boolean; reviewSubmission?: string };
 export type DriveObject = { id: string; teacher_id: string; operation_id: string; slot: string; slot_index: number;
   drive_file_id: string; parent_drive_id: string; mime_type: string; expected_sha256: string; byte_size: string };
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
@@ -30,16 +30,18 @@ async function pathFolder(files: DriveFiles, teacher: string, kind: FolderKind, 
   return ensureFolder(files,pin.folder_id,parent,name,kind,resource,true);
 }
 
-export async function prepareWorkspace(teacher: string, { classId, assignmentId, studentId, assets }: Address) {
+export async function prepareWorkspace(teacher: string, { classId, assignmentId, studentId, assets, reviewSubmission }: Address) {
   const { row, files } = await connectedDrive(teacher);
   const target = await database().query<{ recipient: string | null }>(`
     SELECT r.id AS recipient FROM garden.classes c JOIN garden.users owner ON owner.id=c.teacher_id
     LEFT JOIN garden.assignments a ON a.id=$3 AND a.class_id=c.id AND a.teacher_id=c.teacher_id
     LEFT JOIN garden.recipients r ON r.assignment_id=a.id AND r.student_id=$4
     LEFT JOIN garden.memberships m ON m.class_id=c.id AND m.student_id=$4 AND m.state='active'
+    LEFT JOIN garden.submissions reviewed ON reviewed.id=$5 AND reviewed.recipient_id=r.id AND reviewed.teacher_id=c.teacher_id
     WHERE c.id=$2 AND c.teacher_id=$1 AND c.state='active' AND owner.status='active'
-      AND ($3::uuid IS NULL OR a.id IS NOT NULL) AND ($4::uuid IS NULL OR (r.id IS NOT NULL AND m.student_id IS NOT NULL))
-  `, [teacher,classId,assignmentId ?? null,studentId ?? null]);
+      AND ($3::uuid IS NULL OR a.id IS NOT NULL) AND ($5::uuid IS NULL OR reviewed.id IS NOT NULL)
+      AND ($4::uuid IS NULL OR (r.id IS NOT NULL AND (m.student_id IS NOT NULL OR reviewed.id IS NOT NULL)))
+  `, [teacher,classId,assignmentId ?? null,studentId ?? null,reviewSubmission ?? null]);
   if (!target.rowCount) throw new DriveError('FORBIDDEN', 403);
   await ensureFolder(files,row.app_folder_id,row.parent_folder_id,'Vườn Văn','app',teacher,false);
   const latched = await database().query(`UPDATE garden.drive_connections SET data_started_at=COALESCE(data_started_at,now())

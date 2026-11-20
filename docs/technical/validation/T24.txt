@@ -1,0 +1,47 @@
+T24 | Teacher grading queue, anchored comments and private review drafts
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the local HTTP fake Drive were healthy. Migrations
+were current and the local OIDC client was verified.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ npm --prefix prototypes/editor test
+20 passed, including the canonical text and adapter contract cases.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+20 passed (1.8m), including the T24 test (14.1s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/reviews.spec.mjs
+1 passed (16.2s, 14.6s test body).
+
+- A teacher opens the first submission of an assignment with no reference
+  document. The rubric snapshot supplies five criteria. The teacher selects
+  the second occurrence of text containing a combining accent and emoji,
+  adds a green annotation and scores only one criterion. Autosave creates
+  a Markdown Drive candidate, reads it back and advances the review head.
+- Reload restores the exact UTF-16 anchor, color and rubric level, through
+  the real review endpoint and fake Drive. The same phrase in the first
+  paragraph remains unmarked. The original submission bytes/hash remain
+  unchanged and no JSON/YAML sidecar is created.
+- Version 2 appears first in the pending queue. The teacher can resume v1
+  and take over its lease. A keyboard-selectable table cell can be marked.
+  Running rule scans does not change the saved draft. Choosing a finding
+  stages a comment for confirmation and preserves both source and score.
+- Students, administrators and another teacher cannot read the private
+  review draft. Changing v1 directly in the provider while the teacher is
+  still on the page blocks the next autosave with SUBMISSION_CONFLICT and
+  leaves the prior draft head unchanged. Version 2 remains editable and
+  saves independently. Restoring v1's exact fixture bytes confirms its
+  authenticated read still returns the last successful draft.
+
+The application used local Keycloak, PostgreSQL and the fake Drive over
+HTTP. The duplicate Unicode selection used a DOM Range in Chromium. The
+rule scan uses local patterns. The actual publishing and reply actions are
+T25 and T26. Live Google, native IME and physical devices were outside this
+run.

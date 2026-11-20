@@ -56,6 +56,23 @@ async function assignmentObject(teacher: string, id: string) {
   return { ...await readVerifiedObject(rows[0]), hash: rows[0].expected_sha256 };
 }
 
+async function rubricSnapshot(row: AssignmentRow) {
+  if (!row.rubric_object_id) throw new DriveError('DRIVE_MISSING',404);
+  const snapshot = await assignmentObject(row.teacher_id,row.rubric_object_id);
+  const decoded = decodeAssignment<Omit<RubricSnapshot,'id'> & { assignmentId: string }>(snapshot.bytes,
+    'garden.rubric-snapshot/1',row.rubric_template_id);
+  if (decoded.assignmentId !== row.id || decoded.revision !== row.rubric_template_revision) throw new DriveError('DRIVE_INTEGRITY',409);
+  const { assignmentId: _, ...rubric } = decoded;
+  return { rubric:{ id:row.rubric_template_id,...rubric },rubricHash:snapshot.hash };
+}
+
+export async function assignmentReviewContext(teacher: string, id: string) {
+  const row = await assignmentForActor(teacher,id);
+  if (row.teacher_id !== teacher || row.state !== 'published' || !row.prompt_object_id) throw new DriveError('NOT_FOUND',404);
+  const [prompt, rubric] = await Promise.all([assignmentObject(teacher,row.prompt_object_id),rubricSnapshot(row)]);
+  return { ...rubric,title:decodeAssignment<AssignmentPrompt>(prompt.bytes,'garden.assignment-prompt/1',id).title };
+}
+
 export async function assignmentDraft(row: AssignmentRow) {
   if (row.state !== 'draft') throw new DriveError('ASSIGNMENT_PUBLISHED',409);
   if (!row.head_object_id) return { hash: null, draft: { title: '', prompt: '', material: '', reference: '', scale: '2.00',
@@ -81,18 +98,14 @@ export async function assignmentDetails(actor: string, id: string) {
   const readsReference = async () => Boolean((await database().query<{ allowed: boolean }>(
     'SELECT garden.can_read_reference($1,$2) AS allowed',[actor,id])).rows[0]?.allowed);
   const [prompt, snapshot, reference] = await Promise.all([
-    assignmentObject(row.teacher_id,row.prompt_object_id), assignmentObject(row.teacher_id,row.rubric_object_id),
+    assignmentObject(row.teacher_id,row.prompt_object_id), rubricSnapshot(row),
     row.reference_object_id && await readsReference() ? assignmentObject(row.teacher_id,row.reference_object_id) : null
   ]);
-  const decoded = decodeAssignment<Omit<RubricSnapshot,'id'> & { assignmentId: string }>(snapshot.bytes,
-    'garden.rubric-snapshot/1',row.rubric_template_id);
-  if (decoded.assignmentId !== id || decoded.revision !== row.rubric_template_revision) throw new DriveError('DRIVE_INTEGRITY',409);
-  const { assignmentId: _, ...rubric } = decoded;
   const final = await assignmentForActor(actor,id);
   return { ...info, accepting:final.accepting, version:final.version, classState:final.class_state,
     dueAt:final.due_at?.toISOString() ?? null, referencePublicAt:final.reference_public_at?.toISOString() ?? null,
     state: 'published' as const, prompt: decodeAssignment<AssignmentPrompt>(prompt.bytes,'garden.assignment-prompt/1',id),
-    rubric: { id: row.rubric_template_id, ...rubric }, rubricHash: snapshot.hash,
+    ...snapshot,
     reference: reference && await readsReference() ? decodeAssignment<{ reference: string }>(reference.bytes,'garden.assignment-reference/1',id).reference : null };
 }
 

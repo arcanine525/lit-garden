@@ -11,7 +11,7 @@ export async function responseBody(response,status = 200) {
   return body;
 }
 
-export async function withStudentWork(browser, run) {
+export async function withStudentWork(browser, run, options = {}) {
   const db = migrationPool();
   const kc = await keycloakAdmin();
   const tag = randomBytes(6).toString('hex');
@@ -60,7 +60,7 @@ export async function withStudentWork(browser, run) {
     await responseBody(await post(student.page,'/api/classes',{ action:'join',code:classroom.joinCode }));
     const { requests } = await responseBody(await teacher.page.request.get('/api/classes'));
     await responseBody(await post(teacher.page,'/api/classes',{ action:'approve',requestId:requests[0].id }));
-    const definition = { criteria:[{ id:'idea',label:'Ý tưởng',levels:[
+    const definition = options.rubric ?? { criteria:[{ id:'idea',label:'Ý tưởng',levels:[
       { id:'done',score:'2',description:'Có ý rõ.' },{ id:'start',score:'0',description:'Chưa phát triển.' }
     ] }] };
     await responseBody(await post(admin.page,'/api/rubrics',{ action:'create',id:rubric,label:'Rubric tập viết ' + tag,definition }),201);
