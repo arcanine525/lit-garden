@@ -38,6 +38,8 @@ export function AppShell({ user, current, title, children }: { user: User; curre
         <Link href="/" className="app-brand app-mobile-brand">Vườn Văn</Link>
         <div className="app-account">
           <span>{user.display_name} · {roleLabel[user.role]}</span>
+          {user.role !== 'admin' && <Link className="app-button app-notifications" href="/notifications"
+            aria-current={current === '/notifications' ? 'page' : undefined}>Thông báo</Link>}
           <form action="/auth/logout" method="post"><button type="submit">Đăng xuất</button></form>
         </div>
       </header>

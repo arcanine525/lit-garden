@@ -58,7 +58,8 @@ export default async function ResultPage({ params,searchParams }: Props) {
         <h2>Bài nộp</h2>
         <article aria-label="Văn bản bài nộp"><ReviewDocument source={publication.markdown} marks={ranges}/></article>
         {publication.explanation && <><h3>Giải thích của học sinh</h3><p className="review-text">{publication.explanation}</p></>}
-        {ranges.length > 0 && <section aria-label="Nhận xét theo đoạn">{ranges.map(comment => <div key={comment.id} className="review-comment">
+        {ranges.length > 0 && <section aria-label="Nhận xét theo đoạn">{ranges.map(comment => <div key={comment.id}
+          id={`comment-${comment.id}`} tabIndex={-1} className="review-comment">
           <blockquote><mark className={`review-mark-${comment.color}`}>{comment.anchor.exact}</mark></blockquote>
           {comment.body && <p className="review-text">{comment.body}</p>}
           {currentResult && <ReplyThread submission={id} comment={comment.id} publication={publication.id} viewer={user.id}/>}
@@ -74,7 +75,8 @@ export default async function ResultPage({ params,searchParams }: Props) {
           return <div key={score.criterionId}><dt>{criterion?.label}</dt>
             <dd>{points.format(Number(score.value))} điểm · {level?.description}</dd></div>;
         })}</dl>
-        {overall && <section aria-label="Nhận xét chung"><h3>Nhận xét chung</h3><p className="review-text">{overall.body}</p>
+        {overall && <section aria-label="Nhận xét chung" id={`comment-${overall.id}`} tabIndex={-1}>
+          <h3>Nhận xét chung</h3><p className="review-text">{overall.body}</p>
           {currentResult && <ReplyThread submission={id} comment={overall.id} publication={publication.id} viewer={user.id}/>}</section>}
       </section>
     </div>

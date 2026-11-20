@@ -1,0 +1,44 @@
+T30 | In-app notifications and permission checks at open time
+
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. The schema was
+current.
+
+$ npm run test:db
+2 passed, including fresh and upgrade schema tests.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+26 passed (3.3m), including the T30 browser scenario (8.0s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/notifications.spec.mjs
+1 passed (11.1s).
+
+- A newly approved student receives one event for the existing open
+  assignment. Reopening a closed assignment adds one event for the
+  new recipient and preserves the existing recipient's two events on
+  the first call and replay.
+- Deadline extension, review publication/republication and replies in
+  both directions are replayed using their original inputs. Each event
+  appears only once and only for its intended recipient.
+- Mark read updates live status, persists across a reload and returns
+  the same timestamp on a repeat request. Another student receives an
+  empty 404 for the open URL and cannot mark the item read. Admin
+  cannot list a user's inbox.
+- The stale link for a superseded publication gives a generic unavailable
+  message. Opening the API for the old publication also returns 404.
+  Valid reply links resolve to the exact current comment in the result.
+- Removing the student from a class invalidates the unopened assignment
+  shortcut. The student can still open the deadline and current result
+  for their own submitted assignment under the historical read policy.
+- The inbox API and HTML contain no assignment title, submitted text,
+  review excerpt or reply body. The test confirms the exact metadata
+  column list. No email or device notifications are implemented.
+
+Keycloak and PostgreSQL were real local services. Drive writes and
+read-backs used the HTTP fake through the adapter.
