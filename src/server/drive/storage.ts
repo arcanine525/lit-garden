@@ -2,7 +2,7 @@ import { createHash } from 'node:crypto';
 import { database } from '../db';
 import { connectedDrive } from './connection';
 import { ensureFolder } from './folders';
-import { DriveError, DriveFiles } from './provider';
+import { DriveError, DriveFiles, type DriveFile } from './provider';
 
 type FolderKind = 'class' | 'assignment' | 'student' | 'assets' | 'library' | 'library_item';
 type Address = { classId: string; assignmentId?: string; studentId?: string; assets?: boolean; reviewSubmission?: string };
@@ -91,15 +91,17 @@ export async function pinCandidates(workspace: Workspace, inputs: Candidate[]) {
   const missing = specs.filter(spec => !objects.some(object => object.slot === spec.slot && object.slot_index === spec.slotIndex));
   if (missing.length) {
     const ids = await Promise.all(missing.map(() => files.generateId()));
-    await database().query(`INSERT INTO garden.drive_objects(teacher_id,operation_id,slot,slot_index,drive_file_id,
+    await database().query(`WITH reservable AS (
+      SELECT op.id,op.teacher_id FROM garden.operations op JOIN garden.drive_connections dc ON dc.teacher_id=op.teacher_id
+      WHERE op.id=$1 AND op.teacher_id=$2 AND op.state IN ('reserved','writing','unknown','needs_client')
+        AND dc.state='ready' AND dc.generation=$3 FOR UPDATE OF op
+    ) INSERT INTO garden.drive_objects(teacher_id,operation_id,slot,slot_index,drive_file_id,
       parent_drive_id,mime_type,expected_sha256,byte_size)
       SELECT op.teacher_id,op.id,input.slot,input.index,input.id,$4,input.mime,input.hash,input.size
-      FROM garden.operations op
-      JOIN garden.drive_connections dc ON dc.teacher_id=op.teacher_id
+      FROM reservable op
       CROSS JOIN unnest($5::text[],$6::integer[],$7::text[],$8::text[],$9::text[],$10::bigint[])
         AS input(slot,index,id,mime,hash,size)
-      WHERE op.id=$1 AND op.teacher_id=$2 AND op.state IN ('reserved','writing','unknown','needs_client')
-      AND dc.state='ready' AND dc.generation=$3 ON CONFLICT (operation_id,slot,slot_index) DO NOTHING`,
+      ON CONFLICT (operation_id,slot,slot_index) DO NOTHING`,
       [operationId,teacher,generation,folderId,missing.map(spec => spec.slot),missing.map(spec => spec.slotIndex),ids,
         missing.map(spec => spec.mimeType),missing.map(spec => spec.checksum),missing.map(spec => spec.bytes.length)]);
     objects = await load();
@@ -129,9 +131,7 @@ export async function storeCandidate(workspace: Workspace, input: Candidate) {
   return object.id;
 }
 
-async function verifiedBytes(files: DriveFiles, object: DriveObject) {
-  const file = await files.inspect(object.drive_file_id);
-  if (file.trashed === true && file.id === object.drive_file_id) throw new DriveObjectReadError('missing');
+function assertManagedFile(file: DriveFile, object: DriveObject) {
   if (file.id !== object.drive_file_id || !file.ownedByMe || file.driveId ||
       file.mimeType !== object.mime_type || file.parents?.length !== 1 || file.parents[0] !== object.parent_drive_id ||
       file.appProperties?.schema !== 'garden-blob-1' || file.appProperties.resource !== object.id ||
@@ -139,12 +139,29 @@ async function verifiedBytes(files: DriveFiles, object: DriveObject) {
       file.permissions?.some(permission => permission.type === 'anyone' || permission.type === 'domain')) {
     throw new DriveObjectReadError('unavailable');
   }
+}
+
+async function verifiedBytes(files: DriveFiles, object: DriveObject) {
+  const file = await files.inspect(object.drive_file_id);
+  if (file.trashed === true && file.id === object.drive_file_id) throw new DriveObjectReadError('missing');
+  assertManagedFile(file,object);
   const bytes = await files.download(file.id, Number(object.byte_size)).catch(error => {
     if (error instanceof DriveError && error.code === 'DRIVE_INTEGRITY') throw new DriveObjectReadError('conflict');
     throw error;
   });
   if (hash(bytes) !== object.expected_sha256) throw new DriveObjectReadError('conflict');
   return { bytes, version: file.version ?? null };
+}
+
+export async function trashManagedFile(files: DriveFiles, object: DriveObject) {
+  let file = await files.inspect(object.drive_file_id);
+  assertManagedFile(file,object);
+  if (!file.trashed) {
+    await files.trash(object.drive_file_id);
+    file = await files.inspect(object.drive_file_id);
+    assertManagedFile(file,object);
+  }
+  if (!file.trashed) throw new DriveError('DRIVE_UNAVAILABLE',503);
 }
 
 export async function readVerifiedObject(object: DriveObject) {

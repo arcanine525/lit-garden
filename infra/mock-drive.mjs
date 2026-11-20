@@ -244,6 +244,17 @@ async function handle(request, response) {
     return json(response,200,{ id: file.id });
   }
   const fileId = /^\/drive\/v3\/files\/([\w-]+)$/.exec(pathname)?.[1];
+  if (fileId && method === 'PATCH') {
+    if (await applyFault(response,sub,'trash')) return;
+    const entry = mayAccess(fileId,sub);
+    if (!entry) return fault(response,404,'notFound');
+    const input = await body(request);
+    if (input.trashed !== true || Object.keys(input).length !== 1) return fault(response,400,'badRequest');
+    entry.file.trashed = true;
+    entry.file.version = String(Number(entry.file.version)+1);
+    if (await applyFault(response,sub,'trash',true)) return;
+    return json(response,200,{ id:fileId,trashed:true });
+  }
   if (fileId && method === 'GET') {
     if (await applyFault(response,sub,'read')) return;
     const entry = mayAccess(fileId,sub);

@@ -1,0 +1,42 @@
+T28 | Versioned library edits, featured slots and recoverable deletion
+
+$ docker compose --env-file .env.local restart drive-mock
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. The schema was
+current.
+
+$ npm run test:db
+2 passed, including a fresh install and upgrade.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+24 passed (2.9m), including the T28 browser scenario (5.2s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/library-lifecycle.spec.mjs
+1 passed (10.2s). The delete snapshot inserts the teacher ID required
+by the existing composite foreign keys on both operation and file.
+
+- A teacher can feature a shared document in either of two slots. A class
+  without a share rejects the placement and does not see it.
+- A Markdown edit with an existing private image exercises a lost upload
+  acknowledgment and a DB failure during the pointer update. The student's
+  old reader and featured entry survive both failures. A retry uses the
+  same pinned Drive ID and advances the reader and featured title while
+  retaining shares and favorites. A replaced TXT downloads the new exact
+  bytes. A subsequent metadata-only edit replays with the same result.
+- A late upload races a delete. The delete hides the old reader, download,
+  favorite, featured entry and image lease. Its tracked files include the
+  in-flight upload, which cannot bring the item back. A lost trash response
+  and injected DB failure after trash leave an actionable pending status.
+  Retrying from the teacher queue verifies all tracked files in the trash
+  without trashing them again. The separate TXT stays readable.
+
+Chromium, PostgreSQL and Keycloak ran locally. Drive calls passed through
+the application adapter to the HTTP fake. T28 uses TXT for binary
+replacement and T27 tested opening and downloading PDF. Live Google Drive
+behavior remains pending T13/T34.

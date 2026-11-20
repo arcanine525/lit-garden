@@ -43,7 +43,7 @@ export function libraryText(bytes: Buffer) {
   return source;
 }
 
-export async function libraryInput(form: FormData): Promise<LibraryInput> {
+export async function libraryInput(form: FormData, reuse?: (format: 'pdf' | 'text') => Promise<LibraryInput['upload']>): Promise<LibraryInput> {
   const title = field(form.get('title'),160);
   const category = field(form.get('category') ?? '',100);
   const author = field(form.get('author') ?? '',160);
@@ -60,7 +60,13 @@ export async function libraryInput(form: FormData): Promise<LibraryInput> {
     }
     return { ...fields,markdown };
   }
-  if (markdown || !(file instanceof File) || !file.size) throw new DriveError('INVALID_LIBRARY',422);
+  if (markdown) throw new DriveError('INVALID_LIBRARY',422);
+  if (format !== 'pdf' && format !== 'text') throw new DriveError('INVALID_LIBRARY',422);
+  if (!(file instanceof File) || !file.size) {
+    const upload = await reuse?.(format);
+    if (!upload) throw new DriveError('INVALID_LIBRARY',422);
+    return { ...fields,markdown:'',upload };
+  }
   if (file.size > maxLibraryUpload) throw new DriveError('LIBRARY_SIZE',413);
   const mimeType = format === 'pdf' ? 'application/pdf' : 'text/plain';
   if (file.type && file.type !== mimeType && file.type !== 'application/octet-stream') throw new DriveError('UNSUPPORTED_LIBRARY_FILE',415);

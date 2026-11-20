@@ -117,6 +117,13 @@ export class DriveFiles {
     return (await this.call(`/drive/v3/files/${id}?fields=${encodeURIComponent(fields)}`)).json();
   }
 
+  async trash(id: string) {
+    if (!driveFileId.test(id)) throw new DriveError('DRIVE_INTEGRITY',409);
+    await this.call(`/drive/v3/files/${id}?fields=id,trashed`,{
+      method:'PATCH',headers:{ 'Content-Type':'application/json' },body:JSON.stringify({ trashed:true })
+    });
+  }
+
   async generateId(): Promise<string> {
     const json = await (await this.call('/drive/v3/files/generateIds?count=1&space=drive')).json();
     if (typeof json.ids?.[0] !== 'string' || !driveFileId.test(json.ids[0])) throw new DriveError('DRIVE_UNAVAILABLE');

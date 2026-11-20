@@ -9,7 +9,7 @@ import { confirmLibraryVersion, readLibraryFile, readLibraryItem } from '../../.
 import { isId } from '../../../server/student-drafts/http';
 import { AppShell } from '../../app-shell';
 import { MarkdownDocument } from '../../editor/markdown-document';
-import { FavoriteLibraryItem, LibrarySharing } from '../library-actions';
+import { FavoriteLibraryItem, LibrarySharing, RemoveLibraryItem } from '../library-actions';
 import '../../editor/editor.css';
 import '../library.css';
 
@@ -46,11 +46,13 @@ export default async function LibraryReader({ params }: { params: Promise<{ id: 
     <section className="app-panel" aria-label="Nội dung tài liệu">
       <div className="app-actions library-reader-actions">
         <a href={download} className="app-button">Tải tài liệu</a>
+        {teacher && <Link className="app-button" href={`/library/${id}/edit`}>Sửa tài liệu</Link>}
         {!teacher && <FavoriteLibraryItem id={id} initial={favorite}/>}
       </div>
       {manifest.format === 'pdf' ? <iframe className="library-pdf" title="Tài liệu PDF" src={`${download}?inline=1`}/> :
         manifest.format === 'markdown' ? <MarkdownDocument source={markdown}/> : <pre className="library-text">{text}</pre>}
     </section>
-    {share && <section className="app-panel"><LibrarySharing id={id} {...share}/></section>}
+    {share && <section className="app-panel"><LibrarySharing id={id} {...share}/>
+      <RemoveLibraryItem id={id} version={item.row.version}/></section>}
   </AppShell>;
 }

@@ -13,6 +13,7 @@ export type ItemRow = { id: string; teacher_id: string; draft_stream_id: string;
 type Operation = { id: string; kind: string; state: string; target_kind: string; target_id: string; request_digest: string; result_id: string | null };
 type ImageReference = { id: string; sha256: string; mimeType: string };
 type Manifest = LibraryFields & { blobId: string | null; blobSha256: string | null; assets: ImageReference[] };
+const editable = (item: ItemRow, version: string) => (item.state === 'active' || item.state === 'draft') && item.version === version;
 export const sha256 = (value: string | Buffer) => createHash('sha256').update(value).digest('hex');
 
 async function lockLibraryOwner(db: PoolClient, actor: LibraryActor) {
@@ -119,7 +120,7 @@ export async function saveLibraryItem(actor: LibraryActor, id: string, key: stri
     const row = await lockLibraryItem(db,actor,id);
     const prior = await operation(db,actor.teacher,id,'library_save',key,fingerprint);
     if (prior?.state === 'committed') return { intent:prior,manifestAssets:[] };
-    if (row.state !== 'draft' || row.version !== expected) throw new DriveError('LIBRARY_CHANGED',409);
+    if (!editable(row,expected)) throw new DriveError('LIBRARY_CHANGED',409);
     const manifestAssets = await verifyLibraryAssets(db,id,actor.teacher,assets);
     return { intent:prior ?? await stageLibraryOperation(db,row,'library_save',key,fingerprint),manifestAssets };
   });
@@ -138,7 +139,7 @@ export async function saveLibraryItem(actor: LibraryActor, id: string, key: stri
       const row = await lockLibraryItem(db,actor,id);
       const current = await operation(db,actor.teacher,id,'library_save',key,fingerprint);
       if (current?.state === 'committed') return result;
-      if (!current || row.state !== 'draft' || row.version !== expected) throw new DriveError('LIBRARY_CHANGED',409);
+      if (!current || !editable(row,expected)) throw new DriveError('LIBRARY_CHANGED',409);
       await verifyLibraryAssets(db,id,actor.teacher,assets);
       const targets = blobObject ? [currentObject,blobObject.id] : [currentObject];
       const updated = await db.query(`UPDATE garden.drive_objects SET lifecycle='referenced' WHERE id=ANY($1::uuid[])
@@ -217,4 +218,44 @@ export async function listLibrary(actor: string, favorites: boolean) {
     WHERE id=ANY($2::uuid[]) AND garden.can_read_library($1,id)`,[actor,items.map(item => item.id)]);
   const visible = new Set(permitted.map(item => item.id));
   return items.filter(item => visible.has(item.id));
+}
+
+export async function featuredLibrary(actor: string, classId?: string) {
+  const { rows } = await database().query<{ id: string; classId: string; slot: number; className: string }>(`SELECT i.id,
+    c.id AS "classId",f.slot,c.name AS "className" FROM garden.library_featured f JOIN garden.library_items i ON i.id=f.item_id
+    JOIN garden.classes c ON c.id=f.class_id AND c.state='active'
+    JOIN garden.memberships m ON m.class_id=c.id AND m.student_id=$1 AND m.state='active'
+    WHERE ($2::uuid IS NULL OR c.id=$2) AND garden.can_read_library($1,i.id) ORDER BY c.name,c.id,f.slot`,[actor,classId ?? null]);
+  const featured = [];
+  for (const entry of rows) {
+    try {
+      const { manifest } = await readLibraryItem(actor,entry.id);
+      const stillShared = await database().query(`SELECT 1 FROM garden.library_featured f
+        JOIN garden.classes c ON c.id=f.class_id AND c.state='active'
+        JOIN garden.memberships m ON m.class_id=c.id AND m.student_id=$1 AND m.state='active'
+        WHERE f.class_id=$2 AND f.item_id=$3 AND f.slot=$4 AND garden.can_read_library($1,f.item_id)`,[actor,entry.classId,entry.id,entry.slot]);
+      if (stillShared.rowCount) featured.push({ ...entry,title:manifest.title });
+    } catch (error) {
+      if (!(error instanceof DriveError)) throw error;
+    }
+  }
+  return featured;
+}
+
+export async function copyLibraryBlob(actor: string, id: string, key: string, version: string, format: 'pdf' | 'text') {
+  const row = await ownedLibraryItem(actor,id);
+  const mimeType: 'application/pdf' | 'text/plain' = format === 'pdf' ? 'application/pdf' : 'text/plain';
+  if (row.version === version) {
+    const current = await readLibraryItem(actor,id);
+    if (current.row.version !== version || current.manifest.format !== format) throw new DriveError('LIBRARY_CHANGED',409);
+    return { bytes:(await readLibraryFile(actor,id,current)).bytes,mimeType };
+  }
+  // A successful metadata-only replay reconstructs the original fingerprint from that intent's blob.
+  const { rows:[object] } = await database().query<DriveObject>(`SELECT o.* FROM garden.operations op
+    JOIN garden.drive_objects o ON o.operation_id=op.id AND o.teacher_id=op.teacher_id
+    WHERE op.actor_id=$1 AND op.target_id=$2 AND op.target_kind='library' AND op.kind='library_save'
+      AND op.idempotency_key=$3 AND op.expected_version=$4 AND op.state='committed'
+      AND o.slot='document' AND o.mime_type=$5 AND o.lifecycle='referenced'`,[actor,id,key,version,mimeType]);
+  if (!object) throw new DriveError('LIBRARY_CHANGED',409);
+  return { bytes:(await readVerifiedObject(object)).bytes,mimeType };
 }

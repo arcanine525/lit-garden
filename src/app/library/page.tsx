@@ -3,8 +3,9 @@ import { notFound, redirect } from 'next/navigation';
 import { sessionUser } from '../../server/auth/session';
 import { database } from '../../server/db';
 import { listLibrary } from '../../server/library/items';
+import { deletingLibraryItems } from '../../server/library/deletion';
 import { AppShell } from '../app-shell';
-import { AddLibraryItem, FavoriteLibraryItem } from './library-actions';
+import { AddLibraryItem, FavoriteLibraryItem, RemoveLibraryItem } from './library-actions';
 import './library.css';
 
 const labels = { markdown:'Markdown',pdf:'PDF',text:'TXT' };
@@ -14,8 +15,9 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
   if (user.role === 'admin') notFound();
   const teacher = user.role === 'teacher';
   const favorites = !teacher && (await searchParams).favorites === '1';
-  const [items,drafts] = await Promise.all([listLibrary(user.id,favorites),teacher ?
-    database().query<{ id: string }>("SELECT id FROM garden.library_items WHERE teacher_id=$1 AND state='draft' ORDER BY id",[user.id]).then(result => result.rows) : []]);
+  const [items,drafts,deleting] = await Promise.all([listLibrary(user.id,favorites),teacher ?
+    database().query<{ id: string }>("SELECT id FROM garden.library_items WHERE teacher_id=$1 AND state='draft' ORDER BY id",[user.id]).then(result => result.rows) : [],
+  teacher ? deletingLibraryItems(user.id) : []]);
   return <AppShell user={user} current="/library" title="Thư viện">
     <section className="app-panel">
       {teacher ? <><AddLibraryItem/>
@@ -30,5 +32,9 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
         {!teacher && <FavoriteLibraryItem key={`${item.id}:${item.favorite}`} id={item.id} initial={item.favorite}/>}
       </li>)}</ul> : <p>{favorites ? 'Chưa có tài liệu yêu thích nào bạn còn quyền đọc.' : 'Chưa có tài liệu.'}</p>}
     </section>
+    {deleting.length > 0 && <section className="app-panel">
+      <h2>Đang đối chiếu thùng rác</h2>
+      <ul>{deleting.map(item => <li key={item.id}><RemoveLibraryItem id={item.id} version={item.version} pending/></li>)}</ul>
+    </section>}
   </AppShell>;
 }
