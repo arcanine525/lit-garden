@@ -2,6 +2,7 @@ import { uuidPattern } from '../auth/identity-operations';
 import { DriveError } from '../drive/provider';
 import type { Rubric } from '../rubrics/definition';
 import { maxMarkdownBytes } from '../../shared/editor-markdown';
+import { encodeDocument, decodeDocument } from '../drive/envelope';
 
 export type AssignmentDraft = {
   title: string; prompt: string; material: string; reference: string;
@@ -37,21 +38,10 @@ export function deadlineInput(input: unknown) {
   return input;
 }
 
-export function encodeAssignment(schema: string, id: string, fields: object, body = '') {
-  return Buffer.from(`---\ngarden: ${JSON.stringify({ schema,id,...fields })}\n---\n${body}`);
-}
+export const encodeAssignment = encodeDocument;
 
 export function decodeAssignment<T>(bytes: Buffer, schema: string, id: string): T {
-  try {
-    const decoded = new TextDecoder('utf-8',{ fatal: true }).decode(bytes);
-    const match = /^---\ngarden: ([^\n]+)\n---\n/.exec(decoded);
-    if (!match) throw new Error('Invalid document');
-    const { schema: kind, id: resource, ...data } = JSON.parse(match[1]);
-    if (kind !== schema || resource !== id || !encodeAssignment(kind,resource,data,decoded.slice(match[0].length)).equals(bytes)) {
-      throw new Error('Invalid document');
-    }
-    return data as T;
-  } catch { throw new DriveError('DRIVE_INTEGRITY',409); }
+  return decodeDocument<T>(bytes,schema,id).fields;
 }
 
 export function assignmentFiles(id: string, op: string, draft: AssignmentDraft, rubric: Rubric) {

@@ -19,6 +19,7 @@ const accessTokens = new Map();
 const files = new Map();
 const grants = new Map();
 const faults = new Map();
+const holds = new Map();
 const revoked = new Set();
 
 const encode = value => Buffer.from(JSON.stringify(value)).toString('base64url');
@@ -77,11 +78,19 @@ function issue(sub, includeRefresh) {
   return result;
 }
 
-function applyFault(response, sub, operation, afterCommit = false) {
+async function applyFault(response, sub, operation, afterCommit = false) {
   const key = sub + ':' + operation;
   const next = faults.get(key);
   if (next?.afterCommit !== afterCommit) return false;
   faults.delete(key);
+  if (next.hold) {
+    await new Promise(resolve => {
+      const release = () => { clearTimeout(timer); holds.delete(key); resolve(); };
+      const timer = setTimeout(release,12_000);
+      holds.set(key,release);
+    });
+    return false;
+  }
   fault(response, next.status, next.reason);
   return true;
 }
@@ -92,8 +101,12 @@ async function fixture(request, response) {
   if (!/^[a-z0-9_-]{1,40}$/.test(input.sub)) return json(response, 422, {});
   if (input.action === 'fault') {
     faults.set(input.sub + ':' + input.operation, {
-      status: input.status, reason: input.reason, afterCommit: input.afterCommit === true
+      status: input.status, reason: input.reason, afterCommit: input.afterCommit === true, hold: input.hold === true
     });
+  } else if (input.action === 'release') {
+    const release = holds.get(input.sub + ':' + input.operation);
+    if (!release) return json(response, 404, {});
+    release();
   } else if (input.action === 'revoke') {
     revoked.add(input.sub);
   } else if (input.action === 'file') {
@@ -103,12 +116,16 @@ async function fixture(request, response) {
     if (entry?.sub !== input.sub) return json(response, 404, {});
     Object.assign(entry.file,input.patch);
   } else if (input.action === 'inspect') {
-    return json(response, 200, { files: Array.from(files.values()).filter(entry => entry.sub === input.sub).map(entry => entry.file) });
+    return json(response, 200, {
+      files: Array.from(files.values()).filter(entry => entry.sub === input.sub).map(entry => entry.file),
+      holds: Array.from(holds.keys()).filter(key => key.startsWith(input.sub + ':')).map(key => key.split(':')[1])
+    });
   } else if (input.action === 'reset') {
     for (const [id, entry] of files) if (entry.sub === input.sub) files.delete(id);
     for (const [id, value] of refreshTokens) if (value === input.sub) refreshTokens.delete(id);
     for (const [id, value] of accessTokens) if (value.sub === input.sub) accessTokens.delete(id);
     for (const key of faults.keys()) if (key.startsWith(input.sub + ':')) faults.delete(key);
+    for (const [key, release] of holds) if (key.startsWith(input.sub + ':')) release();
     grants.delete(input.sub);
     revoked.delete(input.sub);
   } else return json(response, 422, {});
@@ -191,20 +208,20 @@ async function handle(request, response) {
     }
   }
   if (pathname === '/drive/v3/files/generateIds' && method === 'GET') {
-    if (applyFault(response, sub, 'generate')) return;
+    if (await applyFault(response, sub, 'generate')) return;
     return json(response, 200, { ids: [randomUUID()] });
   }
   if (pathname === '/drive/v3/files' && method === 'POST') {
-    if (applyFault(response, sub, 'create')) return;
+    if (await applyFault(response, sub, 'create')) return;
     const file = await body(request);
     if (!mayAccess(file.parents?.[0],sub)?.file.capabilities.canAddChildren) return fault(response,403,'insufficientFilePermissions');
     if (files.has(file.id)) return fault(response,409,'alreadyExists');
     register(file,sub);
-    if (applyFault(response, sub, 'create', true)) return;
+    if (await applyFault(response, sub, 'create', true)) return;
     return json(response,200,{ id: file.id });
   }
   if (pathname === '/upload/drive/v3/files' && method === 'POST') {
-    if (applyFault(response, sub, 'upload')) return;
+    if (await applyFault(response, sub, 'upload')) return;
     const boundary = /boundary=([\w-]+)/.exec(request.headers['content-type'] ?? '')?.[1];
     if (!boundary) return fault(response,400,'badRequest');
     const payload = await data(request);
@@ -219,12 +236,12 @@ async function handle(request, response) {
     if (!mayAccess(file.parents?.[0],sub)?.file.capabilities.canAddChildren) return fault(response,403,'insufficientFilePermissions');
     if (files.has(file.id)) return fault(response,409,'alreadyExists');
     register(file,sub,payload.subarray(lastHeader,end));
-    if (applyFault(response, sub, 'upload', true)) return;
+    if (await applyFault(response, sub, 'upload', true)) return;
     return json(response,200,{ id: file.id });
   }
   const fileId = /^\/drive\/v3\/files\/([\w-]+)$/.exec(pathname)?.[1];
   if (fileId && method === 'GET') {
-    if (applyFault(response,sub,'read')) return;
+    if (await applyFault(response,sub,'read')) return;
     const entry = mayAccess(fileId,sub);
     if (!entry) return fault(response,404,'notFound');
     if (url.searchParams.get('alt') === 'media') {

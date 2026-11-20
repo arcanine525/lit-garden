@@ -1,0 +1,48 @@
+T19 | Student draft sync, device persistence and single writer lease
+
+$ docker compose --env-file .env.local restart drive-mock
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the fake Drive fixture were healthy. Migrations
+were current and the OIDC client was verified.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+15 passed (1.3m), including the T19 test (14.1s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/student-drafts.spec.mjs
+1 passed (15.7s) on the full local application stack.
+
+- Acquire grants a 60-second lease, renew extends the same epoch, and a
+  different client receives 423. The test expires the lease in PostgreSQL,
+  then verifies that renew cannot revive it. Reacquire advances the epoch,
+  stale release fails, and current release permits the next writer.
+- Two browser contexts authenticate separately as the same student. The
+  second sees the synced Markdown and optional explanation read-only and
+  confirms a warning before takeover. The fake provider holds the first
+  context's upload reply after it creates the candidate. The second context
+  takes over, autosaves from the focused last table cell, and commits a new
+  head. The first context's delayed reply produces 409 STALE_WRITER. The
+  rejected operation and orphan candidate leave the second head unchanged.
+- A fresh read crosses the app adapter to the fake Drive and compares the
+  full Markdown and explanation with the second context's save request,
+  including the final Vietnamese character. The first context downloads
+  its separate Unicode Markdown and explanation while offline, again after
+  reconnect, and from IndexedDB on reopening. A different assignment has
+  no access to that copy. A fake 504 on Drive read shows the last local
+  synced snapshot as read-only while retaining the unsynced device copy.
+- The teacher sees no student draft link or editor and receives 403 for
+  draft GET and takeover. After assignment closure the student can read
+  their head and cannot acquire a writer lease.
+
+The test uses the production Next.js build, local Keycloak and PostgreSQL,
+HTTP to the local fake Drive server, Chromium with two browser contexts and
+synthesized Unicode keyboard insertion. Google Drive live, a second physical
+device and a Vietnamese IME were outside this run. T13 and T34 track live
+Google verification. IndexedDB keeps a synced snapshot and unsynced branches
+per student and assignment. Restoration is explicit after takeover or reopen.

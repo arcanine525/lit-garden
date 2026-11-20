@@ -1,5 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
-import { sessionUser } from '../../../server/auth/session';
+import { currentSession } from '../../../server/auth/session';
 import { uuidPattern } from '../../../server/auth/identity-operations';
 import { assignmentDetails } from '../../../server/assignments/access';
 import { listRubrics } from '../../../server/rubrics/catalog';
@@ -10,11 +10,13 @@ import { AssignmentEditor } from '../assignment-editor';
 import { AssignmentLifecycle } from '../assignment-lifecycle';
 import { deadlineFormat } from '../deadline-input';
 import { submissionTimings } from '../../../server/assignments/lifecycle';
+import { draftVisible } from '../../../server/student-drafts/access';
 import '../assignment.css';
 
 export default async function AssignmentPage({ params }: { params: Promise<{ id: string }> }) {
-  const user = await sessionUser();
-  if (!user) redirect('/');
+  const session = await currentSession();
+  if (!session) redirect('/');
+  const { user } = session;
   if (user.role === 'admin') notFound();
   const { id: raw } = await params;
   if (!uuidPattern.test(raw)) notFound();
@@ -38,9 +40,14 @@ export default async function AssignmentPage({ params }: { params: Promise<{ id:
     </AppShell>;
   }
   const timings = await submissionTimings(user.id,id);
+  let ownDraft = false;
+  if (user.role === 'student') {
+    ownDraft = await draftVisible({ student:user.id,sessionDigest:session.sessionDigest },id).then(() => true,() => false);
+  }
   return <AppShell user={user} current="/assignments" title={detail.prompt.title}>
     <p>{detail.className} · {detail.teacherName} · {detail.accepting ? 'Đang mở' : 'Đã đóng'}</p>
     <p>{detail.dueAt ? `Hạn nộp ${deadlineFormat.format(new Date(detail.dueAt))}` : 'Không giới hạn hạn nộp'}</p>
+    {ownDraft && <p><a className="app-button app-primary" href={`/assignments/${id}/write`}>{detail.accepting ? 'Mở nháp bài viết' : 'Xem nháp bài viết'}</a></p>}
     {user.role === 'teacher' && detail.classState === 'active' && <AssignmentLifecycle id={id} version={detail.version}
       accepting={detail.accepting} dueAt={detail.dueAt} hasReference={Boolean(detail.reference)} referenceIsPublic={Boolean(detail.referencePublicAt)}/>}
     <section className="app-panel">
