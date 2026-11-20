@@ -6,6 +6,7 @@ import { ActionDialog } from '../action-dialog';
 
 const errors: Record<string,string> = {
   CLASS_FORBIDDEN:'Chỉ chia sẻ được với lớp đang hoạt động do bạn quản lý.',
+  LIBRARY_READ_ONLY:'Tài liệu đang ở chế độ chỉ đọc.',
   NOT_FOUND:'Tài liệu không còn khả dụng.'
 };
 
@@ -85,7 +86,7 @@ export function LibrarySharing({ id, classes, shared, featured }: { id: string; 
   </>;
 }
 
-export function FavoriteLibraryItem({ id, initial }: { id: string; initial: boolean }) {
+export function FavoriteLibraryItem({ id, initial, writable }: { id: string; initial: boolean; writable: boolean }) {
   const router = useRouter();
   const [favorite,setFavorite] = useState(initial);
   const [busy,setBusy] = useState(false);
@@ -103,7 +104,7 @@ export function FavoriteLibraryItem({ id, initial }: { id: string; initial: bool
     } catch (error) { setError(errors[(error as Error).message] ?? 'Chưa lưu được yêu thích.'); }
     finally { setBusy(false); }
   }
-  return <><button type="button" disabled={busy} aria-pressed={favorite} onClick={toggle}>Yêu thích</button>
+  return <><button type="button" disabled={busy || !writable} aria-pressed={favorite} onClick={toggle}>Yêu thích</button>
     {error && <p role="alert">{error}</p>}</>;
 }
 

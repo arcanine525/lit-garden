@@ -29,7 +29,7 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
       <h2>Tài liệu</h2>
       {items.length ? <ul className="library-list">{items.map(item => <li key={item.id}>
         <div><Link href={`/library/${item.id}`}>{item.title}</Link>{item.format && <p>{labels[item.format]}{item.sourceLabel ? ` · ${item.sourceLabel}` : ''}</p>}</div>
-        {!teacher && <FavoriteLibraryItem key={`${item.id}:${item.favorite}`} id={item.id} initial={item.favorite}/>}
+        {!teacher && <FavoriteLibraryItem key={`${item.id}:${item.favorite}`} id={item.id} initial={item.favorite} writable={item.writable}/>}
       </li>)}</ul> : <p>{favorites ? 'Chưa có tài liệu yêu thích nào bạn còn quyền đọc.' : 'Chưa có tài liệu.'}</p>}
     </section>
     {deleting.length > 0 && <section className="app-panel">

@@ -31,9 +31,10 @@ export async function shareLibraryItem(actor: LibraryActor, id: string, classIds
 export async function favoriteLibraryItem(student: string, id: string, favorite: boolean) {
   const row = await accessibleLibraryItem(student,id);
   return transaction(async db => {
-    await db.query('SELECT id FROM garden.users WHERE id=$1 FOR UPDATE',[row.teacher_id]);
+    const { rows:[owner] } = await db.query<{ status: string }>('SELECT status FROM garden.users WHERE id=$1 FOR UPDATE',[row.teacher_id]);
     const allowed = await db.query(`SELECT 1 FROM garden.users WHERE id=$1 AND role='student' AND garden.can_read_library($1,$2)`,[student,id]);
     if (!allowed.rowCount) throw new DriveError('NOT_FOUND',404);
+    if (owner?.status !== 'active') throw new DriveError('LIBRARY_READ_ONLY',409);
     if (favorite) await db.query('INSERT INTO garden.library_favorites(item_id,user_id) VALUES($1,$2) ON CONFLICT DO NOTHING',[id,student]);
     else await db.query('DELETE FROM garden.library_favorites WHERE item_id=$1 AND user_id=$2',[id,student]);
     return { favorite };

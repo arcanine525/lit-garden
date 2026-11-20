@@ -22,13 +22,19 @@ export default async function LibraryReader({ params }: { params: Promise<{ id: 
   const id = raw.toLowerCase(), { user } = session;
   let item;
   let share = null;
-  let favorite = false;
+  let favorite = { saved:false,writable:false };
   let text = '';
   try {
     item = await readLibraryItem(user.id,id);
     if (item.manifest.format === 'text') text = libraryText((await readLibraryFile(user.id,id,item)).bytes);
     if (user.role === 'teacher') share = await librarySharing(user.id,id);
-    else favorite = !!(await database().query('SELECT 1 FROM garden.library_favorites WHERE item_id=$1 AND user_id=$2',[id,user.id])).rowCount;
+    else {
+      const { rows:[state] } = await database().query<{ saved: boolean; writable: boolean }>(`
+        SELECT f.item_id IS NOT NULL AS saved,owner.status='active' AS writable FROM garden.users owner
+        LEFT JOIN garden.library_favorites f ON f.item_id=$1 AND f.user_id=$2 WHERE owner.id=$3`,
+      [id,user.id,item.row.teacher_id]);
+      favorite = state;
+    }
     await confirmLibraryVersion(user.id,item.row);
   } catch (error) {
     if (error instanceof DriveError && error.code === 'NOT_FOUND') notFound();
@@ -47,7 +53,7 @@ export default async function LibraryReader({ params }: { params: Promise<{ id: 
       <div className="app-actions library-reader-actions">
         <a href={download} className="app-button">Tải tài liệu</a>
         {teacher && <Link className="app-button" href={`/library/${id}/edit`}>Sửa tài liệu</Link>}
-        {!teacher && <FavoriteLibraryItem id={id} initial={favorite}/>}
+        {!teacher && <FavoriteLibraryItem id={id} initial={favorite.saved} writable={favorite.writable}/>}
       </div>
       {manifest.format === 'pdf' ? <iframe className="library-pdf" title="Tài liệu PDF" src={`${download}?inline=1`}/> :
         manifest.format === 'markdown' ? <MarkdownDocument source={markdown}/> : <pre className="library-text">{text}</pre>}

@@ -1,0 +1,74 @@
+T33 | Verification matrix across two teacher tenants
+
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. The schema was
+current.
+
+$ npm run test:db
+2 passed, including fresh and upgrade schema tests.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+31 passed (4.5m), including the T33 scenarios (13.5s and 13.2s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/access-matrix.spec.mjs
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/access-matrix.spec.mjs --grep 'Keycloak timeout'
+The lifecycle scenario passed in 13.8s. The Keycloak scenario passed
+in 15.0s after checking the actual 403 policy denial for a reply while
+its teacher account is suspended.
+
+- Admin can open the account directory, see both Drive connection
+  states and read the rubric catalog. The JSON account row has only
+  allowed account and Drive status fields. Looking up a submission,
+  result, private image, thread or library by ID is denied. Admin has
+  no gradebook or personal inbox. A teacher cannot reset the shared
+  student's password. The admin reset invalidates the student's old
+  session, and password change restores the same user and B history.
+- Teachers have separate Drive fixtures and only their own CSV rows.
+  A cannot archive B's class or read B's submission. A cannot open
+  student draft downloads. A peer, teacher B and admin cannot read
+  A's student's exact submission, private image, result or thread.
+- Pending enrollment cannot read the closed assignment or write a
+  draft. A real GUI reopen confirmation describes the extra recipients.
+  PostgreSQL reports that the reopen waits on the approval transaction.
+  The new recipient sees one event, one Mầm, opens the prompt and
+  submits from the editor. The old recipient/history/events are unchanged.
+- Closed assignments allow the recipient to read and download their
+  draft while save/submit fail. Teacher returns and republish still
+  work, as does the student's reply. Published reference is readable
+  only to recipients and permanently blocks opening that assignment.
+- Class archive while an upload is held hides active assignments and
+  rejects the late submit. The already saved draft, submitted file
+  and current result remain readable. Publishing/opening and reply
+  writes are denied. Restoring keeps open/closed states and does not
+  revive the rejected submit.
+- After A is suspended during a real paused-Keycloak timeout, A's old
+  application session gets 401 on content, thread, library and CSV
+  routes while directory reconciliation remains pending. Reconciliation
+  then disables the Keycloak account and clears its sessions. The
+  student sees A's read-only draft, result and library while Drive is
+  available. Save/submit/reply/favorite fail, and the favorite UI is
+  disabled. Revoking A's fake Drive produces an unavailable screen
+  from the assignment notification. B still serves its image, accepts
+  a new submission and reports its own counts and gradebook rows.
+- Removing the shared student during a held library read denies that
+  response and an old image lease. The student loses A-only library,
+  unsubmitted activity and draft access. Their own submitted/current
+  result history remains, the reply is read-only, and stale notice is
+  unavailable. A library share through another active class survives.
+  Readmission preserves the old history and restores access/write only
+  as policy permits.
+- Teacher retains both releases and student only sees/downloads current.
+  The stale notification loses its destination. Draft grading is denied
+  even while the student can download the last confirmed release.
+
+PostgreSQL and Keycloak were real local services. Both Drive accounts,
+OAuth revocation and restore were HTTP fake fixtures. Image bytes were
+uploaded through the app adapter. One synthetic DB link attached an
+unpublished image to a submission to exercise the private image
+endpoint alongside the shared library images.

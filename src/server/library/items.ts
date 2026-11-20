@@ -200,7 +200,9 @@ export async function readLibraryFile(actor: string, id: string, loaded?: Awaite
 }
 
 export async function listLibrary(actor: string, favorites: boolean) {
-  const { rows } = await database().query<{ id: string; favorite: boolean }>(`SELECT i.id,f.item_id IS NOT NULL AS favorite FROM garden.library_items i
+  const { rows } = await database().query<{ id: string; favorite: boolean; writable: boolean }>(`
+    SELECT i.id,f.item_id IS NOT NULL AS favorite,owner.status='active' AS writable FROM garden.library_items i
+    JOIN garden.users owner ON owner.id=i.teacher_id
     LEFT JOIN garden.library_favorites f ON f.item_id=i.id AND f.user_id=$1 WHERE garden.can_read_library($1,i.id)
       AND (NOT $2::boolean OR f.item_id IS NOT NULL) ORDER BY i.id`,[actor,favorites]);
   const items = [];

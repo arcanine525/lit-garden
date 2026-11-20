@@ -123,6 +123,8 @@ export async function withStudentWork(browser, run, options = {}) {
       for (const context of contexts) await context.close();
       const ids = accounts.map(account => account.id);
       await clearFixturePublications(db,ids);
+      await db.query('DELETE FROM garden.submission_assets WHERE teacher_id=ANY($1)',[ids]);
+      await db.query('DELETE FROM garden.assignment_assets WHERE teacher_id=ANY($1)',[ids]);
       await db.query(`DELETE FROM garden.library_delete_files f USING garden.operations op
         WHERE f.operation_id=op.id AND op.teacher_id=ANY($1)`,[ids]);
       for (const table of ['library_featured','library_favorites','library_shares','library_assets']) {
