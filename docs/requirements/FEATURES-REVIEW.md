@@ -112,3 +112,11 @@ Các quyết định nghiệp vụ trên là đầu vào thiết kế. Những c
 | RUBRIC | F07–F08, F29; admin quản lý cấu hình chung, cố định bản dùng cho từng bài giao. |
 | LIB | F14–F16, F33, F39–F40; quyền theo lớp, PDF/TXT/Markdown, sửa/xóa và giới thiệu; không thêm liên kết ngoài. |
 | AI và chức năng chưa có | F17 bỏ AI; F25 thêm thông báo trong ứng dụng. |
+
+## 5. Bổ sung Q01 — người nhận khi mở lại bài
+
+**Q01-B — Người dùng xác nhận ngày 20/11/2026:** khi giáo viên mở lại bài chưa công khai tham chiếu, tự giao bổ sung cho học sinh có membership đang hoạt động trong lớp chưa nhận bài, gồm người được duyệt lúc bài đóng; gửi một thông báo bài mới cho mỗi recipient mới. Giữ recipient và lịch sử cũ, không gửi lại thông báo giao bài cho người đã nhận.
+
+Quyết định này bổ sung F12/F22/F42; không đổi mã hoặc nội dung 42 quyết định trước. Không cấp cho yêu cầu chưa duyệt, học sinh đã rời lớp hoặc lớp khác. Mở lại vẫn bị chặn nếu tham chiếu đã công khai, lớp lưu trữ hoặc giáo viên bị khóa. Hạn nộp không tự thay đổi. Recipient mới chưa nộp được tính vào Mầm; người đã nộp vẫn tính theo bản nộp mới nhất.
+
+Retry và duyệt/mở lại đồng thời phải không bỏ sót hoặc tạo trùng recipient/thông báo. Quyết định đã chốt; triển khai và nghiệm thu còn cần làm ở T22 của kế hoạch agent3.
