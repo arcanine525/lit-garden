@@ -119,4 +119,4 @@ Các quyết định nghiệp vụ trên là đầu vào thiết kế. Những c
 
 Quyết định này bổ sung F12/F22/F42; không đổi mã hoặc nội dung 42 quyết định trước. Không cấp cho yêu cầu chưa duyệt, học sinh đã rời lớp hoặc lớp khác. Mở lại vẫn bị chặn nếu tham chiếu đã công khai, lớp lưu trữ hoặc giáo viên bị khóa. Hạn nộp không tự thay đổi. Recipient mới chưa nộp được tính vào Mầm; người đã nộp vẫn tính theo bản nộp mới nhất.
 
-Retry và duyệt/mở lại đồng thời phải không bỏ sót hoặc tạo trùng recipient/thông báo. Quyết định đã chốt; triển khai và nghiệm thu còn cần làm ở T22 của kế hoạch agent3.
+Thử lại và chạy duyệt, nhận lại hoặc đưa học sinh ra khỏi lớp đồng thời với mở lại phải giữ đúng recipient và số thông báo. T22 đã kiểm hai thứ tự commit, rollback và thử lại sau mất phản hồi. [Biên bản T22](../technical/validation/T22.txt)

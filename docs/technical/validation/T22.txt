@@ -1,0 +1,44 @@
+T22 | Q01-B grants missing recipients when reopening an assignment
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the local fake Drive provider were healthy.
+Migrations were current and the local OIDC client was verified.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+18 passed (1.6m), including the T22 test (11.1s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/assignment-reopen.spec.mjs
+1 passed (13.2s, 11.8s test body).
+
+- With a closed assignment, approving an applicant creates no recipient.
+  Reopening grants that student one recipient and one assigned event. A
+  pending applicant, a removed student and a member of another class are
+  excluded. The existing student's recipient, event and submitted version
+  remain byte-for-byte equal in the queried metadata. The deadline stays
+  unchanged and the confirmation dialog explains the supplemental assignment.
+- A PostgreSQL trigger fails the assigned event insert. The transaction
+  rolls back the accepting flag, version, recipient and event. The next
+  attempt commits, and Playwright drops that response. Clicking the dialog
+  again sends the same expected version and leaves recipient and event IDs
+  unchanged.
+- Six pairs of requests cover approve, readmit and remove in both orders.
+  A test-only advisory lock holds the first transaction at its update. The
+  test checks pg_blocking_pids before releasing it. Approve and readmit grant
+  exactly once in either order. Removing before reopening creates no grant.
+  Removing after reopening preserves the grant and event and blocks current
+  assignment/draft access for the student who has no submission.
+- Reopening is blocked after reference disclosure, in an archived class
+  and through the teacher's revoked session after suspension.
+
+Keycloak and PostgreSQL were local services. Assignment and submission
+bytes crossed the app adapter to the HTTP fake Drive. PostgreSQL triggers
+and Playwright response interception inject faults in this test only. The
+student garden and notification center UI follow in T29 and T30. Live
+Google Drive was outside this verification.

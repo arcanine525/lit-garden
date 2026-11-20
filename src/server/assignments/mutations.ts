@@ -8,6 +8,7 @@ import type { Rubric } from '../rubrics/definition';
 import { assignmentDraft, assignmentForActor, assertDriveReady, lockAssignment, lockNewAssignment,
   transaction, type AssignmentRow } from './access';
 import { assignmentFiles, encodeAssignment, type AssignmentDraft } from './bundle';
+import { grantRecipients } from './recipients';
 
 type Writer = { clientId: string; epoch: string };
 type Snapshot = Writer & { key: string; baseVersion: string };
@@ -205,13 +206,7 @@ export async function publishAssignment(teacher: string, id: string, snapshot: S
       await db.query(`UPDATE garden.assignments SET state='published',accepting=true,published_at=(SELECT accepted_at FROM garden.operations WHERE id=$2),
         prompt_object_id=$3,reference_object_id=$4,rubric_object_id=$5,due_at=$6,version=version+1 WHERE id=$1`,
         [id,context.op.id,written.prompt,written.reference ?? null,written.rubric,draft.dueAt ?? null]);
-      await db.query(`WITH granted AS (
-        INSERT INTO garden.recipients(assignment_id,class_id,teacher_id,student_id)
-        SELECT $1,$2,$3,m.student_id FROM garden.memberships m JOIN garden.users u ON u.id=m.student_id
-        WHERE m.class_id=$2 AND m.state='active' AND u.status='active'
-        ON CONFLICT (assignment_id,student_id) DO NOTHING RETURNING student_id
-      ) INSERT INTO garden.notifications(user_id,teacher_id,event_operation_id,event_kind,target_kind,target_id)
-        SELECT student_id,$3,$4,'assigned','assignment',$1 FROM granted ON CONFLICT DO NOTHING`,[id,row.class_id,teacher,context.op.id]);
+      await grantRecipients(db,{ teacher,classId:row.class_id,assignment:id });
       await db.query(`UPDATE garden.document_streams SET lease_actor_id=NULL,lease_session_id=NULL,lease_until=NULL,lease_epoch=lease_epoch+1 WHERE id=$1`,[row.draft_stream_id]);
       await db.query("UPDATE garden.operations SET state='committed',result_id=$2,error_code=NULL WHERE id=$1",[context.op.id,id]);
       return result;

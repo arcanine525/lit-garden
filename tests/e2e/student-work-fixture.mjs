@@ -18,7 +18,6 @@ export async function withStudentWork(browser, run) {
   const subject = 'writing_' + tag;
   const rubric = randomUUID();
   const accounts = [], contexts = [];
-  let classId;
 
   async function pageFor(username,password) {
     const context = await browser.newContext({ baseURL:origin });
@@ -35,7 +34,7 @@ export async function withStudentWork(browser, run) {
     const page = await pageFor(username,temporary);
     await setPassword(page,password);
     await expect.poll(async () => (await page.request.get('/api/me')).status()).toBe(200);
-    return { ...account,page,newSession:async () => {
+    return { ...account,username,page,newSession:async () => {
       const other = await pageFor(username,password);
       await expect.poll(async () => (await other.request.get('/api/me')).status()).toBe(200);
       return other;
@@ -57,7 +56,7 @@ export async function withStudentWork(browser, run) {
     const student = await provision('student','writer');
     const classroom = await responseBody(await post(teacher.page,'/api/classes',{
       action:'save_class',name:'Lớp tập viết ' + tag,year:'2026–2027' }),201);
-    classId = classroom.classId;
+    const { classId } = classroom;
     await responseBody(await post(student.page,'/api/classes',{ action:'join',code:classroom.joinCode }));
     const { requests } = await responseBody(await teacher.page.request.get('/api/classes'));
     await responseBody(await post(teacher.page,'/api/classes',{ action:'approve',requestId:requests[0].id }));
@@ -73,18 +72,18 @@ export async function withStudentWork(browser, run) {
     await teacher.page.getByRole('button',{ name:'Dùng thư mục này' }).click();
     await expect(teacher.page.getByRole('status')).toContainText('Đã xác minh');
 
-    async function publish(title,dueAt = null) {
+    async function publish(title,dueAt = null,reference = '') {
       const id = randomUUID(), clientId = randomUUID();
       const api = `/api/assignments/${id}`;
       await responseBody(await post(teacher.page,'/api/assignments',{ id,classId,rubricId:rubric,rubricRevision:1 }),201);
       const { epoch } = await responseBody(await post(teacher.page,api,{ action:'acquire',clientId }));
-      const draft = { title,prompt:'Hãy viết một đoạn văn.',material:'',reference:'',rubricId:rubric,rubricRevision:1,scale:'2',dueAt };
+      const draft = { title,prompt:'Hãy viết một đoạn văn.',material:'',reference,rubricId:rubric,rubricRevision:1,scale:'2',dueAt };
       const { hash,draftVersion } = await responseBody(await post(teacher.page,api,{ action:'save',key:randomUUID(),clientId,epoch,baseVersion:'0',draft }));
       await responseBody(await post(teacher.page,api,{ action:'publish',key:randomUUID(),clientId,epoch,baseVersion:draftVersion,hash }));
       return { id,api,draftApi:api + '/draft',url:`/assignments/${id}/write` };
     }
 
-    await run({ student,teacher,admin,db,tag,fake,publish });
+    await run({ student,teacher,admin,db,tag,fake,publish,classroom,provision });
   } finally {
     try {
       for (const context of contexts) await context.close();
@@ -95,11 +94,14 @@ export async function withStudentWork(browser, run) {
         ['document_streams','teacher_id'],['drive_objects','teacher_id'],['operations','teacher_id']
       ]) await db.query(`DELETE FROM garden.${table} WHERE ${column}=ANY($1)`,[ids]);
       await db.query('DELETE FROM garden.rubric_templates WHERE id=$1',[rubric]);
-      await db.query('DELETE FROM garden.enrollment_requests WHERE class_id=$1',[classId ?? null]);
-      await db.query('DELETE FROM garden.memberships WHERE class_id=$1',[classId ?? null]);
+      for (const table of ['enrollment_requests','memberships']) {
+        await db.query(`DELETE FROM garden.${table} resource USING garden.classes class
+          WHERE resource.class_id=class.id AND class.teacher_id=ANY($1)`,[ids]);
+      }
       for (const table of ['classes','drive_folders','drive_setups','drive_oauth_attempts','drive_connections']) {
         await db.query(`DELETE FROM garden.${table} WHERE teacher_id=ANY($1)`,[ids]);
       }
+      await db.query('DELETE FROM garden.identity_operations WHERE actor_id=ANY($1) AND target_user_id=ANY($1)',[ids]);
       for (const table of ['students','teachers','users']) await db.query(`DELETE FROM garden.${table} WHERE id=ANY($1)`,[ids]);
       for (const account of accounts) await kc('/users/' + account.subject,'DELETE');
       await fake('reset');

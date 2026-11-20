@@ -3,6 +3,7 @@ import { database } from '../db';
 import { DriveError } from '../drive/provider';
 import { fenceStudentWrites } from '../student-drafts/policy';
 import { assignmentDetails, lockAssignment, transaction, type AssignmentRow } from './access';
+import { grantRecipients } from './recipients';
 
 function published(row: AssignmentRow) {
   if (row.state !== 'published') throw new DriveError('ASSIGNMENT_DRAFT',409);
@@ -17,6 +18,7 @@ export async function changeAccepting(teacher: string, id: string, accepting: bo
     if (row.version !== expectedVersion) throw new DriveError('ASSIGNMENT_CHANGED',409);
     if (!accepting) await fenceStudentWrites(db,{ teacher,assignment:id });
     const updated = await db.query<{ version: string }>('UPDATE garden.assignments SET accepting=$2,version=version+1 WHERE id=$1 RETURNING version',[id,accepting]);
+    if (accepting) await grantRecipients(db,{ teacher,classId:row.class_id,assignment:id });
     return { accepting,version:updated.rows[0].version };
   });
 }

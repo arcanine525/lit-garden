@@ -29,7 +29,8 @@ export function AssignmentLifecycle({ id, version, accepting, dueAt, hasReferenc
     setBusy(true);
     try {
       const response = await fetch(`/api/assignments/${id}`,{ method:'POST',headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ action,expectedVersion:version,...data }) });
+        body:JSON.stringify({ action,expectedVersion:version,...data }) })
+        .catch(() => { throw Error('Chưa xác nhận được thay đổi. Hãy thử lại.'); });
       if (!response.ok) throw Error(errorText[(await response.json()).error] ?? 'Chưa lưu được thay đổi. Hãy thử lại.');
       setMessage(resultText);
       router.refresh();
@@ -51,8 +52,9 @@ export function AssignmentLifecycle({ id, version, accepting, dueAt, hasReferenc
       {accepting ? <ActionDialog trigger="Đóng bài" title="Đóng bài giao?"
         detail="Học sinh vẫn xem được bài và nháp. Vườn Văn sẽ dừng nhận bản nộp mới."
         confirmLabel="Xác nhận đóng bài" inactive={busy} onConfirm={() => change('close','Đã đóng bài.')}/> :
-        <ActionDialog trigger="Mở lại bài" title="Mở lại bài giao?" detail="Học sinh đủ quyền sẽ tiếp tục viết và nộp bài."
-          confirmLabel="Xác nhận mở lại" inactive={busy || referenceIsPublic} onConfirm={() => change('reopen','Đã mở lại bài.')}/>}
+        <ActionDialog trigger="Mở lại bài" title="Mở lại bài này?"
+          detail="Bài sẽ được giao bổ sung cho học sinh đang thuộc lớp và chưa nhận bài này. Mỗi em sẽ nhận một thông báo bài mới. Hạn nộp và lịch sử các lần nộp được giữ nguyên."
+          confirmLabel="Mở lại và giao bổ sung" inactive={busy || referenceIsPublic} onConfirm={() => change('reopen','Đã mở lại bài.')}/>}
       {!accepting && hasReference && !referenceIsPublic && <ActionDialog trigger="Công khai tham chiếu" title="Công khai tham chiếu?"
         detail="Học sinh được giao bài sẽ xem được tham chiếu. Bài sẽ giữ trạng thái đóng."
         confirmLabel="Xác nhận công khai" inactive={busy} onConfirm={() => change('publish_reference','Đã công khai tham chiếu.')}/>}
