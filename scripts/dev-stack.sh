@@ -20,10 +20,11 @@ setup() {
       split($0, pair, "=")
       if (seen[pair[1]]) next
       if ($0 ~ /_(PASSWORD|SECRET)=$/) {
-        cmd = "openssl rand -hex 24"
+        bytes = pair[1] == "APP_DRIVE_KEY_SECRET" ? 32 : 24
+        cmd = "openssl rand -hex " bytes
         cmd | getline secret
         close(cmd)
-        if (length(secret) != 48) exit 1
+        if (length(secret) != bytes * 2) exit 1
         print $0 secret
       } else print
     }

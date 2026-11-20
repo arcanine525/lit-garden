@@ -75,7 +75,7 @@ export async function currentSession() {
   `, [digest(handle)]);
   if (!rows[0]) return null;
   const { recent_auth, ...user } = rows[0];
-  return { user, recentAuth: recent_auth };
+  return { user, recentAuth: recent_auth, sessionDigest: digest(handle) };
 }
 
 export async function revokeSession(handle: string | undefined) {

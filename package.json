@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "csv-parse": "7.0.3",
+    "google-auth-library": "11.3.4",
     "next": "16.4.6",
     "openid-client": "6.9.0",
     "pg": "8.23.1",

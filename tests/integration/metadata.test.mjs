@@ -5,7 +5,7 @@ import { test } from 'node:test';
 import { migrate, migrationPool } from '../../infra/db/migrate.mjs';
 import { findIdentity, findLatestSubmission, metadataReady } from '../../src/server/metadata.ts';
 
-const migrations = ['001-metadata.sql', '002-tenant-constraints.sql', '003-auth-sessions.sql', '004-identity-lifecycle.sql', '005-enrollment.sql', '006-roster-lifecycle.sql', '007-rubric-versioning.sql'];
+const migrations = ['001-metadata.sql', '002-tenant-constraints.sql', '003-auth-sessions.sql', '004-identity-lifecycle.sql', '005-enrollment.sql', '006-roster-lifecycle.sql', '007-rubric-versioning.sql', '008-drive-connection.sql'];
 const uid = key => {
   const hash = createHash('md5').update(key).digest('hex');
   return [hash.slice(0, 8), hash.slice(8, 12), hash.slice(12, 16), hash.slice(16, 20), hash.slice(20)].join('-');

@@ -360,6 +360,10 @@ Giáo viên quản lý vòng đời lớp tại **Đang hoạt động** và **�
 
 Quản trị viên tạo, sửa theo phiên bản và ngừng dùng rubric trong **Quản lý rubric mẫu**. Giáo viên và học sinh có thể chọn xem rubric đang dùng và mở mô tả từng mức điểm. Một rubric có thể có nhiều tiêu chí và mức điểm. Tổng điểm mẫu được tính từ điểm cao nhất của từng tiêu chí. Rubric ngừng dùng vẫn nằm trong lịch sử quản trị. [Kiểm chứng T12](docs/technical/validation/T12.txt).
 
+Giáo viên dùng **Kết nối Google Drive** để cấp quyền và chọn thư mục trong My Drive. Ứng dụng xác minh thư mục `Vườn Văn` trước khi cho tạo nội dung. Nếu quyền hết hạn sau khi đã tạo dữ liệu, giáo viên cấp lại quyền bằng cùng tài khoản Google. Luồng local dùng `APP_DRIVE_PROVIDER=fake`, tạo khóa mã hóa riêng trong `.env.local` và dùng PostgreSQL cùng Keycloak thật. [Kiểm chứng T14](docs/technical/validation/T14.txt).
+
+Chế độ `APP_DRIVE_PROVIDER=google` dùng `APP_DRIVE_GOOGLE_CLIENT_ID`, `APP_DRIVE_GOOGLE_CLIENT_SECRET`, `APP_DRIVE_GOOGLE_PROJECT_NUMBER`, `APP_DRIVE_GOOGLE_PICKER_KEY` và `APP_DRIVE_KMS_KEY`. Đăng ký callback của ứng dụng tại `/api/drive/callback` trên `APP_ORIGIN` và origin tương ứng cho Picker. ID client, hạn chế browser key và Cloud KMS dùng cấu hình của cùng môi trường. Workload cần Application Default Credentials và quyền dùng khóa KMS để bọc hoặc mở khóa dữ liệu. T13 kiểm consent và Picker trên project tích hợp riêng. T34 kiểm lại các luồng Drive trên cấu hình thật. [Google Picker](https://developers.google.com/workspace/drive/picker/guides/web-picker) · [Cloud KMS](https://docs.cloud.google.com/kms/docs/encrypt-decrypt)
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash

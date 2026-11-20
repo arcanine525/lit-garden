@@ -1,0 +1,49 @@
+T14 | Teacher Drive connection and private Drive storage adapter
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the local Drive fixture were healthy. Applied
+008-drive-connection.sql and verified a repeat leaves the migration current.
+
+$ npm run test:db
+2 passed, covering the migration history, upgrade, and policy predicates.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+9 passed (48.8s) on the full local application stack.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- drive.spec.mjs
+1 passed. The app uses real Keycloak sessions and actual callback, application,
+and storage HTTP paths. The test fake issues its own signed OIDC ID token and
+mimics Drive responses. Google did not issue any credential in this run.
+
+- Setup is restricted to the authenticated teacher. State is bound to the
+  application session and consumed on callback. Replaying the callback fails.
+  The fake Picker exposes only the current account's test folder. Server-side
+  checks reject inaccessible and non-owned parents. A 403 quota response is
+  distinguished from a permission error.
+- The fake creates the reserved folder and then returns HTTP 504. A later
+  retry uses and verifies the same ID. Only one Vườn Văn folder exists.
+  Content cannot start before the connection is ready. Folders for class,
+  assignment, and student use stable UUIDs and are nested under the app folder.
+- Refresh tokens are stored only in an authenticated encryption envelope
+  with a key identifier. Local wrapping uses a generated key. After provider
+  revocation the adapter requests reconnect. A different Google subject is
+  rejected after a data reservation. The same subject restores the original
+  folder and content. Teacher suspension leaves authorized student reads live
+  while refusing the teacher's own requests.
+- The adapter uploads immutable Markdown and image bytes under a pre-generated
+  Drive ID and verifies the read-back. A 504 after upload is reconciled by the
+  pinned ID and hash. The browser gets Markdown and decodes a PNG through
+  session-protected app routes. Another teacher, another student, and an admin
+  receive 404. An asset outside the submission relationship receives 404. A
+  moved file fails integrity checks. No public permission is created.
+
+The submission and recipient metadata in this test are synthetic fixtures;
+student authoring and submission commit are implemented in later tasks. This
+validates the fake provider and local envelope path. Google consent, real
+Picker behavior, Drive ACL inheritance, live storage and Cloud KMS are
+unverified. The Google branch uses the configured workload identity and key,
+and was built and type-checked. T13 and T34 carry the live checks.

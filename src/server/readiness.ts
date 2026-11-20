@@ -39,11 +39,17 @@ async function checkDriveMock() {
 }
 
 export async function readiness() {
-  const [database, oidc, driveMock] = await Promise.all(
-    [checkDatabase, checkOidc, checkDriveMock].map(check => check().then(Boolean, () => false))
+  const mode = process.env.APP_DRIVE_PROVIDER;
+  const google = mode === 'google';
+  const checkDrive = google ? async () => [
+    'APP_DRIVE_GOOGLE_CLIENT_ID', 'APP_DRIVE_GOOGLE_CLIENT_SECRET', 'APP_DRIVE_GOOGLE_PROJECT_NUMBER',
+    'APP_DRIVE_GOOGLE_PICKER_KEY', 'APP_DRIVE_KMS_KEY'
+  ].every(name => Boolean(process.env[name])) : async () => mode === 'fake' && checkDriveMock();
+  const [database, oidc, drive] = await Promise.all(
+    [checkDatabase, checkOidc, checkDrive].map(check => check().then(Boolean, () => false))
   );
   return {
-    status: database && oidc && driveMock ? 'ready' : 'unavailable',
-    checks: { database, oidc, driveMock }
+    status: database && oidc && drive ? 'ready' : 'unavailable',
+    checks: { database, oidc, ...(google ? { googleDriveConfig: drive } : { driveMock: drive }) }
   } as const;
 }

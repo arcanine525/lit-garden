@@ -39,6 +39,11 @@ services:
   drive-mock:
     image: node:24.18.0-alpine
     command: ["node", "/opt/drive/mock-drive.mjs"]
+    environment:
+      DRIVE_FAKE_ISSUER: ${DRIVE_MOCK_URL:?Run npm run stack:setup}
+      DRIVE_FAKE_CLIENT_ID: ${APP_DRIVE_FAKE_CLIENT_ID:?Run npm run stack:setup}
+      DRIVE_FAKE_CLIENT_SECRET: ${APP_DRIVE_FAKE_CLIENT_SECRET:?Run npm run stack:setup}
+      DRIVE_FAKE_CALLBACK: ${APP_ORIGIN:?Run npm run stack:setup}/api/drive/callback
     ports:
       - "127.0.0.1:${DRIVE_MOCK_PORT}:8080"
     volumes:
