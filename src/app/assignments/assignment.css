@@ -1,0 +1,7 @@
+.assignment-inputs { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
+.markdown-document { font: 17px/1.9 var(--serif); overflow-wrap: anywhere; }
+.markdown-document img { max-width: 100%; height: auto; }
+.markdown-document blockquote { margin-inline-start: 0; padding-inline-start: 14px; border-inline-start: 1px solid var(--line); }
+.markdown-table { max-width: 100%; overflow-x: auto; }
+.markdown-table table { border-collapse: collapse; }
+.markdown-table td, .markdown-table th { padding: 5px 12px; border: 1px solid var(--line); }

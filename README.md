@@ -366,6 +366,8 @@ Chế độ `APP_DRIVE_PROVIDER=google` dùng `APP_DRIVE_GOOGLE_CLIENT_ID`, `APP
 
 **Soạn Markdown** mở ở chế độ trực quan, cho chuyển sang mã nguồn và tải `.md`. Trong nháp bài của giáo viên, ảnh đã tải lên Drive được tham chiếu bằng ID nội bộ, và Vườn Văn xác thực quyền mỗi khi ảnh được mở. Tệp `.md` giữ tham chiếu này để đọc ảnh qua ứng dụng. [Kiểm chứng T16](docs/technical/validation/T16.txt).
 
+Từ **Bài giao**, giáo viên chọn lớp và rubric để tạo nháp. Nháp tự lưu lên Drive và có thể mở lại ở phiên khác. Khi giao, Vườn Văn kiểm các tệp đề, thang điểm, rubric và tham chiếu nếu có, rồi cấp bài cho học sinh đang tham gia. Thay đổi rubric mẫu về sau chỉ áp dụng cho bài mới. [Kiểm chứng T17](docs/technical/validation/T17.txt).
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash

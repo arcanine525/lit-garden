@@ -6,7 +6,7 @@ import { DriveError, DriveFiles } from './provider';
 
 type FolderKind = 'class' | 'assignment' | 'student' | 'assets';
 type Address = { classId: string; assignmentId?: string; studentId?: string; assets?: boolean };
-export type DriveObject = { id: string; teacher_id: string; operation_id: string; slot: string;
+export type DriveObject = { id: string; teacher_id: string; operation_id: string; slot: string; slot_index: number;
   drive_file_id: string; parent_drive_id: string; mime_type: string; expected_sha256: string; byte_size: string };
 const hash = (bytes: Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -55,29 +55,45 @@ type Workspace = Awaited<ReturnType<typeof prepareWorkspace>>;
 type Candidate = { operationId: string; slot: 'document' | 'prompt' | 'reference' | 'rubric' | 'asset' | 'message';
   slotIndex?: number; name: string; mimeType: string; bytes: Buffer };
 
-// Reserves immutable Drive bytes against an existing operation. The caller commits
-// a resource pointer in a separate transaction after checking that operation's policy.
-export async function storeCandidate(workspace: Workspace, input: Candidate) {
+export async function pinCandidates(workspace: Workspace, inputs: Candidate[]) {
   const { files, folderId, teacher, generation } = workspace;
-  const { operationId, slot, slotIndex = 0, mimeType, bytes, name } = input;
-  const checksum = hash(bytes);
-  const key = [operationId,slot,slotIndex,teacher];
-  const select = `SELECT * FROM garden.drive_objects WHERE operation_id=$1 AND slot=$2 AND slot_index=$3 AND teacher_id=$4`;
-  let object = (await database().query<DriveObject>(select,key)).rows[0];
-  if (!object) {
-    const driveId = await files.generateId();
+  if (!inputs.length) return [];
+  const { operationId } = inputs[0];
+  if (inputs.some(input => input.operationId !== operationId)) throw new DriveError('DRIVE_INTEGRITY',409);
+  const specs = inputs.map(input => ({ ...input, slotIndex: input.slotIndex ?? 0, checksum: hash(input.bytes) }));
+  const load = async () => (await database().query<DriveObject>(
+    'SELECT * FROM garden.drive_objects WHERE operation_id=$1 AND teacher_id=$2',[operationId,teacher])).rows;
+  let objects = await load();
+  const missing = specs.filter(spec => !objects.some(object => object.slot === spec.slot && object.slot_index === spec.slotIndex));
+  if (missing.length) {
+    const ids = await Promise.all(missing.map(() => files.generateId()));
     await database().query(`INSERT INTO garden.drive_objects(teacher_id,operation_id,slot,slot_index,drive_file_id,
       parent_drive_id,mime_type,expected_sha256,byte_size)
-      SELECT op.teacher_id,op.id,$2,$3,$5,$6,$7,$8,$9 FROM garden.operations op
+      SELECT op.teacher_id,op.id,input.slot,input.index,input.id,$4,input.mime,input.hash,input.size
+      FROM garden.operations op
       JOIN garden.drive_connections dc ON dc.teacher_id=op.teacher_id
-      WHERE op.id=$1 AND op.teacher_id=$4 AND op.state IN ('reserved','writing','unknown','needs_client')
-      AND dc.state='ready' AND dc.generation=$10 ON CONFLICT (operation_id,slot,slot_index) DO NOTHING`,
-      [...key,driveId,folderId,mimeType,checksum,bytes.length,generation]);
-    object = (await database().query<DriveObject>(select,key)).rows[0];
+      CROSS JOIN unnest($5::text[],$6::integer[],$7::text[],$8::text[],$9::text[],$10::bigint[])
+        AS input(slot,index,id,mime,hash,size)
+      WHERE op.id=$1 AND op.teacher_id=$2 AND op.state IN ('reserved','writing','unknown','needs_client')
+      AND dc.state='ready' AND dc.generation=$3 ON CONFLICT (operation_id,slot,slot_index) DO NOTHING`,
+      [operationId,teacher,generation,folderId,missing.map(spec => spec.slot),missing.map(spec => spec.slotIndex),ids,
+        missing.map(spec => spec.mimeType),missing.map(spec => spec.checksum),missing.map(spec => spec.bytes.length)]);
+    objects = await load();
   }
-  if (!object) throw new DriveError('DRIVE_SETUP_CHANGED', 409);
-  if (object.parent_drive_id !== folderId || object.expected_sha256 !== checksum ||
-      Number(object.byte_size) !== bytes.length || object.mime_type !== mimeType) throw new DriveError('DRIVE_INTEGRITY', 409);
+  return specs.map(spec => {
+    const object = objects.find(item => item.slot === spec.slot && item.slot_index === spec.slotIndex);
+    if (!object) throw new DriveError('DRIVE_SETUP_CHANGED',409);
+    if (object.parent_drive_id !== folderId || object.expected_sha256 !== spec.checksum ||
+        Number(object.byte_size) !== spec.bytes.length || object.mime_type !== spec.mimeType) throw new DriveError('DRIVE_INTEGRITY',409);
+    return object;
+  });
+}
+
+// The caller commits a resource pointer only after checking its own policy.
+export async function storeCandidate(workspace: Workspace, input: Candidate) {
+  const { files, folderId } = workspace;
+  const { operationId, mimeType, bytes, name } = input;
+  const [object] = await pinCandidates(workspace,[input]);
   const marker = { schema: 'garden-blob-1', resource: object.id, operation: operationId };
   try { await files.upload(object.drive_file_id,folderId,name,mimeType,bytes,marker); }
   catch (error) {

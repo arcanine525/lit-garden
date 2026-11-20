@@ -1,0 +1,64 @@
+import { uuidPattern } from '../auth/identity-operations';
+import { DriveError } from '../drive/provider';
+import type { Rubric } from '../rubrics/definition';
+import { maxMarkdownBytes } from '../../shared/editor-markdown';
+
+export type AssignmentDraft = {
+  title: string; prompt: string; material: string; reference: string;
+  rubricId: string; rubricRevision: number; scale: string;
+};
+export type AssignmentPrompt = Pick<AssignmentDraft, 'title' | 'prompt' | 'material'>;
+export type RubricSnapshot = { id: string; label: string; revision: number; scale: string; max: string;
+  criteria: Rubric['definition']['criteria']; rounding: 'round-half-up-2' };
+
+export function draftInput(input: unknown): AssignmentDraft {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) throw new DriveError('INVALID_DRAFT',422);
+  const value = input as Record<string,unknown>;
+  if (Object.keys(value).some(key => !['title','prompt','material','reference','rubricId','rubricRevision','scale'].includes(key)) ||
+      typeof value.title !== 'string' || value.title.trim().length > 160 || /[\r\n\u0000]/.test(value.title) ||
+      typeof value.prompt !== 'string' || typeof value.material !== 'string' || typeof value.reference !== 'string' ||
+      typeof value.rubricId !== 'string' || !uuidPattern.test(value.rubricId) ||
+      typeof value.rubricRevision !== 'number' || !Number.isSafeInteger(value.rubricRevision) || value.rubricRevision < 1 ||
+      typeof value.scale !== 'string' || !/^\d{1,3}(?:[.,]\d{1,2})?$/.test(value.scale)) throw new DriveError('INVALID_DRAFT',422);
+  const scale = Number(value.scale.replace(',','.'));
+  if (scale < .25 || scale > 100 || !Number.isInteger(scale * 4)) throw new DriveError('INVALID_SCALE',422);
+  const draft = { title: value.title.trim(), prompt: value.prompt, material: value.material, reference: value.reference,
+    rubricId: value.rubricId, rubricRevision: value.rubricRevision, scale: scale.toFixed(2) };
+  if (Buffer.byteLength(JSON.stringify(draft)) > maxMarkdownBytes) throw new DriveError('MARKDOWN_SIZE',422);
+  return draft;
+}
+
+export function encodeAssignment(schema: string, id: string, fields: object, body = '') {
+  return Buffer.from(`---\ngarden: ${JSON.stringify({ schema,id,...fields })}\n---\n${body}`);
+}
+
+export function decodeAssignment<T>(bytes: Buffer, schema: string, id: string): T {
+  try {
+    const decoded = new TextDecoder('utf-8',{ fatal: true }).decode(bytes);
+    const match = /^---\ngarden: ([^\n]+)\n---\n/.exec(decoded);
+    if (!match) throw new Error('Invalid document');
+    const { schema: kind, id: resource, ...data } = JSON.parse(match[1]);
+    if (kind !== schema || resource !== id || !encodeAssignment(kind,resource,data,decoded.slice(match[0].length)).equals(bytes)) {
+      throw new Error('Invalid document');
+    }
+    return data as T;
+  } catch { throw new DriveError('DRIVE_INTEGRITY',409); }
+}
+
+export function assignmentFiles(id: string, op: string, draft: AssignmentDraft, rubric: Rubric) {
+  const prompt = { title: draft.title, prompt: draft.prompt, material: draft.material };
+  const snapshot: RubricSnapshot = {
+    id: rubric.id, label: rubric.label, revision: rubric.revision, scale: draft.scale, max: rubric.definition.max,
+    criteria: rubric.definition.criteria, rounding: 'round-half-up-2'
+  };
+  const snapshotFields = { label: snapshot.label, revision: snapshot.revision, scale: snapshot.scale, max: snapshot.max,
+    criteria: snapshot.criteria, rounding: snapshot.rounding, assignmentId: id };
+  const files = [
+    { slot: 'prompt' as const, bytes: encodeAssignment('garden.assignment-prompt/1',id,prompt,
+      [draft.prompt,draft.material].filter(Boolean).join('\n\n')) },
+    { slot: 'rubric' as const, bytes: encodeAssignment('garden.rubric-snapshot/1',snapshot.id,snapshotFields) }
+  ];
+  const reference = draft.reference.trim() ? [{ slot: 'reference' as const,
+    bytes: encodeAssignment('garden.assignment-reference/1',id,{ reference: draft.reference },draft.reference) }] : [];
+  return [...files,...reference].map(file => ({ ...file, operationId: op, mimeType: 'text/markdown', name: `${file.slot}-${op}.md` }));
+}

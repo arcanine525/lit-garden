@@ -13,7 +13,7 @@ import { assetBlob } from './asset-client';
 
 export type EditorHandle = { getMarkdown(): string; setMarkdown(markdown: string): boolean };
 export type EditorProps = { initialMarkdown?: string; role: EditorRole; assignmentId?: string;
-  onMarkdownChange?: (source: string) => void; editorRef?: Ref<EditorHandle>; validate?: boolean };
+  onMarkdownChange?: (source: string) => void; editorRef?: Ref<EditorHandle>; validate?: boolean; readOnly?: boolean };
 
 const errors: Record<string,string> = {
   PRIVATE_ASSET_REQUIRED: 'Chỉ dùng ảnh đã tải vào bài này.',
@@ -33,7 +33,7 @@ const errors: Record<string,string> = {
   DRIVE_UNAVAILABLE: 'Chưa đọc hoặc lưu được ảnh trên Drive. Hãy thử lại.'
 };
 
-export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMarkdownChange, editorRef, validate }: EditorProps) {
+export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMarkdownChange, editorRef, validate, readOnly }: EditorProps) {
   const [initial] = useState(() => {
     try { return { source: prepareMarkdown(initialMarkdown,role), invalid: false }; }
     catch { return { source: initialMarkdown, invalid: true }; }
@@ -56,7 +56,7 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMar
   const previews = useRef(new Map<string, Promise<string>>());
   const live = useRef(false);
   const uploads = useRef(new WeakMap<File,string>());
-  const canInsertImages = role === 'teacher' && !!assignmentId;
+  const canInsertImages = role === 'teacher' && !!assignmentId && !readOnly;
 
   useEffect(() => {
     const urls = previewUrls.current;
@@ -144,6 +144,7 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMar
   }
 
   function importClipboard(event: ClipboardEvent<HTMLDivElement> | DragEvent<HTMLDivElement>) {
+    if (readOnly) return;
     const clipboard = 'clipboardData' in event ? event.clipboardData : event.dataTransfer;
     const files = [...clipboard.files];
     const html = clipboard.getData('text/html');
@@ -213,7 +214,7 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMar
         setEpoch(value => value + 1);
       }}>Tải lại ảnh</button>}
     </div>
-    {mode === 'source' && <label>Mã Markdown<textarea rows={12} value={source} onChange={event => {
+    {mode === 'source' && <label>Mã Markdown<textarea rows={12} value={source} readOnly={readOnly} onChange={event => {
       setSource(event.target.value);
       onMarkdownChange?.(event.target.value);
     }}/></label>}
@@ -223,7 +224,7 @@ export function MarkdownEditor({ initialMarkdown = '', role, assignmentId, onMar
       event.target.value = '';
     }}/>
     <div hidden={mode === 'source'} onPasteCapture={importClipboard} onDropCapture={importClipboard}>
-      <MDXEditor key={epoch} ref={editor} markdown={initialText.current} suppressHtmlProcessing trim={false}
+      <MDXEditor key={epoch} ref={editor} markdown={initialText.current} suppressHtmlProcessing trim={false} readOnly={readOnly}
         contentEditableClassName="garden-editor-text" onError={() => {
           rejected.current = true;
           setSource(lastImport.current);

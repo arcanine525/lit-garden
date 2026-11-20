@@ -1,0 +1,46 @@
+T17 | Drive-backed assignment drafts and atomic publication
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL, Keycloak and the fake Drive service were healthy. No new schema
+migration was needed. This task uses the existing streams, operations, Drive
+objects, recipients and notifications tables.
+
+$ npm run test:db
+2 passed.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+13 passed (47.2s) on the full local stack.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e -- assignments.spec.mjs
+1 passed (11.2s). Chrome used real Keycloak sessions and the application's
+actual PostgreSQL and Drive adapter paths.
+
+- Teacher creates a draft after connecting Drive, selects the active rubric,
+  edits the prompt and material in the shared editor, and changes the scale
+  from the default two points to four. Debounced autosave writes a verified
+  Markdown file on Drive and changes only metadata in PostgreSQL. The draft
+  reopens from Drive after reload and explicit writer takeover. Before publish
+  even the approved student sees neither the draft list entry nor its detail.
+- The fake Drive service uploads the prompt then responds with 504. Both
+  publication slot IDs are already pinned. The draft and pending operation
+  remain recoverable. A fixture PostgreSQL trigger then rejects the final
+  transaction after both files verify. In either failure, there is no visible
+  prompt, student recipient, or notification. Retrying the same request key
+  after the trigger is removed publishes the original two file IDs, with one
+  recipient and one notification. Replaying the success returns the same ID.
+- An approved student reads the prompt and material in the application. A
+  student awaiting approval still receives 404. A blank reference creates no
+  reference file. The draft API refuses changes to a published assignment.
+- Revising and retiring the source rubric leaves the published snapshot,
+  its SHA-256, scoring levels, and assignment's four-point scale unchanged.
+  A new draft cannot select the retired rubric.
+
+The application stores the assignment title, body, scale and rubric snapshot
+on Drive. PostgreSQL stores the configuration revision reference, metadata
+and content hashes. Verification used the fake Drive provider. Google live
+consent, storage and ACL behavior remain in T13/T34. Deadline changes and
+reference publication are implemented in T18.
