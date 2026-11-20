@@ -2,7 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 
-type Class = { id: string; name: string; school_year: string; teacher?: string; state: string };
+type Class = { id: string; name: string; school_year: string; teacher?: string; state: string; class_state?: string };
 type Member = { class_id: string; student_id: string; display_name: string; username: string; state: string };
 type Request = { id: string; class_id: string; display_name: string; username: string };
 type Row = { line: number; name: string; username: string; className: string; state: string; error?: string; temporaryPassword?: string };
@@ -24,14 +24,21 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
   const [batch, setBatch] = useState('');
   const [busy, setBusy] = useState(false);
   const [singleKey, setSingleKey] = useState('');
+  const [archived, setArchived] = useState(false);
 
-  async function refresh() {
-    const response = await fetch('/api/classes', { cache: 'no-store' });
+  async function refresh(showArchived = archived, signal?: AbortSignal) {
+    const response = await fetch(showArchived ? '/api/classes?view=archived' : '/api/classes', { cache: 'no-store', signal });
     if (!response.ok) throw Error('Chưa tải được lớp học.');
     setData({ ...initial, ...await response.json() });
   }
 
-  useEffect(() => { refresh().catch(error => setFeedback(error.message)); }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    refresh(archived, controller.signal).catch(error => {
+      if (!controller.signal.aborted) setFeedback(error.message);
+    });
+    return () => controller.abort();
+  }, [archived]);
 
   async function post(payload: Record<string, unknown>) {
     const response = await fetch('/api/classes', {
@@ -41,6 +48,7 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
     if (!response.ok) throw Error(result.error === 'INVALID_CSV'
       ? 'CSV chưa hợp lệ. Kiểm tra tiêu đề và tối đa 300 dòng.'
       : result.error === 'CLASS_NOT_FOUND' ? 'Không tìm thấy lớp phù hợp.'
+      : result.error === 'CLASS_ARCHIVED' ? 'Lớp đã lưu trữ. Khôi phục lớp để thay đổi danh sách.'
       : 'Chưa thực hiện được thao tác. Kiểm tra thông tin và thử lại.');
     return result;
   }
@@ -87,8 +95,31 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
     setRecords([]);
   }
 
+  function changeView(showArchived: boolean) {
+    if (archived === showArchived) return;
+    setData(initial);
+    setFeedback('');
+    setArchived(showArchived);
+  }
+
+  async function changeRoster(payload: Record<string, unknown>, message: string) {
+    await perform(async () => {
+      await post(payload);
+      setFeedback(message);
+      await refresh();
+    });
+  }
+
+  const currentClasses = data.classes.filter(item => item.class_state !== 'archived' && item.state !== 'removed');
+  const pastClasses = data.classes.filter(item => item.class_state === 'archived' || item.state === 'removed');
+
   return <>
     {teacher ? <>
+      <nav aria-label="Danh sách lớp">
+        <button disabled={busy} aria-pressed={!archived} onClick={() => changeView(false)}>Đang hoạt động</button>{' '}
+        <button disabled={busy} aria-pressed={archived} onClick={() => changeView(true)}>Đã lưu trữ</button>
+      </nav>
+      {!archived && <>
       <h2>Tạo lớp</h2>
       <form onSubmit={event => handle(event, 'save_class')}>
         <label>Tên lớp <input name="name" required maxLength={100}/></label>{' '}
@@ -125,24 +156,30 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
         {row.temporaryPassword && <p>Mật khẩu tạm <output>{row.temporaryPassword}</output></p>}
         {row.state === 'pending' && <button disabled={busy} onClick={() => loadRows(false, row.line)}>Thử lại dòng {row.line}</button>}
       </li>)}</ul>}
-      <h2>Danh sách lớp</h2>
+      </>}
+      <h2>{archived ? 'Lớp đã lưu trữ' : 'Danh sách lớp'}</h2>
       {data.classes.map(item => <section aria-label={item.name} key={item.id}>
         <h3>{item.name} · {item.school_year}</h3>
+        {item.state === 'active'
+          ? <button disabled={busy} onClick={() => changeRoster({ action: 'archive_class', classId: item.id }, 'Đã lưu trữ lớp.')}>Lưu trữ lớp</button>
+          : <button disabled={busy} onClick={() => changeRoster({ action: 'restore_class', classId: item.id }, 'Đã khôi phục lớp.')}>Khôi phục lớp</button>}
         {item.state === 'active' && <form onSubmit={event => handle(event, 'save_class', {classId: item.id})}>
           <label>Tên lớp <input name="name" required maxLength={100} defaultValue={item.name}/></label>{' '}
           <label>Năm học <input name="year" required maxLength={30} defaultValue={item.school_year}/></label>{' '}
           <button disabled={busy}>Lưu lớp</button>
         </form>}
         <ul>{data.memberships.filter(member => member.class_id === item.id).map(member => <li key={member.student_id}>
-          {member.display_name} · {member.username} · {enrollmentState[member.state]}
+          {member.display_name} · {member.username} · {enrollmentState[member.state]}{' '}
+          {item.state === 'active' && <button disabled={busy} onClick={() => {
+            const remove = member.state === 'active';
+            return changeRoster({ action: remove ? 'remove_student' : 'readmit_student', classId: item.id, studentId: member.student_id },
+              remove ? 'Đã đưa học sinh ra khỏi lớp.' : 'Đã nhận lại học sinh.');
+          }}>{member.state === 'active' ? 'Đưa ra khỏi lớp' : 'Nhận lại'} {member.display_name}</button>}
         </li>)}</ul>
         <ul>{data.requests.filter(request => request.class_id === item.id).map(request => <li key={request.id}>
           {request.display_name} · {request.username}{' '}
-          <button disabled={busy} onClick={() => perform(async () => {
-            await post({ action: 'approve', requestId: request.id });
-            setFeedback('Đã duyệt yêu cầu vào lớp.');
-            await refresh();
-          })}>Duyệt {request.display_name}</button>
+          {item.state === 'active' && <button disabled={busy} onClick={() =>
+            changeRoster({ action: 'approve', requestId: request.id }, 'Đã duyệt yêu cầu vào lớp.')}>Duyệt {request.display_name}</button>}
         </li>)}</ul>
       </section>)}
     </> : <>
@@ -150,7 +187,13 @@ export function ClassDirectory({ teacher }: { teacher: boolean }) {
         <label>Mã lớp <input name="code" required maxLength={12}/></label>{' '}
         <button disabled={busy}>Gửi yêu cầu</button>
       </form>
-      <ul>{data.classes.map(item => <li key={item.id}>{item.name} · {item.teacher} · {enrollmentState[item.state]}</li>)}</ul>
+      <h2>Lớp của tôi</h2>
+      <ul>{currentClasses.map(item => <li key={item.id}>{item.name} · {item.teacher} · {enrollmentState[item.state]}</li>)}</ul>
+      {pastClasses.length > 0 && <>
+        <h2>Lịch sử lớp</h2>
+        <ul>{pastClasses.map(item => <li key={item.id}>{item.name} · {item.teacher} · {item.class_state === 'archived'
+          ? `Đã lưu trữ · ${enrollmentState[item.state]}` : enrollmentState[item.state]}</li>)}</ul>
+      </>}
     </>}
     <p role="status">{feedback}</p>
   </>;

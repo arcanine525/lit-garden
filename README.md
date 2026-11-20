@@ -356,6 +356,8 @@ Khi khóa giáo viên mà Keycloak chưa xác nhận, ứng dụng đã ngắt p
 
 Giáo viên dùng **Lớp học** để tạo lớp, lấy mã lớp và quản lý yêu cầu tham gia. CSV dùng UTF-8 với tiêu đề `ho_ten,ten_dang_nhap,lop,nam_hoc`, tối đa 300 dòng và 1 MB. Tạo lớp trước khi nhập CSV. Với tên đăng nhập đã tồn tại, gửi mã lớp cho học sinh để dùng tài khoản hiện có và chờ duyệt. Nếu một dòng cấp tài khoản còn chờ xác nhận, giữ nguyên nội dung CSV và dùng **Thử lại dòng** để đối chiếu đúng tài khoản. [Kiểm chứng T10](docs/technical/validation/T10.txt).
 
+Giáo viên quản lý vòng đời lớp tại **Đang hoạt động** và **Đã lưu trữ**. Lưu trữ ẩn lớp khỏi danh sách hoạt động. Khôi phục lớp cho phép quản lý danh sách lại. Khi đưa học sinh ra, hồ sơ ghi danh và lịch sử vẫn được giữ để nhận lại vào cùng lớp, kể cả khi học sinh đang tham gia lớp khác. [Kiểm chứng T11](docs/technical/validation/T11.txt).
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash

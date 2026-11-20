@@ -1,0 +1,36 @@
+T11 | Class and membership lifecycle
+
+$ npm run stack:up && npm run db:migrate && npm run auth:bootstrap
+PostgreSQL and Keycloak healthy. Applied 006-roster-lifecycle.sql, which
+records the class ID with membership audits. Local Drive uses a stub.
+
+$ npm run test:db
+2 passed. The PostgreSQL predicates cover the states used by the roster:
+archived class keeps reads and blocks writes, suspended teacher blocks writes
+while the other teacher's class stays writable, removed student retains own
+submission and its prompt but loses library and draft access, readmission
+allows open work and does not make a closed assignment writable.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+7 passed on the full local application stack.
+- The owning teacher uses the UI to remove and readmit the same student,
+  and archives and restores the class. Removal retains the original joined
+  timestamp. Restoration keeps the composite membership identity and advances
+  its version. Repeated removal or archival does not add an audit event.
+- A different teacher gets 404 on the owner-scoped mutations. Students get
+  403 on teacher mutations, including attempted self-removal.
+- Archived classes are absent from active lists. In the archived list, roster
+  history and pending names are visible. The owner can restore the class.
+  Edit, approve, issue-one, remove, and readmit return 409 while archived.
+  Join by code fails and CSV flags the row, with no enrollment created.
+- Suspension through the admin API revokes the teacher's access to the roster
+  and every tested mutation. The other teacher can still edit their class.
+  The shared student's second membership retains the same state and version.
+
+The role matrix here exercises the roster HTTP endpoints. Content predicates
+are checked in PostgreSQL. The full HTTP content matrix belongs to T33.
+No live Google service was used.

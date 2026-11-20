@@ -34,38 +34,43 @@ async function activeTeacher(connection: PoolClient, teacher: string) {
   if (!result.rowCount) throw new RosterError(403, 'FORBIDDEN');
 }
 
-async function ownedClass(connection: PoolClient, teacher: string, classId: string) {
-  const { rows } = await connection.query<{ state: string }>(
+type ClassState = 'active' | 'archived';
+type MembershipState = 'active' | 'removed';
+
+async function ownedClass(connection: PoolClient, teacher: string, classId: string, requireActive = true) {
+  const { rows } = await connection.query<{ state: ClassState }>(
     'SELECT state FROM garden.classes WHERE id=$1 AND teacher_id=$2 FOR UPDATE', [classId, teacher]);
   if (!rows[0]) throw new RosterError(404, 'CLASS_NOT_FOUND');
-  if (rows[0].state !== 'active') throw new RosterError(409, 'CLASS_ARCHIVED');
+  if (requireActive && rows[0].state !== 'active') throw new RosterError(409, 'CLASS_ARCHIVED');
+  return rows[0].state;
 }
 
-export async function listTeacherClasses(teacher: string) {
+export async function listTeacherClasses(teacher: string, archived: boolean) {
+  const scope = [teacher, archived ? 'archived' : 'active'];
   const [classes, memberships, requests] = await Promise.all([
-    database().query('SELECT id,name,school_year,state FROM garden.classes WHERE teacher_id=$1 ORDER BY name,school_year', [teacher]),
+    database().query('SELECT id,name,school_year,state FROM garden.classes WHERE teacher_id=$1 AND state=$2 ORDER BY name,school_year', scope),
     database().query(`SELECT membership.class_id, membership.student_id, account.display_name, account.username, membership.state
       FROM garden.memberships membership JOIN garden.classes class ON class.id=membership.class_id
       JOIN garden.users account ON account.id=membership.student_id
-      WHERE class.teacher_id=$1 ORDER BY account.username`, [teacher]),
+      WHERE class.teacher_id=$1 AND class.state=$2 ORDER BY account.username`, scope),
     database().query(`SELECT request.id,request.class_id,account.display_name,account.username
       FROM garden.enrollment_requests request JOIN garden.classes class ON class.id=request.class_id
       JOIN garden.users account ON account.id=request.student_id
-      WHERE class.teacher_id=$1 AND request.state='pending' ORDER BY request.requested_at`, [teacher])
+      WHERE class.teacher_id=$1 AND class.state=$2 AND request.state='pending' ORDER BY request.requested_at`, scope)
   ]);
   return { classes: classes.rows, memberships: memberships.rows, requests: requests.rows };
 }
 
 export async function listStudentClasses(student: string) {
   const { rows } = await database().query(`
-    SELECT class.id,class.name,class.school_year,teacher.display_name AS teacher,
-      COALESCE(membership.state,'pending') AS state
+    SELECT class.id,class.name,class.school_year,teacher.display_name AS teacher,class.state AS class_state,
+      CASE WHEN membership.state='active' THEN 'active' WHEN pending.id IS NOT NULL THEN 'pending'
+        ELSE membership.state END AS state
     FROM garden.classes class JOIN garden.users teacher ON teacher.id=class.teacher_id
     LEFT JOIN garden.memberships membership ON membership.class_id=class.id AND membership.student_id=$1
-    WHERE membership.student_id IS NOT NULL OR EXISTS (
-      SELECT 1 FROM garden.enrollment_requests request
-      WHERE request.class_id=class.id AND request.student_id=$1 AND request.state='pending'
-    ) ORDER BY class.name,teacher.display_name
+    LEFT JOIN garden.enrollment_requests pending ON pending.class_id=class.id AND pending.student_id=$1 AND pending.state='pending'
+    WHERE membership.student_id IS NOT NULL OR pending.id IS NOT NULL
+    ORDER BY class.name,teacher.display_name
   `, [student]);
   return { classes: rows };
 }
@@ -86,14 +91,60 @@ export function saveClass(teacher: string, name: string, year: string, id?: stri
   });
 }
 
+export function setClassState(teacher: string, classId: string, state: ClassState) {
+  return tx(async connection => {
+    await activeTeacher(connection, teacher);
+    const current = await ownedClass(connection, teacher, classId, false);
+    if (current !== state) {
+      await connection.query('UPDATE garden.classes SET state=$2,version=version+1 WHERE id=$1', [classId,state]);
+      await connection.query(`
+        INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,outcome)
+        VALUES($1,$2,'class',$3,'success')
+      `, [teacher, state === 'archived' ? 'ARCHIVE' : 'UNARCHIVE', classId]);
+    }
+    return { state };
+  });
+}
+
+export function setMembershipState(teacher: string, classId: string, studentId: string, state: MembershipState) {
+  return tx(async connection => {
+    await activeTeacher(connection, teacher);
+    await ownedClass(connection, teacher, classId);
+    const { rows } = await connection.query<{ state: MembershipState }>(`
+      SELECT state FROM garden.memberships WHERE class_id=$1 AND student_id=$2 FOR UPDATE
+    `, [classId,studentId]);
+    if (!rows[0]) throw new RosterError(404, 'MEMBERSHIP_NOT_FOUND');
+    if (rows[0].state !== state) {
+      await connection.query(`
+        UPDATE garden.memberships SET state=$3,version=version+1,
+          removed_at=CASE WHEN $3='removed' THEN now() ELSE NULL END
+        WHERE class_id=$1 AND student_id=$2
+      `, [classId,studentId,state]);
+      if (state === 'active') {
+        await connection.query(`
+          UPDATE garden.enrollment_requests SET state='approved',decided_by=$3,decided_at=now()
+          WHERE class_id=$1 AND student_id=$2 AND state='pending'
+        `, [classId,studentId,teacher]);
+      }
+      await connection.query(`
+        INSERT INTO garden.audit_events(actor_id,action_code,target_kind,target_id,class_id,outcome)
+        VALUES($1,$2,'membership',$3,$4,'success')
+      `, [teacher, state === 'removed' ? 'REMOVE' : 'RESTORE', studentId, classId]);
+    }
+    return { state };
+  });
+}
+
 export function requestEnrollment(student: string, code: string) {
   return tx(async connection => {
-    const { rows } = await connection.query<{ id: string }>(`
-      SELECT class.id FROM garden.classes class JOIN garden.users teacher ON teacher.id=class.teacher_id
-      WHERE class.join_code_digest=$1 AND class.state='active' AND teacher.status='active' FOR UPDATE OF class
+    const { rows } = await connection.query<{ id: string; teacher_id: string }>(`
+      SELECT class.id,class.teacher_id FROM garden.classes class JOIN garden.users teacher ON teacher.id=class.teacher_id
+      WHERE class.join_code_digest=$1 AND class.state='active' AND teacher.status='active'
     `, [digestCode(code)]);
     if (!rows[0]) throw new RosterError(404, 'CLASS_NOT_FOUND');
-    const classId = rows[0].id;
+    const { id: classId, teacher_id: teacherId } = rows[0];
+    await activeTeacher(connection, teacherId);
+    await ownedClass(connection, teacherId, classId);
     const enrolled = await connection.query("SELECT 1 FROM garden.memberships WHERE class_id=$1 AND student_id=$2 AND state='active'", [classId, student]);
     if (enrolled.rowCount) return { classId, state: 'active' };
     await connection.query(`

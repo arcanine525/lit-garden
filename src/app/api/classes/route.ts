@@ -1,6 +1,6 @@
 import {
   approveEnrollment, importCsv, listStudentClasses, listTeacherClasses, previewCsv,
-  provisionStudent, requestEnrollment, RosterError, saveClass
+  provisionStudent, requestEnrollment, RosterError, saveClass, setClassState, setMembershipState
 } from '../../../server/classes/roster';
 import { isUsername } from '../../../server/classes/csv';
 import { sessionUser } from '../../../server/auth/session';
@@ -21,11 +21,11 @@ function fault(error: unknown) {
   return json({ error: 'UNAVAILABLE' }, 503);
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await sessionUser();
     if (!user) return json({ error: 'UNAUTHENTICATED' }, 401);
-    if (user.role === 'teacher') return json(await listTeacherClasses(user.id));
+    if (user.role === 'teacher') return json(await listTeacherClasses(user.id, new URL(request.url).searchParams.get('view') === 'archived'));
     if (user.role === 'student') return json(await listStudentClasses(user.id));
     return json({ error: 'FORBIDDEN' }, 403);
   } catch (error) {
@@ -59,6 +59,14 @@ export async function POST(request: Request) {
       case 'approve':
         if (!isUuid(body.requestId)) return json({ error: 'INVALID' }, 422);
         return json(await approveEnrollment(user.id, body.requestId));
+      case 'archive_class':
+      case 'restore_class':
+        if (!isUuid(body.classId)) return json({ error: 'INVALID' }, 422);
+        return json(await setClassState(user.id, body.classId, body.action === 'archive_class' ? 'archived' : 'active'));
+      case 'remove_student':
+      case 'readmit_student':
+        if (!isUuid(body.classId) || !isUuid(body.studentId)) return json({ error: 'INVALID' }, 422);
+        return json(await setMembershipState(user.id, body.classId, body.studentId, body.action === 'remove_student' ? 'removed' : 'active'));
       case 'create_student': {
         const { key, classId, username } = body;
         if (!isUuid(key) || !isUuid(classId) || typeof username !== 'string' || !isUsername(username)) {
