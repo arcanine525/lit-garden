@@ -49,7 +49,7 @@ export async function publicationSource(actor: string, submission: Submission) {
 
 export type ReviewSource = Awaited<ReturnType<typeof reviewSource>>;
 
-export async function reviewQueue(teacher: string) {
+export async function reviewQueue(teacher: string, waitingOnly = false) {
   const { rows } = await database().query<{ id: string; assignment_id: string; class_name: string; student_name: string;
     submission_no: number; latest: boolean; grading: boolean; returned: boolean; integrity: string }>(`
     SELECT s.id,r.assignment_id,c.name AS class_name,student.display_name AS student_name,s.submission_no,
@@ -61,6 +61,7 @@ export async function reviewQueue(teacher: string) {
     LEFT JOIN garden.review_drafts draft ON draft.submission_id=s.id
     LEFT JOIN garden.document_streams stream ON stream.id=draft.stream_id
     WHERE s.teacher_id=$1 AND garden.can_read_submission($1,s.id)
-    ORDER BY (s.current_publication_id IS NULL) DESC, (s.id=latest.id) DESC,s.submitted_at DESC,s.id`,[teacher]);
+      AND (NOT $2::boolean OR (c.state='active' AND s.id=latest.id AND s.current_publication_id IS NULL))
+    ORDER BY (s.current_publication_id IS NULL) DESC, (s.id=latest.id) DESC,s.submitted_at DESC,s.id`,[teacher,waitingOnly]);
   return rows;
 }

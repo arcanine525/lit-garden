@@ -14,11 +14,12 @@ export type AssignmentRow = {
   lease_epoch: string; lease_live: boolean; version: string;
 };
 
-const overview = `SELECT a.*, c.name AS class_name, c.state AS class_state, t.display_name AS teacher_name,
+const overviewColumns = `a.*, c.name AS class_name, c.state AS class_state, t.display_name AS teacher_name,
   ds.head_object_id,ds.version AS draft_version,ds.lease_actor_id,ds.lease_session_id,ds.lease_epoch,
-  COALESCE(ds.lease_until>clock_timestamp(),false) AS lease_live
-  FROM garden.assignments a JOIN garden.classes c ON c.id=a.class_id
+  COALESCE(ds.lease_until>clock_timestamp(),false) AS lease_live`;
+const overviewJoins = `FROM garden.assignments a JOIN garden.classes c ON c.id=a.class_id
   JOIN garden.users t ON t.id=a.teacher_id JOIN garden.document_streams ds ON ds.id=a.draft_stream_id`;
+const overview = `SELECT ${overviewColumns} ${overviewJoins}`;
 
 export async function assignmentForActor(actor: string, id: string) {
   const { rows } = await database().query<AssignmentRow>(`${overview} WHERE a.id=$1 AND garden.can_read_assignment($2,a.id)`, [id,actor]);
@@ -26,27 +27,45 @@ export async function assignmentForActor(actor: string, id: string) {
   return rows[0];
 }
 
-export async function listAssignments(actor: string) {
-  const { rows } = await database().query<AssignmentRow>(`${overview} WHERE garden.can_read_assignment($1,a.id)
-    ORDER BY a.published_at DESC NULLS FIRST, a.id`,[actor]);
-  const entries = [];
+export type AssignmentFilters = { classId?: string; teacherId?: string };
+
+type ListedAssignment = AssignmentRow & { submission_id: string | null; publication_id: string | null };
+
+async function listedAssignments(actor: string, current: AssignmentFilters | undefined, ids?: string[]) {
+  const { rows } = await database().query<ListedAssignment>(`SELECT ${overviewColumns},
+    latest.id AS submission_id,latest.current_publication_id AS publication_id ${overviewJoins}
+    LEFT JOIN garden.recipients recipient ON recipient.assignment_id=a.id AND recipient.student_id=$1
+    LEFT JOIN garden.latest_submission_metadata latest ON latest.recipient_id=recipient.id
+    WHERE garden.can_read_assignment($1,a.id)
+      AND (NOT $2::boolean OR (c.state='active' AND EXISTS (
+        SELECT 1 FROM garden.memberships m WHERE m.class_id=c.id AND m.student_id=$1 AND m.state='active')))
+      AND ($3::uuid IS NULL OR a.class_id=$3) AND ($4::uuid IS NULL OR a.teacher_id=$4)
+      AND ($5::uuid[] IS NULL OR a.id=ANY($5))
+    ORDER BY a.published_at DESC NULLS FIRST, a.id`,[actor,Boolean(current),current?.classId ?? null,current?.teacherId ?? null,ids ?? null]);
+  return rows;
+}
+
+export async function listAssignments(actor: string, current?: AssignmentFilters) {
+  const rows = await listedAssignments(actor,current);
+  const titles = new Map<string,{ title: string; unavailable: boolean }>();
   for (const row of rows) {
     const objectId = row.state === 'draft' ? row.head_object_id : row.prompt_object_id;
     let title = '';
     let unavailable = false;
     if (objectId) {
       try {
-        const file = await assignmentObject(row.teacher_id,objectId);
-        const schema = row.state === 'draft' ? 'garden.assignment-draft/1' : 'garden.assignment-prompt/1';
-        title = decodeAssignment<{ title: string }>(file.bytes,schema,row.id).title;
+        title = row.state === 'draft' ? (await assignmentDraft(row)).draft.title :
+          decodeAssignment<AssignmentPrompt>((await assignmentObject(row.teacher_id,objectId)).bytes,'garden.assignment-prompt/1',row.id).title;
       } catch { unavailable = true; }
     }
-    try { await assignmentForActor(actor,row.id); }
-    catch (error) { if (error instanceof DriveError && error.status === 404) continue; throw error; }
-    entries.push({ id: row.id, classId: row.class_id, className: row.class_name, teacherName: row.teacher_name,
-      state: row.state, accepting: row.accepting, title, unavailable, dueAt: row.due_at?.toISOString() ?? null });
+    titles.set(row.id,{ title,unavailable });
   }
-  return entries;
+  if (!rows.length) return [];
+  return (await listedAssignments(actor,current,rows.map(row => row.id))).map(row => ({
+    id:row.id,classId:row.class_id,className:row.class_name,teacherId:row.teacher_id,teacherName:row.teacher_name,
+    state:row.state,classState:row.class_state,accepting:row.accepting,dueAt:row.due_at?.toISOString() ?? null,
+    submissionId:row.submission_id,returned:Boolean(row.publication_id),...titles.get(row.id)!
+  }));
 }
 
 async function assignmentObject(teacher: string, id: string) {

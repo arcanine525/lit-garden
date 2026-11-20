@@ -45,6 +45,7 @@ export async function withStudentWork(browser, run, options = {}) {
   const subject = 'writing_' + tag;
   const rubric = randomUUID();
   const accounts = [], contexts = [];
+  const subjects = new Set();
 
   async function pageFor(username,password) {
     const context = await browser.newContext({ baseURL:origin });
@@ -77,6 +78,18 @@ export async function withStudentWork(browser, run, options = {}) {
     return response.json();
   }
 
+  async function connectDrive(account, driveSubject = subject) {
+    subjects.add(driveSubject);
+    const { page } = account;
+    await page.goto('/drive');
+    await page.getByRole('button',{ name:'Cấp quyền Drive' }).click();
+    await page.getByLabel('Danh tính Drive thử').fill(driveSubject);
+    await page.getByRole('button',{ name:'Cho phép' }).click();
+    await page.getByRole('button',{ name:'Chọn thư mục cha' }).click();
+    await page.getByRole('button',{ name:'Dùng thư mục này' }).click();
+    await expect(page.getByRole('status')).toContainText('Đã xác minh');
+  }
+
   try {
     const teacher = await provision('teacher','teacher');
     const admin = await provision('admin','admin');
@@ -91,26 +104,20 @@ export async function withStudentWork(browser, run, options = {}) {
       { id:'done',score:'2',description:'Có ý rõ.' },{ id:'start',score:'0',description:'Chưa phát triển.' }
     ] }] };
     await responseBody(await post(admin.page,'/api/rubrics',{ action:'create',id:rubric,label:'Rubric tập viết ' + tag,definition }),201);
-    await teacher.page.goto('/drive');
-    await teacher.page.getByRole('button',{ name:'Cấp quyền Drive' }).click();
-    await teacher.page.getByLabel('Danh tính Drive thử').fill(subject);
-    await teacher.page.getByRole('button',{ name:'Cho phép' }).click();
-    await teacher.page.getByRole('button',{ name:'Chọn thư mục cha' }).click();
-    await teacher.page.getByRole('button',{ name:'Dùng thư mục này' }).click();
-    await expect(teacher.page.getByRole('status')).toContainText('Đã xác minh');
+    await connectDrive(teacher);
 
-    async function publish(title,dueAt = null,reference = '') {
+    async function publish(title,dueAt = null,reference = '',room = classroom,owner = teacher) {
       const id = randomUUID(), clientId = randomUUID();
       const api = `/api/assignments/${id}`;
-      await responseBody(await post(teacher.page,'/api/assignments',{ id,classId,rubricId:rubric,rubricRevision:1 }),201);
-      const { epoch } = await responseBody(await post(teacher.page,api,{ action:'acquire',clientId }));
+      await responseBody(await post(owner.page,'/api/assignments',{ id,classId:room.classId,rubricId:rubric,rubricRevision:1 }),201);
+      const { epoch } = await responseBody(await post(owner.page,api,{ action:'acquire',clientId }));
       const draft = { title,prompt:'Hãy viết một đoạn văn.',material:'',reference,rubricId:rubric,rubricRevision:1,scale:'2',dueAt };
-      const { hash,draftVersion } = await responseBody(await post(teacher.page,api,{ action:'save',key:randomUUID(),clientId,epoch,baseVersion:'0',draft }));
-      await responseBody(await post(teacher.page,api,{ action:'publish',key:randomUUID(),clientId,epoch,baseVersion:draftVersion,hash }));
+      const { hash,draftVersion } = await responseBody(await post(owner.page,api,{ action:'save',key:randomUUID(),clientId,epoch,baseVersion:'0',draft }));
+      await responseBody(await post(owner.page,api,{ action:'publish',key:randomUUID(),clientId,epoch,baseVersion:draftVersion,hash }));
       return { id,api,draftApi:api + '/draft',url:`/assignments/${id}/write` };
     }
 
-    await run({ student,teacher,admin,db,tag,fake,publish,classroom,provision });
+    await run({ student,teacher,admin,db,tag,fake,publish,classroom,provision,connectDrive });
   } finally {
     try {
       for (const context of contexts) await context.close();
@@ -139,7 +146,7 @@ export async function withStudentWork(browser, run, options = {}) {
       await db.query('DELETE FROM garden.identity_operations WHERE actor_id=ANY($1) AND target_user_id=ANY($1)',[ids]);
       for (const table of ['students','teachers','users']) await db.query(`DELETE FROM garden.${table} WHERE id=ANY($1)`,[ids]);
       for (const account of accounts) await kc('/users/' + account.subject,'DELETE');
-      await fake('reset');
+      for (const sub of subjects) await fake('reset',{ sub });
     } finally { await db.end(); }
   }
 }

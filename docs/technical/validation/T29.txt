@@ -1,0 +1,42 @@
+T29 | Latest submission progress, role totals and scoped home filters
+
+$ npm run stack:up
+$ npm run db:migrate
+$ npm run auth:bootstrap
+PostgreSQL, Keycloak and the HTTP fake Drive were healthy. The schema was
+current.
+
+$ npm run test:db
+2 passed, including fresh and upgrade schema tests.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+25 passed (3.1m), including the T29 browser scenario (14.9s).
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e -- tests/e2e/student-progress.spec.mjs
+1 passed (18.1s).
+
+- Two teachers with separate Drive identities share a student. Four
+  assignments across two classes produce one Mầm, one Hoa, one Quả and
+  a separate closed/unsubmitted row. Each row shows class and teacher.
+- A published v1 remains readable in history after v2 is submitted.
+  Republishing v1 after that still yields one Hoa and links to no latest
+  result. The teacher's outstanding count and queue link target v2 only.
+  The second teacher has no outstanding work in their own class.
+- Class and teacher filters change rows, counts and featured documents
+  together. Changing to an incompatible teacher clears the class. Home's
+  garden link carries the filter. A featured document disappears after
+  revoking its share. An archived class drops out of current scope, and
+  the assignment API returns only the remaining active-class rows.
+- Reopening a closed assignment puts it in Mầm for both its current
+  unsubmitted recipient and the newly approved student. The new student
+  has exactly one assignment event.
+- The garden at viewport width 390 px has no horizontal document overflow
+  after changing the teacher filter.
+
+PostgreSQL and Keycloak were real local services. App operations used two
+HTTP fake Drive identities through the adapter. The viewport was Chrome
+emulation. Comparison to the approved visual baseline belongs to T35.

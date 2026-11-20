@@ -5,6 +5,7 @@ import { database } from '../../server/db';
 import { listRubrics } from '../../server/rubrics/catalog';
 import { listAssignments } from '../../server/assignments/access';
 import { AppShell } from '../app-shell';
+import { StudentAssignmentRows } from '../student-progress';
 import { CreateAssignment } from './create-assignment';
 
 export default async function AssignmentsPage() {
@@ -21,7 +22,7 @@ export default async function AssignmentsPage() {
     {teacher && <CreateAssignment classes={classes} rubrics={rubrics.map(({ id, revision, label }) => ({ id,revision,label }))}/>}
     <section className="app-panel">
       <h2>Danh sách bài</h2>
-      {assignments.length ? <ul className="assignment-list">{assignments.map(item => <li key={item.id}>
+      {!teacher ? <StudentAssignmentRows assignments={assignments}/> : assignments.length ? <ul className="assignment-list">{assignments.map(item => <li key={item.id}>
         <Link href={`/assignments/${item.id}`}>{item.unavailable ? 'Chưa tải được đề bài' : item.title || 'Nháp chưa đặt tên'}</Link>
         <p>{item.className} · {item.teacherName} · {item.state === 'draft' ? 'Nháp' : item.accepting ? 'Đang mở' : 'Đã đóng'}</p>
       </li>)}</ul> : <p>Chưa có bài.</p>}

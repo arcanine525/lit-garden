@@ -220,12 +220,15 @@ export async function listLibrary(actor: string, favorites: boolean) {
   return items.filter(item => visible.has(item.id));
 }
 
-export async function featuredLibrary(actor: string, classId?: string) {
-  const { rows } = await database().query<{ id: string; classId: string; slot: number; className: string }>(`SELECT i.id,
-    c.id AS "classId",f.slot,c.name AS "className" FROM garden.library_featured f JOIN garden.library_items i ON i.id=f.item_id
+export async function featuredLibrary(actor: string, classId?: string, teacherId?: string) {
+  const { rows } = await database().query<{ id: string; classId: string; slot: number; className: string; teacherName: string }>(`SELECT i.id,
+    c.id AS "classId",f.slot,c.name AS "className",t.display_name AS "teacherName"
+    FROM garden.library_featured f JOIN garden.library_items i ON i.id=f.item_id
     JOIN garden.classes c ON c.id=f.class_id AND c.state='active'
+    JOIN garden.users t ON t.id=c.teacher_id
     JOIN garden.memberships m ON m.class_id=c.id AND m.student_id=$1 AND m.state='active'
-    WHERE ($2::uuid IS NULL OR c.id=$2) AND garden.can_read_library($1,i.id) ORDER BY c.name,c.id,f.slot`,[actor,classId ?? null]);
+    WHERE ($2::uuid IS NULL OR c.id=$2) AND ($3::uuid IS NULL OR c.teacher_id=$3) AND garden.can_read_library($1,i.id)
+    ORDER BY c.name,c.id,f.slot`,[actor,classId ?? null,teacherId ?? null]);
   const featured = [];
   for (const entry of rows) {
     try {

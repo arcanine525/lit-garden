@@ -6,15 +6,17 @@ import { reviewQueue } from '../../server/reviews/source';
 import { AppShell } from '../app-shell';
 import './review.css';
 
-export default async function ReviewQueuePage() {
+export default async function ReviewQueuePage({ searchParams }: { searchParams: Promise<{ waiting?: string }> }) {
   const user = await sessionUser();
   if (!user) redirect('/');
   if (user.role !== 'teacher') notFound();
-  const [entries,assignments] = await Promise.all([reviewQueue(user.id),listAssignments(user.id)]);
+  const waiting = (await searchParams).waiting === '1';
+  const [entries,assignments] = await Promise.all([reviewQueue(user.id,waiting),listAssignments(user.id)]);
   const titles = new Map(assignments.map(item => [item.id,item.title]));
   return <AppShell user={user} current="/reviews" title="Bàn chấm">
     <section className="app-panel">
-      <h2>Các bài viết</h2>
+      <h2>{waiting ? 'Bản mới nhất chờ chấm' : 'Các bài viết'}</h2>
+      {waiting && <p><Link href="/reviews">Xem tất cả lần nộp</Link></p>}
       {entries.length ? <ul className="review-queue">{entries.map(item => <li key={item.id}>
         <div><strong>{titles.get(item.assignment_id) || 'Đề bài chưa khả dụng'}</strong>
           <p>{item.student_name} · {item.class_name} · Lần nộp {item.submission_no}</p></div>

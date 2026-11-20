@@ -3,13 +3,17 @@ import { uuidPattern } from '../../../server/auth/identity-operations';
 import { driveActor, driveFailure, driveJson } from '../../../server/drive/http';
 import { createAssignment } from '../../../server/assignments/mutations';
 import { listAssignments } from '../../../server/assignments/access';
+import { progressFilters } from '../../../server/assignments/progress';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const user = await sessionUser();
     if (!user) return driveJson({ error: 'UNAUTHENTICATED' },401);
     if (user.role === 'admin') return driveJson({ error: 'FORBIDDEN' },403);
-    const assignments = await listAssignments(user.id);
+    const query = new URL(request.url).searchParams;
+    const current = user.role === 'student' && query.get('scope') === 'current'
+      ? progressFilters({ class:query.get('class') ?? undefined,teacher:query.get('teacher') ?? undefined }) : undefined;
+    const assignments = await listAssignments(user.id,current);
     if ((await sessionUser())?.id !== user.id) return driveJson({ error: 'UNAUTHENTICATED' },401);
     return driveJson({ assignments });
   } catch (error) { return driveFailure(error); }

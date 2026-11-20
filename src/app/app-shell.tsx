@@ -14,7 +14,8 @@ const nav: Record<Role, Destination[]> = {
     { href: '/editor', label: 'Soạn Markdown' }, { href: '/rubrics', label: 'Rubric', name: 'Rubric chấm bài' }, { href: '/library', label: 'Thư viện' },
     { href: '/drive', label: 'Drive', name: 'Kết nối Google Drive' }],
   student: [{ href: '/', label: 'Trang chính' }, { href: '/classes', label: 'Tham gia lớp' },
-    { href: '/assignments', label: 'Bài được giao' }, { href: '/editor', label: 'Soạn Markdown' }, { href: '/library', label: 'Thư viện' },
+    { href: '/assignments', label: 'Bài được giao' }, { href: '/garden', label: 'Khu vườn' },
+    { href: '/editor', label: 'Soạn Markdown' }, { href: '/library', label: 'Thư viện' },
     { href: '/rubrics', label: 'Rubric', name: 'Rubric chấm bài' }]
 };
 
