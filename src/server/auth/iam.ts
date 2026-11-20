@@ -35,25 +35,40 @@ export async function userManagement() {
   const read = async <Output>(path: string): Promise<Output> => (await call(path)).json();
   const userPath = (subject: string) => `/users/${encodeURIComponent(subject)}`;
 
-  return {
-    async provisionTeacher(id: string, username: string, name: string, password: string) {
-      const parameters = new URLSearchParams({ exact: 'true', username });
-      const prior = await read<KeycloakUser[]>(`/users?${parameters}`);
-      if (prior.length) throw new Error('Username already registered at identity provider');
+  async function provision(id: string, username: string, name: string, role: 'teacher' | 'student', password: string, expectedSubject?: string | null) {
+    const parameters = new URLSearchParams({ exact: 'true', username });
+    let [user] = await read<KeycloakUser[]>(`/users?${parameters}`);
+    const reconciled = Boolean(user);
+    if (expectedSubject && user?.id !== expectedSubject) throw new Error('Provisioning subject changed');
+    if (user && role === 'teacher') throw new Error('Username already registered at identity provider');
+    if (!user) {
       await call('/users', 'POST', {
         username, firstName: name, lastName: 'Vườn Văn', enabled: true,
         attributes: { garden_provisioning_id: [id] },
         requiredActions: ['UPDATE_PASSWORD'],
         credentials: [{ type: 'password', value: password, temporary: true }]
       });
-      const [user] = await read<KeycloakUser[]>(`/users?${parameters}`);
-      if (!user?.id) throw new Error('Provisioned user not found');
-      const profile = await read<KeycloakUser>(userPath(user.id));
-      if (profile.attributes?.garden_provisioning_id?.[0] !== id) throw new Error('Provisioning identity mismatch');
-      const role = await read<{ id: string; name: string }>('/roles/garden-teacher');
-      await call(`${userPath(user.id)}/role-mappings/realm`, 'POST', [{ id: role.id, name: role.name }]);
-      return user.id;
-    },
+      [user] = await read<KeycloakUser[]>(`/users?${parameters}`);
+    }
+    if (!user?.id) throw new Error('Provisioned user not found');
+    const profile = await read<KeycloakUser>(userPath(user.id));
+    if (profile.attributes?.garden_provisioning_id?.[0] !== id) throw new Error('Provisioning identity mismatch');
+    const roleMapping = await read<{ id: string; name: string }>(`/roles/garden-${role}`);
+    await call(`${userPath(user.id)}/role-mappings/realm`, 'POST', [{ id: roleMapping.id, name: roleMapping.name }]);
+    if (reconciled) {
+      // Only an unlinked, reserved account with our exact provisioning marker
+      // reaches this path. Active/shared accounts are never reset by a teacher.
+      await call(`${userPath(user.id)}/reset-password`, 'PUT', { type: 'password', temporary: true, value: password });
+      await call(`${userPath(user.id)}/logout`, 'POST');
+    }
+    return user.id;
+  }
+
+  return {
+    provisionTeacher: (id: string, username: string, name: string, password: string) =>
+      provision(id, username, name, 'teacher', password),
+    provisionStudent: (id: string, username: string, name: string, password: string, subject?: string | null) =>
+      provision(id, username, name, 'student', password, subject),
     async resetPassword(subject: string, password: string) {
       await call(`${userPath(subject)}/reset-password`, 'PUT', { type: 'password', temporary: true, value: password });
       await call(`${userPath(subject)}/logout`, 'POST');

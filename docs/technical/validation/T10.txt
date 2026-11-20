@@ -1,0 +1,40 @@
+T10 | Class roster, enrollment and CSV provisioning
+
+$ npm run stack:up
+PostgreSQL and Keycloak healthy. Drive readiness uses the local stub. The
+teachers in the acceptance test have no Drive connection.
+
+$ npm run db:migrate && npm run auth:bootstrap
+Applied 005-enrollment.sql. Repeating migration reports up to date.
+The OIDC client and the realm-scoped account service are ready.
+
+$ npm run test:db
+2 passed, covering a fresh migration and a populated upgrade.
+
+$ NEXT_TELEMETRY_DISABLED=1 npm run typecheck
+$ NEXT_TELEMETRY_DISABLED=1 npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome NEXT_TELEMETRY_DISABLED=1 npm run test:e2e
+6 passed (20.2s) on the full local application stack.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e -- classes.spec.mjs
+1 passed. The test creates and edits a class in the browser, provisions one
+student individually and checks valid, invalid, repeated and existing rows in
+a UTF-8 CSV fixture. An existing username keeps its original password and
+membership. The second teacher uses the original identity via a join request.
+Before approval the second class has no membership or assignment recipient for
+that student. The wrong teacher cannot approve; the owner can.
+
+The CSV retry test launches a second instance of the production build, uses
+real Keycloak and pauses the local DB transaction on membership insertion.
+The test waits for the recorded Keycloak subject and the blocked transaction,
+kills the second app process, and verifies that membership did not commit.
+Retry with the same batch and row returns the same account subject, exactly
+one membership, and a one-time password. A repeat returns no password.
+
+CSV refers to an existing class by name and school year. The source stays
+in the browser for per-row retry. Before approval the membership and recipient
+preconditions for content access are absent. T07 checks the PostgreSQL access
+predicates. HTTP prompt and submission paths are covered as T17 and T20 land.
+No live Google service was used.

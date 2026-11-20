@@ -20,6 +20,7 @@
     "stack:down": "sh scripts/dev-stack.sh down"
   },
   "dependencies": {
+    "csv-parse": "7.0.3",
     "next": "16.4.6",
     "openid-client": "6.9.0",
     "pg": "8.23.1",

@@ -354,6 +354,8 @@ Service quản trị dùng client credentials trong lệnh vận hành và E2E. 
 
 Khi khóa giáo viên mà Keycloak chưa xác nhận, ứng dụng đã ngắt phiên dựa trên trạng thái trong PostgreSQL. Mục **Thử đồng bộ Keycloak** thực hiện lại lệnh khóa và thu hồi phiên provider. Nếu mất phản hồi khi cấp hoặc đặt lại mật khẩu, người vận hành xử lý trạng thái chờ và xác minh tài khoản trước khi thử lại. [Kiểm chứng T09](docs/technical/validation/T09.txt).
 
+Giáo viên dùng **Lớp học** để tạo lớp, lấy mã lớp và quản lý yêu cầu tham gia. CSV dùng UTF-8 với tiêu đề `ho_ten,ten_dang_nhap,lop,nam_hoc`, tối đa 300 dòng và 1 MB. Tạo lớp trước khi nhập CSV. Với tên đăng nhập đã tồn tại, gửi mã lớp cho học sinh để dùng tài khoản hiện có và chờ duyệt. Nếu một dòng cấp tài khoản còn chờ xác nhận, giữ nguyên nội dung CSV và dùng **Thử lại dòng** để đối chiếu đúng tài khoản. [Kiểm chứng T10](docs/technical/validation/T10.txt).
+
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
 ```bash
