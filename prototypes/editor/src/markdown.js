@@ -1,0 +1,109 @@
+import { unified } from 'unified';
+import remarkParse from 'remark-parse';
+import remarkGfm from 'remark-gfm';
+import { toMarkdown } from 'mdast-util-to-markdown';
+import { gfmToMarkdown } from 'mdast-util-gfm';
+
+const parser = unified().use(remarkParse).use(remarkGfm);
+export const parseMarkdown = (source) => parser.parse(source);
+export const assetPattern = /^\/api\/assets\/[a-zA-Z0-9_-]+$/;
+const allowed = new Set(['root', 'paragraph', 'text', 'heading', 'strong', 'emphasis', 'list', 'listItem', 'blockquote', 'table', 'tableRow', 'tableCell', 'link', 'linkReference', 'definition', 'image', 'imageReference', 'break']);
+const safeLink = (url) => {
+  try { const u = new URL(url); return ['https:', 'http:', 'mailto:'].includes(u.protocol) && !u.username && !u.password; }
+  catch { return false; }
+};
+export function referenceDefinitions(tree) {
+  const definitions = new Map();
+  // CommonMark resolves the FIRST definition, including case-normalized IDs.
+  // Validation, editor conversion and semantic comparison must agree.
+  walk(tree, (n) => {
+    if (n.type === 'definition' && !definitions.has(n.identifier)) definitions.set(n.identifier, n);
+  });
+  return definitions;
+}
+export function prepareEditorMarkdown(source, role) {
+  const tree = validateMarkdown(source, role), definitions = referenceDefinitions(tree);
+  if (!definitions.size) return source;
+  function resolve(n) {
+    if (n.type === 'definition') return null;
+    if (n.type === 'linkReference' || n.type === 'imageReference') {
+      const definition = definitions.get(n.identifier);
+      if (!definition) throw Error('UNRESOLVED_REFERENCE');
+      const node = { type: n.type === 'linkReference' ? 'link' : 'image',
+        url: definition.url, title: definition.title ?? null };
+      if (n.type === 'imageReference') node.alt = n.alt;
+      else node.children = n.children.map(resolve).filter(Boolean);
+      return node;
+    }
+    return { ...n, ...(n.children ? { children: n.children.map(resolve).filter(Boolean) } : {}) };
+  }
+  // Only drafts entering the rich editor are converted. Never rewrite a submitted
+  // file or its integrity baseline; projection/hash restore still uses original bytes.
+  const markdown = toMarkdown(resolve(tree), { extensions: [gfmToMarkdown()] });
+  validateMarkdown(markdown, role);
+  return markdown;
+}
+export function validateMarkdown(source, role = 'student') {
+  if (typeof source !== 'string' || source.length > 100000) throw Error('MARKDOWN_SIZE');
+  const tree = parseMarkdown(source);
+  const definitions = referenceDefinitions(tree);
+  walk(tree, (n) => {
+    if (!allowed.has(n.type)) throw Error(`UNSUPPORTED_${n.type}`);
+    // CommonMark treats unknown MDX expressions/JSX as text: explicitly refuse source syntax too.
+    if (n.type === 'text' && /<\/?[A-Za-z][^>]*>|\{[^}]*\}|^(import|export)\s/m.test(n.value)) throw Error('UNSUPPORTED_MDX');
+    if (n.type === 'listItem' && n.checked != null) throw Error('UNSUPPORTED_TASK_LIST');
+    if (n.type === 'image' || n.type === 'imageReference') {
+      if (role !== 'teacher') throw Error('STUDENT_IMAGE_FORBIDDEN');
+      const url = n.url ?? definitions.get(n.identifier)?.url;
+      if (!assetPattern.test(url ?? '')) throw Error('PRIVATE_ASSET_REQUIRED');
+    }
+    if (n.type === 'link' || n.type === 'linkReference') {
+      if (!safeLink(n.url ?? definitions.get(n.identifier)?.url)) throw Error('UNSAFE_LINK');
+    }
+  });
+  return tree;
+}
+export function walk(node, visit) { visit(node); node.children?.forEach((n) => walk(n, visit)); }
+
+// vv-render-text-v1: UTF-16 offsets, exact Unicode (no NFC folding).
+// Leaves are text; hard breaks are LF; block endings are LF; table cells TAB.
+// Link destinations and image alt/src are excluded from annotatable text.
+export function projectMarkdown(source) {
+  const tree = parseMarkdown(source);
+  let text = '';
+  function add(value) { const start = text.length; text += value; return { value, start, end: text.length }; }
+  function visit(n) {
+    const out = { ...n }; delete out.position;
+    if (n.type === 'text') out.run = add(n.value.replace(/\r\n?/g, '\n'));
+    if (n.type === 'break') out.run = add('\n');
+    out.children = n.children?.map(visit);
+    if (['paragraph', 'heading', 'tableRow'].includes(n.type)) out.suffix = add('\n');
+    if (n.type === 'tableCell') out.suffix = add('\t');
+    return out;
+  }
+  return { tree: visit(tree), get text() { return text; }, projection: 'vv-render-text-v1' };
+}
+// Semantic comparison permits marker changes, whitespace around blocks, and
+// serializer changes to hard-break spelling; preserves AST content/structure.
+export function semantic(source) {
+  const tree = parseMarkdown(source);
+  const definitions = referenceDefinitions(tree);
+  function clean(n) {
+    if (n.type === 'definition') return null;
+    const type = n.type === 'linkReference' ? 'link' : n.type === 'imageReference' ? 'image' : n.type;
+    const def = definitions.get(n.identifier);
+    const result = { type };
+    for (const key of ['value', 'depth', 'ordered', 'start', 'align', 'url', 'title', 'alt']) {
+      let value = n[key] ?? def?.[key];
+      if (key === 'title' && value === '') value = null;
+      if (value != null) result[key] = value;
+    }
+    if (n.children) result.children = n.children.map(clean).filter(Boolean);
+    return result;
+  }
+  return clean(tree);
+}
+export async function sha256(value) {
+  const hash = await globalThis.crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return [...new Uint8Array(hash)].map((n) => n.toString(16).padStart(2, '0')).join('');
+}

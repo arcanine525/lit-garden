@@ -1,0 +1,80 @@
+{
+  "verifiedAt": "2026-11-20T04:42:53.914759+00:00",
+  "scope": "Local editor spike; Drive/OAuth and application auth are mocked, no live Google calls",
+  "baseline": "976470faefc0ba00145d6a4fe1afb1bad315692f",
+  "environment": {
+    "node": "24.18.0",
+    "npm": "11.16.0",
+    "browser": "Chrome 157.0.8103.79",
+    "os": "macOS arm64"
+  },
+  "checks": {
+    "core": {
+      "command": "npm --prefix prototypes/editor test",
+      "passed": 20,
+      "failed": 0
+    },
+    "browser": {
+      "command": "npm --prefix prototypes/editor run test:browser",
+      "passed": 9,
+      "failed": 0
+    },
+    "build": {
+      "command": "npm --prefix prototypes/editor run build",
+      "exitCode": 0,
+      "warnings": [
+        "Radix use client directives ignored by Vite",
+        "Editor chunk exceeds 500 kB"
+      ]
+    },
+    "audit": {
+      "command": "npm --prefix prototypes/editor audit --json",
+      "vulnerabilities": {
+        "info": 0,
+        "low": 0,
+        "moderate": 0,
+        "high": 0,
+        "critical": 0,
+        "total": 0
+      }
+    }
+  },
+  "roundTrip": {
+    "historicalDefaultReportedSemanticPass": 9,
+    "historicalDefaultCaveat": "Original test did not detect retained source on reference import failure",
+    "cases": 10,
+    "cyclesPerCase": 2,
+    "fullRichTextVerified": 10,
+    "richEditExported": 10,
+    "handledImportErrorsAsserted": true,
+    "adapter": "reference-to-inline + hard-break export"
+  },
+  "notVerifiedLive": [
+    "Drive private-file upload/download and permissions",
+    "Google OAuth and refresh token lifecycle",
+    "Keycloak/PostgreSQL authorization",
+    "Drive review publication/reply concurrency and autosave",
+    "OS clipboard/IME and other browsers"
+  ],
+  "previousVerification": {
+    "verifiedAt": "2026-11-19T18:38:29.000625+00:00",
+    "corePassed": 16,
+    "browserPassed": 6,
+    "caveat": "Reference-link round-trip was a false positive before R1 fix; superseded by full DOM/import-error/edit-export assertions."
+  },
+  "reviewedCommit": "8eff505",
+  "revision": "Working tree after R1/R5 fixes",
+  "artifact_sha256": {
+    "docs/technical/EDITOR-VALIDATION.md": "4126bd5d3954c3165abc37e01e3331b983d6a7d0d330b94e17ebd1bbfb910a32",
+    "prototypes/editor/src/markdown.js": "68c2343b2271bac3df04424929a3da5de42add28ef10c687353ac2eed0c964ea",
+    "prototypes/editor/src/main.jsx": "802b921910bb8e90fee76f1735abd38365feaeee86c1e915a048e2b0b665917a",
+    "prototypes/editor/src/mock-api.js": "e78d1c1d46abc45ab036fd604e52cbc511c978762cef22a78aa9ce35d97b0bda",
+    "prototypes/editor/src/review.js": "fcd98803dd68b29d0079beeb6f739df1da5268c2d329c224ae8c01d719d8794c",
+    "prototypes/editor/tests/core.test.js": "8c1d7af56e7be4d2a94f6fed2bab158feba74b969ca162f1278161aa486b6892",
+    "prototypes/editor/tests/editor.spec.js": "3d47f70534a6ffaabb7dac8c655da485d4e9ad2e4efbf1d66171553a33ab7dad",
+    "prototypes/editor/tests/utf16-anchor-cases.json": "113fcdc17b7d5ac34674941de563414c6f05b5a1a68c870b85b11b7d6114567b",
+    "prototypes/editor/package.json": "6899e51c3d2234947d5cdf9f44e6640ce9dcc706ded4c668acdc2e0839c1fd3d",
+    "prototypes/editor/package-lock.json": "69f859b771e2107b6c50e25578c035303a2566dd83672d82eb6df6f8d99ee0eb",
+    "prototypes/editor/evidence/round-trip.json": "7b98eb92b6eebe0e0e55a11339a2e5a4921524d366d10c65c43a0844f159f8ee"
+  }
+}

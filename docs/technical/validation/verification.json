@@ -28,7 +28,7 @@
     "python3 docs/technical/validation/protocol_model.py > docs/technical/validation/protocol-tests.txt 2>&1"
   ],
   "artifact_sha256": {
-    "README.md": "8eaab1127e05563982ac4d908e86492e6c29b0390110d6ee6c075dda7e3acee5",
+    "README.md": "57100e7157a69d355612c0633bfe895a72b037db9f9a81bd54118f6f900e2b7d",
     "docs/technical/DATA-AUTH-DRIVE-DESIGN.md": "9b94580fa313216367e660f17f5bade635f327a6ad76d220be1f1ad73576d625",
     "docs/technical/EDITOR-REVIEW-CONTRACT.md": "56f5f9026416a12e7671aadc57efe891b437a008a8ab966194ad325151f4edc3",
     "docs/technical/metadata-reference.sql": "f6e64a32f7e1ce015003e6bba480ca15e4c10d9607f9e8fd59ec13712c81e557",
@@ -46,5 +46,20 @@
   ],
   "previous_verified_at": "2026-11-19T18:47:29.399945+00:00",
   "reviewed_commit": "62a9734",
-  "revision": "Working tree after R2/R3/R4 fixes, shared R5 corpus and approved Q01-B documentation"
+  "revision": "Working tree after R2/R3/R4 fixes, shared R5 corpus and approved Q01-B documentation",
+  "merge_validation": {
+    "verified_at": "2026-11-20T06:15:20.415559+00:00",
+    "merged_base_commit": "2929d925ffc4ad9766b8827c765a015557f8633b",
+    "head_before_merge": "271a5fe112b935600e2ba9698597e7dd15ce92a9",
+    "conflict_files": [
+      "README.md"
+    ],
+    "protocol_model_passed": 30,
+    "editor_core_passed": 20,
+    "editor_browser_passed": 9,
+    "editor_build_exit_code": 0,
+    "shared_utf16_corpus": "identical",
+    "documentation_links": "checked",
+    "sql": "unchanged; not rerun for README conflict resolution"
+  }
 }

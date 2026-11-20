@@ -8,7 +8,7 @@ Nội dung học tập chính thức được lưu trên **Google Drive của gi
 
 ## Trạng thái dự án
 
-Repo hiện có tài liệu khảo sát, đặc tả chức năng, thiết kế giao diện và bằng chứng tham chiếu. **Chưa có mã ứng dụng, cấu hình triển khai hoặc lệnh chạy frontend/backend.** Các sơ đồ dưới đây mô tả kiến trúc mục tiêu.
+Repo hiện có tài liệu khảo sát, đặc tả chức năng, thiết kế giao diện, bằng chứng tham chiếu và [prototype kiểm chứng editor](prototypes/editor/README.md). **Chưa có mã ứng dụng sản phẩm hoặc cấu hình triển khai.** Các sơ đồ dưới đây mô tả kiến trúc mục tiêu.
 
 | Hạng mục | Trạng thái |
 |---|---|
@@ -17,7 +17,8 @@ Repo hiện có tài liệu khảo sát, đặc tả chức năng, thiết kế 
 | Phạm vi Admin–Drive–Markdown | Đã thống nhất các quyết định nghiệp vụ qua phiên thiết kế |
 | Review chức năng tham chiếu | Đã xác nhận thêm 42 quyết định về vòng đời bài/lớp, chấm, rubric, thư viện và thông báo |
 | Stack công nghệ | Có đề xuất làm cơ sở triển khai; xem phần bên dưới |
-| Editor, đồng bộ Drive, annotation | Cần prototype để kiểm chứng các điểm tích hợp |
+| Editor và annotation | Có spike MDXEditor 4.5.0: Markdown hai chiều, phục hồi review và adapter ảnh qua backend mock; [kết luận/giới hạn](docs/technical/EDITOR-VALIDATION.md) |
+| Đồng bộ và ảnh Drive thật | Chưa kiểm chứng OAuth/Drive live; chưa tích hợp ứng dụng |
 | Ứng dụng mới và mức khớp giao diện >90% | Chưa triển khai/chưa đo trên bản clone |
 
 Website được khảo sát: [vuon-van-ca-nhan.pages.dev](https://vuon-van-ca-nhan.pages.dev/). Đây là nguồn tham chiếu; không phải bản triển khai từ repo này.
@@ -29,6 +30,7 @@ Website được khảo sát: [vuon-van-ca-nhan.pages.dev](https://vuon-van-ca-n
 | [FEATURES.MD](FEATURES.MD) | Hiện trạng hệ thống tham chiếu; phân biệt chức năng quan sát được, xác nhận từ mã và chức năng riêng của demo |
 | [DESGIN.MD](DESGIN.MD) | Đặc tả dựng giao diện, tokens, responsive và tiêu chí pixel-diff; tên file giữ theo yêu cầu ban đầu |
 | [Admin–Drive–Markdown](docs/requirements/ADMIN-DRIVE-MARKDOWN.md) | 24 quyết định, quyền truy cập, luồng lưu nội dung, lỗi và điều kiện nghiệm thu |
+| [Kiểm chứng editor](docs/technical/EDITOR-VALIDATION.md) | Prototype, ma trận kết quả, evidence, hạn chế mock/live và contract đề xuất cho schema/giao thức |
 | [Review chức năng](docs/requirements/FEATURES-REVIEW.md) | 42 quyết định bổ sung từ phiên grill FEATURES: vòng đời bài/lớp, chấm, hội thoại, rubric, thư viện và thông báo |
 | [Chi tiết màn hình](docs/design/SCREENS.md) | Bố cục và thông số từng màn hình tham chiếu |
 | [Thiết kế dữ liệu, quyền và Drive](docs/technical/DATA-AUTH-DRIVE-DESIGN.md) | Schema PostgreSQL tham chiếu, auth, lease/fencing, idempotency, toàn vẹn và phục hồi lỗi; chưa là migrations ứng dụng |
@@ -129,7 +131,7 @@ Các cạnh tới PostgreSQL biểu diễn dữ liệu quản lý và rubric m�
 
 ## Stack công nghệ đề xuất
 
-Các nguyên tắc sở hữu dữ liệu và nghiệp vụ ở trên đã được chốt. Bảng này ghi lựa chọn công nghệ đã đề xuất trong thảo luận; chưa có dependency hay phiên bản nào được cài trong repo.
+Các nguyên tắc sở hữu dữ liệu và nghiệp vụ ở trên đã được chốt. Bảng này ghi lựa chọn công nghệ đã đề xuất trong thảo luận; dependency được khóa riêng trong prototype editor, chưa scaffold ứng dụng sản phẩm.
 
 | Phần | Đề xuất | Vai trò / điểm cần lưu ý |
 |---|---|---|
@@ -137,7 +139,7 @@ Các nguyên tắc sở hữu dữ liệu và nghiệp vụ ở trên đã đư�
 | UI | **CSS Modules + Radix Primitives dùng chọn lọc** | Bám tokens và số đo gốc; HTML native cho control đơn giản. shadcn/ui đã được so sánh nhưng chưa được chọn thay Radix |
 | Xác thực | **Keycloak + OpenID Connect** | Username/password, mật khẩu tạm, buộc đổi lần đầu, quản lý phiên và khóa tài khoản; cần theme đăng nhập theo Vườn Văn |
 | Dữ liệu quản lý | **PostgreSQL + Drizzle ORM** | Lớp, membership, trạng thái, định danh file, phiên chỉnh sửa và audit |
-| Soạn thảo | **MDXEditor** | Ứng viên chính cho trực quan/mã nguồn; cần kiểm chứng Markdown, ảnh Drive riêng tư và tích hợp chấm theo đoạn |
+| Soạn thảo | **MDXEditor** | Spike khuyến nghị 4.5.0 kèm plugin giữ hard-break, gate Markdown và renderer annotation riêng; ảnh chỉ mới kiểm chứng qua mock |
 | Nháp trên thiết bị | **Dexie.js / IndexedDB** | Lưu nháp và trạng thái chưa đồng bộ; logic đồng bộ Drive do ứng dụng xây dựng |
 | Nội dung chính thức | **Google Drive API + Google Picker** | Giáo viên chọn thư mục cha; ứng dụng đọc/ghi file theo quyền được cấp |
 | Kiểm thử | **Vitest + Playwright** | Logic nghiệp vụ, phân quyền, luồng nhiều thiết bị, E2E và so screenshot |
@@ -303,7 +305,7 @@ Source trong `docs/research/` là bằng chứng khảo sát, không phải mã 
 
 ## Làm việc với repo
 
-Đọc README → đặc tả Admin–Drive–Markdown và Review chức năng → FEATURES và DESGIN trước khi triển khai. Repo chưa có `package.json`, Docker Compose, database migrations hoặc lệnh `dev`; hướng dẫn chạy ứng dụng sẽ được bổ sung khi scaffold.
+Đọc README → đặc tả Admin–Drive–Markdown và Review chức năng → FEATURES và DESGIN trước khi triển khai. Root repo chưa có `package.json`, Docker Compose hoặc database migrations; hướng dẫn chạy ứng dụng sản phẩm sẽ được bổ sung khi scaffold. Prototype cô lập có lệnh chạy tại [prototypes/editor](prototypes/editor/README.md).
 
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 
@@ -319,7 +321,7 @@ Khi đã có screenshot của bản triển khai, so với ảnh gốc bằng th
 
 ## Các bước triển khai tiếp theo
 
-1. Kiểm chứng editor: Markdown chuyển đổi hai chiều, ảnh Drive riêng tư và phục hồi annotation từ `.review.md`.
+1. Tích hợp [kết quả spike editor](docs/technical/EDITOR-VALIDATION.md); kiểm chứng ảnh/đọc ghi review với OAuth và Drive thật, thống nhất contract với thiết kế schema/giao thức.
 2. Áp dụng [thiết kế metadata–auth–Drive](docs/technical/DATA-AUTH-DRIVE-DESIGN.md) khi scaffold; schema/kịch bản tham chiếu đã có, còn kiểm chứng OAuth/Drive/Keycloak thật và transaction trong ứng dụng.
 3. Scaffold stack, cấu hình môi trường và triển khai luồng tài khoản/lớp/Drive.
 4. Hoàn thiện viết bài, đồng bộ nháp, phiên bản, rubric/nhận xét và thư viện theo từng luồng sử dụng.
