@@ -9,6 +9,7 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
     <h1>Vườn Văn</h1>
     {user ? <>
       <p>{user.display_name} · {roleName[user.role]}</p>
+      {user.role === 'admin' && <p><a href="/admin/accounts">Quản lý tài khoản</a></p>}
       <form action="/auth/logout" method="post"><button type="submit">Đăng xuất</button></form>
     </> : <>
       <p>Không gian dạy và học viết.</p>

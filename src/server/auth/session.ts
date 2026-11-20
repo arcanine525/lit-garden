@@ -47,27 +47,35 @@ export async function consumeAttempt(handle: string, state: string) {
   return rows[0] ?? null;
 }
 
-export async function createSession(userId: string, authEpoch: string) {
+export async function createSession(userId: string, authEpoch: string, authTime: number) {
   const handle = randomHandle();
   await database().query('DELETE FROM garden.app_sessions WHERE expires_at <= now()');
   const result = await database().query(`
-    INSERT INTO garden.app_sessions(handle_digest, user_id, auth_epoch, expires_at)
-    SELECT $1, id, auth_epoch, now() + $4 * interval '1 second'
+    INSERT INTO garden.app_sessions(handle_digest, user_id, auth_epoch, expires_at, authenticated_at)
+    SELECT $1, id, auth_epoch, now() + $4 * interval '1 second', to_timestamp($5)
     FROM garden.users WHERE id=$2 AND auth_epoch=$3 AND status='active'
-  `, [digest(handle), userId, authEpoch, sessionTtl]);
+  `, [digest(handle), userId, authEpoch, sessionTtl, authTime]);
   return result.rowCount === 1 ? { handle, maxAge: sessionTtl } : null;
 }
 
 export async function sessionUser(): Promise<SessionUser | null> {
+  const session = await currentSession();
+  return session?.user ?? null;
+}
+
+export async function currentSession() {
   const handle = (await cookies()).get(sessionCookie)?.value;
   if (!handle || !validHandle(handle)) return null;
-  const { rows } = await database().query<SessionUser>(`
-    SELECT users.id, users.username, users.display_name, users.role
+  const { rows } = await database().query<SessionUser & { recent_auth: boolean }>(`
+    SELECT users.id, users.username, users.display_name, users.role,
+      COALESCE(session.authenticated_at > now() - interval '5 minutes', false) AS recent_auth
     FROM garden.app_sessions AS session JOIN garden.users ON users.id=session.user_id
     WHERE session.handle_digest=$1 AND session.expires_at>now()
       AND session.auth_epoch=users.auth_epoch AND users.status='active'
   `, [digest(handle)]);
-  return rows[0] ?? null;
+  if (!rows[0]) return null;
+  const { recent_auth, ...user } = rows[0];
+  return { user, recentAuth: recent_auth };
 }
 
 export async function revokeSession(handle: string | undefined) {

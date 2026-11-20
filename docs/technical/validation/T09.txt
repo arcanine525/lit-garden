@@ -1,0 +1,42 @@
+T09 | Admin account lifecycle and Keycloak recovery
+
+$ npm run stack:up
+Passed. Local PostgreSQL and real Keycloak ready. Drive status used metadata
+fixtures and the Drive readiness stub.
+
+$ npm run db:migrate && npm run auth:bootstrap
+Applied 004-identity-lifecycle.sql. Repeated without changes. Keycloak setup
+created a realm-scoped service client. User management uses manage-users.
+Reading the teacher role UUID requires view-realm, confirmed by an HTTP 403
+with manage-users alone. No master-role token is used by the application.
+
+$ npm run test:db
+2 passed, including migration history/rollback and actor-scoped access checks.
+
+$ npm run typecheck && npm run build
+Both passed.
+
+$ PLAYWRIGHT_CHANNEL=chrome npm run test:e2e
+5 passed (15.9s) on Chrome against the full local stack.
+- Admin can list teacher Drive state and issue a teacher account with mandatory
+  password change. The one-time password response is no-store. Replaying the
+  same key returns the operation ID without the password.
+- Teacher cannot read the admin directory or reset a shared student. A reset
+  requires an administrator to attest that they verified the person outside
+  the app. Reset revokes the old session. The new temporary password can only
+  be used to transition through Keycloak's password-change screen.
+- The test pauses the local Keycloak container during the suspend request.
+  The old session of teacher A gets HTTP 401 from /api/me while the request is
+  still pending. Teacher B remains at 200. Suspend returns 202 with an unknown
+  provider result. After unpause, the administrator reloads the dashboard and
+  retries sync. Keycloak disables A and has no provider sessions for A.
+  Enabling A again leaves the old application session revoked.
+- The admin must reauthenticate to mutate accounts after five minutes. Reads
+  remain available to an otherwise valid admin session.
+- Audits preserve actor, target, time and requested/unknown/success outcomes.
+  Neither issued password appears in identity operation or audit rows.
+
+Scope: account and session HTTP routes. The content access policy is tested
+through the T07 PostgreSQL predicates. Cross-class content routes and all
+role combinations are exercised as those features are integrated in T33.
+Live Google credentials were not used.

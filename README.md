@@ -335,7 +335,7 @@ npm run test:e2e
 
 Playwright khởi động bản build tại cổng 3000 và kiểm qua trình duyệt. Nếu máy đã có Chrome, có thể chạy `PLAYWRIGHT_CHANNEL=chrome npm run test:e2e`. GitHub Actions chạy các bước tương đương với Chromium trên Linux. Đăng nhập ứng dụng dùng Keycloak qua Authorization Code + PKCE. Phiên của app có thời hạn tám giờ và kiểm trạng thái tài khoản cùng auth epoch ở mỗi request. Google OAuth và Drive thật thuộc các mốc tích hợp sau. [Kiểm chứng T06](docs/technical/validation/T06.txt).
 
-`npm run auth:bootstrap` cấu hình client OIDC, theme đăng nhập và tạo tài khoản admin ứng dụng. Cấp giá trị `APP_BOOTSTRAP_PASSWORD` cho người vận hành qua kho secret. Tài khoản phải đổi mật khẩu tạm trong Keycloak trước khi nhận phiên app. Chạy lại bootstrap giữ nguyên mật khẩu của admin hiện có. Khóa, cấp tài khoản thường và đặt lại mật khẩu ứng dụng là các task tiếp theo.
+`npm run auth:bootstrap` cấu hình client OIDC, theme đăng nhập và tạo tài khoản admin ứng dụng. Cấp giá trị `APP_BOOTSTRAP_PASSWORD` cho người vận hành qua kho secret. Tài khoản phải đổi mật khẩu tạm trong Keycloak trước khi nhận phiên app. Chạy lại bootstrap giữ nguyên mật khẩu của admin hiện có. Sau khi đăng nhập admin, đường dẫn **Quản lý tài khoản** cho phép cấp hoặc khóa/mở giáo viên và đặt lại mật khẩu học sinh. Thao tác ghi yêu cầu xác thực trong năm phút gần đây. Trước khi đặt lại, người vận hành đối chiếu danh sách lớp và thông tin liên hệ của người yêu cầu ngoài ứng dụng. Cấp mật khẩu tạm chỉ hiển thị một lần.
 
 Nếu dùng lại volume dev được tạo trước T08, Keycloak đã có master realm nên bỏ qua bootstrap service ở startup. Chạy một lần quy trình dev dưới đây để tạo service bằng secret cục bộ, giữ nguyên volume:
 
@@ -350,7 +350,9 @@ npm run db:migrate
 npm run auth:bootstrap
 ```
 
-Service quản trị dùng client credentials trong lệnh vận hành và E2E. App không cần service credential để phục vụ người dùng. Với môi trường triển khai, người vận hành thay service bootstrap bằng quyền quản trị giới hạn và thiết lập MFA cho admin ưu tiên quy trình vận hành. [Kiểm chứng T08](docs/technical/validation/T08.txt).
+Service quản trị dùng client credentials trong lệnh vận hành và E2E. Luồng đăng nhập không dùng credential quản trị. Các thao tác quản lý tài khoản dùng client riêng trong realm ứng dụng với quyền `manage-users` và `view-realm`. Tránh cấp quyền master cho app. Với môi trường triển khai, người vận hành thay service bootstrap bằng quyền quản trị giới hạn và thiết lập MFA cho admin ưu tiên quy trình vận hành. [Kiểm chứng T08](docs/technical/validation/T08.txt).
+
+Khi khóa giáo viên mà Keycloak chưa xác nhận, ứng dụng đã ngắt phiên dựa trên trạng thái trong PostgreSQL. Mục **Thử đồng bộ Keycloak** thực hiện lại lệnh khóa và thu hồi phiên provider. Nếu mất phản hồi khi cấp hoặc đặt lại mật khẩu, người vận hành xử lý trạng thái chờ và xác minh tài khoản trước khi thử lại. [Kiểm chứng T09](docs/technical/validation/T09.txt).
 
 Hai công cụ tài liệu hiện có cần **Python 3 và Pillow**:
 

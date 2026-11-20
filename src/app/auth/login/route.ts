@@ -12,7 +12,7 @@ export async function GET() {
     const authorize = oidc.buildAuthorizationUrl(config, {
       redirect_uri: callbackUrl(), scope: 'openid', state, nonce,
       code_challenge: await oidc.calculatePKCECodeChallenge(verifier),
-      code_challenge_method: 'S256', ui_locales: 'vi'
+      code_challenge_method: 'S256', max_age: '300', ui_locales: 'vi'
     });
     const handle = await saveAttempt({ verifier, state, nonce });
     const response = NextResponse.redirect(authorize);

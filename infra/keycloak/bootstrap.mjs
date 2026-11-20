@@ -50,10 +50,10 @@ async function setupRealm(admin) {
   for (const attribute of profile.attributes) {
     if (attribute.name === 'email') delete attribute.required;
   }
-  if (!profile.attributes.some(attribute => attribute.name === 'garden_bootstrap')) {
-    profile.attributes.push({
-      name: 'garden_bootstrap', permissions: { view: ['admin'], edit: ['admin'] }
-    });
+  for (const name of ['garden_bootstrap', 'garden_provisioning_id']) {
+    if (!profile.attributes.some(attribute => attribute.name === name)) {
+      profile.attributes.push({ name, permissions: { view: ['admin'], edit: ['admin'] } });
+    }
   }
   await admin('/users/profile', 'PUT', profile);
 
@@ -98,6 +98,25 @@ async function setupRealm(admin) {
   } else {
     await admin('/clients', 'POST', configuration);
   }
+}
+
+async function prepareIamClient(admin) {
+  const clientId = env('APP_IAM_CLIENT_ID');
+  const matches = await admin(`/clients?clientId=${encodeURIComponent(clientId)}`);
+  if (!matches.some(client => client.clientId === clientId)) {
+    await admin('/clients', 'POST', {
+      clientId, secret: env('APP_IAM_CLIENT_SECRET'), protocol: 'openid-connect',
+      enabled: true, publicClient: false, standardFlowEnabled: false,
+      directAccessGrantsEnabled: false, serviceAccountsEnabled: true, fullScopeAllowed: true
+    });
+  }
+  const [iam] = await admin(`/clients?clientId=${encodeURIComponent(clientId)}`);
+  const [management] = await admin('/clients?clientId=realm-management');
+  const account = await admin(`/clients/${iam.id}/service-account-user`);
+  const roles = await Promise.all(['manage-users', 'view-realm'].map(role =>
+    admin(`/clients/${management.id}/roles/${role}`)));
+  await admin(`/users/${account.id}/role-mappings/clients/${management.id}`, 'POST',
+    roles.map(({ id, name }) => ({ id, name })));
 }
 
 export async function provisionIdentity(admin, db, { username, name, role, password, bootstrap = false }) {
@@ -161,6 +180,7 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
     const admin = await keycloakAdmin();
     pool = migrationPool();
     await setupRealm(admin);
+    await prepareIamClient(admin);
     await provisionIdentity(admin, pool, {
       username: env('APP_BOOTSTRAP_USER'), name: 'Quản trị viên',
       role: 'admin', password: env('APP_BOOTSTRAP_PASSWORD'), bootstrap: true

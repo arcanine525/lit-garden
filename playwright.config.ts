@@ -6,6 +6,8 @@ if (existsSync('.env.local')) loadEnvFile('.env.local');
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // The identity recovery test temporarily pauses this local stack's Keycloak.
+  workers: 1,
   forbidOnly: !!process.env.CI,
   reporter: 'list',
   use: {

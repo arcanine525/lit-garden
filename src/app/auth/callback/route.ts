@@ -25,16 +25,17 @@ export async function GET(request: NextRequest) {
       pkceCodeVerifier: attempt.verifier,
       expectedNonce: attempt.nonce,
       expectedState: attempt.state,
-      idTokenExpected: true
+      idTokenExpected: true,
+      maxAge: 300
     });
     const claims = tokens.claims();
-    if (!claims) return redirect('/?auth=failed');
+    if (!claims || typeof claims.auth_time !== 'number') return redirect('/?auth=failed');
     const identity = await findIdentity(database(), claims.iss, claims.sub);
     const roles = Array.isArray(claims.garden_roles) ? claims.garden_roles : [];
     if (!identity || identity.status !== 'active' || !roles.includes(`garden-${identity.role}`)) {
       return redirect('/?auth=denied');
     }
-    const session = await createSession(identity.id, identity.auth_epoch);
+    const session = await createSession(identity.id, identity.auth_epoch, claims.auth_time);
     if (!session) return redirect('/?auth=denied');
     const response = redirect('/');
     setAuthCookie(response, sessionCookie, session.handle, session.maxAge);
