@@ -31,6 +31,7 @@ export function ClassDirectory({ user }: { user: { display_name: string; role: '
   const [selected, setSelected] = useState('');
   const [previewing, setPreviewing] = useState(false);
   const [previewError, setPreviewError] = useState('');
+  const createDialog = useRef<HTMLDialogElement>(null);
   const previewList = useRef<HTMLUListElement>(null);
   const [loadState, setLoadState] = useState<'loading' | 'ready' | 'error'>('loading');
   const [retry, setRetry] = useState(0);
@@ -76,11 +77,16 @@ export function ClassDirectory({ user }: { user: { display_name: string; role: '
   async function handle(event: FormEvent<HTMLFormElement>, action: string, extra: Record<string, unknown> = {}) {
     event.preventDefault();
     const fields = Object.fromEntries(new FormData(event.currentTarget));
+    const form = event.currentTarget;
     await perform(async () => {
       const key = singleKey || crypto.randomUUID();
       if (action === 'create_student' && !singleKey) setSingleKey(key);
       const result = await post({ action, ...fields, key, ...extra });
-      if (result.joinCode) setJoinCode(result.joinCode);
+      if (result.joinCode) {
+        setJoinCode(result.joinCode);
+        form.reset();
+        createDialog.current?.close();
+      }
       if (action === 'create_student') {
         setCredentials(result.temporaryPassword ?? '');
         setFeedback(rowState[result.state]);
@@ -142,22 +148,28 @@ export function ClassDirectory({ user }: { user: { display_name: string; role: '
       <button onClick={() => { setLoadState('loading'); setRetry(retry + 1); }}>Thử lại</button>
     </section>}
     {loadState === 'ready' && teacher && !room && <>
-      <section className="app-panel" aria-labelledby="current-classes">
-        <h2 id="current-classes">Lớp đang hoạt động</h2>
-        <details className="class-form">
-          <summary className="app-button app-primary">Tạo lớp</summary>
+      <section className="class-directory" aria-labelledby="current-classes">
+        <p id="current-classes">Các lớp đang hoạt động và danh sách học sinh của bạn.</p>
+        <button className="app-primary" onClick={() => { setFeedback(''); createDialog.current?.showModal(); }}>+ Tạo lớp</button>
+        <dialog ref={createDialog} className="class-form-dialog" aria-labelledby="create-class-title"
+          onCancel={event => { if (busy) event.preventDefault(); }}>
+          <h2 id="create-class-title">Tạo lớp</h2>
           <form onSubmit={event => handle(event, 'save_class')}>
             <label>Tên lớp <input name="name" required maxLength={100}/></label>
             <label>Năm học <input name="year" required maxLength={30}/></label>
-            <button disabled={busy}>Tạo lớp</button>
+            <div className="app-actions">
+              <button className="app-primary" disabled={busy}>Tạo lớp</button>
+              <button type="button" disabled={busy} onClick={() => createDialog.current?.close()}>Hủy</button>
+            </div>
+            {feedback && <p role="status">{feedback}</p>}
           </form>
-        </details>
+        </dialog>
         {joinCode && <p>Mã lớp <output>{joinCode}</output> <button onClick={() => setJoinCode('')}>Đã ghi lại</button></p>}
         {!currentClasses.length && <p>Tạo lớp để cấp tài khoản và gửi mã tham gia.</p>}
-        {currentClasses.map(item => <section className="class-row" aria-label={item.name} key={item.id}>
+        <div className="class-cards">{currentClasses.map(item => <section className="class-card" aria-label={item.name} key={item.id}>
           <div><h3>{item.name}</h3><p>Năm học {item.school_year} · {data.memberships.filter(member => member.class_id === item.id && member.state === 'active').length} thành viên</p></div>
           <button onClick={() => { setSelected(item.id); setFeedback(''); }}>Mở lớp</button>
-        </section>)}
+        </section>)}</div>
       </section>
       <section className="app-panel" aria-labelledby="past-classes">
         <h2 id="past-classes">Đã lưu trữ</h2>

@@ -91,6 +91,7 @@ test('T17 autosaves an assignment, publishes all verified objects and keeps a ru
     await expect(teacher.page.getByRole('status')).toContainText('Đã xác minh');
 
     await teacher.page.goto('/assignments');
+    await teacher.page.getByRole('link',{ name:'+ Giao bài mới' }).click();
     await teacher.page.getByRole('combobox',{ name:'Lớp',exact:true }).selectOption(classId);
     await teacher.page.getByRole('combobox',{ name:'Rubric',exact:true }).selectOption(`${rubric}:1`);
     await teacher.page.getByRole('button',{ name:'Tạo bài nháp' }).click();
@@ -175,7 +176,8 @@ test('T17 autosaves an assignment, publishes all verified objects and keeps a ru
     expect(await invisible()).toMatchObject({ state:'published',grants:'1',notices:'1' });
     expect((await pins()).map(file => file.drive_file_id)).toEqual(first.map(file => file.drive_file_id));
     await student.page.goto('/assignments');
-    await student.page.getByRole('link',{ name:title }).click();
+    await expect(student.page.getByRole('link',{ name:`Làm bài · ${title}`,exact:true })).toHaveAttribute('href',`/assignments/${assignment}/write`);
+    await student.page.getByRole('link',{ name:title,exact:true }).click();
     await expect(student.page.getByRole('heading',{ name:title,exact:true })).toBeVisible();
     await expect(student.page.locator('.markdown-document strong')).toHaveText('mùa xuân');
     await expect(student.page.locator('.markdown-document blockquote')).toHaveText('Những mầm non bắt đầu xanh.');

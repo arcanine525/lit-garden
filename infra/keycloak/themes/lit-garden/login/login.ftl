@@ -9,10 +9,14 @@
 <body>
 <main class="login">
   <div class="art"><img src="${url.resourcesPath}/img/book.webp" alt="Khu vườn nhỏ trên trang sách">
-    <p>Một khu vườn nhỏ<br>nhiều trang viết đang chờ.</p>
+    <p>Một khu vườn nhỏ,<br>nhiều trang viết<br>đang chờ.</p>
   </div>
   <div class="login-content">
-    <p class="wordmark">Vườn Văn</p>
+    <div class="brand">
+      <span class="flower" aria-hidden="true">✿</span>
+      <p class="wordmark">Vườn Văn</p>
+      <small>Không gian sáng tạo và kết nối</small>
+    </div>
     <h1>Vào khu vườn của mình</h1>
     <#if message?? && message.type == 'error'><p role="alert">Tên đăng nhập hoặc mật khẩu chưa đúng.</p></#if>
     <form action="${url.loginAction}" method="post">
@@ -22,7 +26,8 @@
       <input id="password" name="password" type="password" autocomplete="current-password" required>
       <button type="submit">Đăng nhập</button>
     </form>
-    <p class="muted">Tài khoản do giáo viên hoặc quản trị viên cấp.</p>
+    <p class="muted">Học sinh dùng tài khoản do giáo viên cấp.</p>
+    <p class="help">Quên mật khẩu? Liên hệ giáo viên phụ trách hoặc quản trị viên để được cấp lại.</p>
   </div>
 </main>
 </body>

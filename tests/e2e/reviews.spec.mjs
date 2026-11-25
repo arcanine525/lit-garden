@@ -86,7 +86,7 @@ test('T24 annotates and autosaves a per-version review using the rubric snapshot
     await expect(page.getByRole('combobox',{ name:'Bố cục',exact:true })).toHaveValue('');
     const v2 = await submit('Bản nộp mới với dẫn chứng.');
     await page.goto('/reviews');
-    const rows = page.locator('.review-queue > li');
+    const rows = page.getByRole('table',{ name:'Các bản nộp' }).locator('tbody tr');
     await expect(rows.nth(0)).toContainText('Lần nộp 2');
     await expect(rows.nth(0)).toContainText('Chờ chấm');
     await expect(rows.nth(1)).toContainText('Lần nộp 1');

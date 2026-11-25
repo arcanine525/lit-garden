@@ -13,10 +13,12 @@ import { FocusClock, type FocusClockHandle } from './focus-clock';
 import { useSubmission } from './use-submission';
 import './writing.css';
 
+import type { AssignmentPrompt, RubricSnapshot } from '../../../../server/assignments/bundle';
+
 type Head = { draft: DraftBody; writable: boolean; version: string; hash: string | null };
 type Lease = { epoch: string; version: string };
 type Attempt = { action: 'save'; key: string; epoch: string; baseVersion: string; draft: DraftBody };
-type Prompt = { state: 'published'; prompt: { title: string; prompt: string }; dueAt: string | null };
+type Prompt = { state: 'published'; prompt: AssignmentPrompt; rubric: RubricSnapshot; dueAt: string | null };
 const empty = { markdown:'',explanation:'' };
 const synced = 'Đã đồng bộ nháp lên Drive.';
 const stale = 'Quyền viết đã chuyển. Bạn vẫn có thể tải phần chưa đồng bộ.';
@@ -373,19 +375,30 @@ export function StudentWriter({ assignment, student, displayName }: { assignment
   </section>;
   return <AppShell user={{ display_name:displayName,role:'student' }} current="/assignments"
     title={assignmentPrompt?.prompt.title ?? 'Viết bài'}>
+    <FocusClock student={student} assignment={assignment} clockRef={clock}/>
     <div className="writing-layout">
       {draftPanel}
-      <aside aria-label="Đề bài và đồng hồ">
+      <aside aria-label="Nội dung đề bài">
         <section className="app-panel writing-prompt">
           <h2><a href={`/assignments/${assignment}`}>Đề bài</a></h2>
           {assignmentPrompt && <>
             <MarkdownDocument source={assignmentPrompt.prompt.prompt}/>
+            {assignmentPrompt.prompt.material && <><h3>Ngữ liệu</h3><MarkdownDocument source={assignmentPrompt.prompt.material}/></>}
             {assignmentPrompt.dueAt && <span className="writing-deadline">
               Hạn {shortDeadline.format(new Date(assignmentPrompt.dueAt))}
             </span>}
           </>}
         </section>
-        <section className="app-panel"><FocusClock student={student} assignment={assignment} clockRef={clock}/></section>
+        {assignmentPrompt && <section className="app-panel writing-rubric">
+          <h2>Rubric của bài</h2>
+          <p>{assignmentPrompt.rubric.label}</p>
+          {assignmentPrompt.rubric.criteria.map(criterion => <details key={criterion.id}>
+            <summary>{criterion.label}</summary>
+            <dl>{criterion.levels.map(level => <div key={level.id}>
+              <dt>{Number(level.score).toLocaleString('vi-VN')} điểm</dt><dd>{level.description}</dd>
+            </div>)}</dl>
+          </details>)}
+        </section>}
       </aside>
     </div>
   </AppShell>;

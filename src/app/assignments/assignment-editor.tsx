@@ -215,6 +215,12 @@ export function AssignmentEditor({ id, className, initial, rubrics }: { id: stri
         <label className="assignment-deadline">Hạn nộp (không bắt buộc, giờ Việt Nam) <input type="datetime-local" value={deadlineField(draft.dueAt)}
           onChange={event => setDraft({ ...draft,dueAt:deadlineValue(event.target.value) })}/></label>
       </fieldset>
+      <section className="assignment-prompt-section" aria-labelledby="author-prompt">
+        <h2 id="author-prompt">Đề bài</h2>
+        <fieldset className="assignment-prompt"><legend className="visually-hidden">Đề bài</legend>
+          <EditorWorkbench role="teacher" assignmentId={id} editorRef={prompt} worksheet {...editorProps('prompt')}/>
+        </fieldset>
+      </section>
       <div className="assignment-supplement">
         {referenceOpen ? <span>Tham chiếu (không bắt buộc)</span> : <label htmlFor="assignment-reference">Tham chiếu (không bắt buộc)</label>}
         <details onToggle={event => {
@@ -237,12 +243,6 @@ export function AssignmentEditor({ id, className, initial, rubrics }: { id: stri
       </div>
       {!referenceOpen && <textarea className="assignment-reference" id="assignment-reference" value={draft.reference}
         readOnly={readOnly || busy} onChange={event => setDraft({ ...draft,reference:event.target.value })}/>}
-    </section>
-    <section className="app-panel" aria-labelledby="author-prompt">
-      <h2 id="author-prompt">Đề bài</h2>
-      <fieldset className="assignment-prompt"><legend className="visually-hidden">Đề bài</legend>
-        <EditorWorkbench role="teacher" assignmentId={id} editorRef={prompt} worksheet {...editorProps('prompt')}/>
-      </fieldset>
       <p className="assignment-sync" role="status">{status}</p>
       <div className="app-actions">
         {retry ? <button onClick={() => run('retry')} disabled={busy || readOnly}>

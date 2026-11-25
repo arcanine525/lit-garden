@@ -1,5 +1,8 @@
 # Danh mục baseline đích T05
 
+Từ 25/11/2026, giao diện triển khai dùng [ảnh trang nguồn](../design-references/vuon-van-ca-nhan.pages.dev/) và [đặc tả từng màn](SCREENS.md) để đối chiếu hình ảnh tại 1440, 768 và 390 px. Bộ T05 dưới đây lưu lại mốc nghiệm thu trước lần sửa. Các phần bổ sung của sản phẩm như Keycloak, Drive, quản trị và trả bài theo phiên bản tiếp tục theo [quyết định nghiệp vụ](../requirements/FEATURES-REVIEW.md).
+
+
 **Đã duyệt đủ 29 cảnh / 87 ảnh cho T35.** SHA-256 của manifest là `9bbd164f0c97c0a016fd7cf53801a3c02fa9e9b7fd816ccd578d47e3763838fd`. Điều phối đã duyệt lại 18 ảnh sửa và xác minh SHA-256 của 87 file. 69 ảnh duyệt trước giữ nguyên. T35 dùng đúng bộ này và chụp ứng dụng với fixture tương ứng.
 
 Bộ ảnh dùng Chrome/macOS, DPR 1, locale vi-VN, múi giờ Asia/Ho_Chi_Minh, reduced motion và scroll 0. Mỗi ảnh là PNG toàn trang. Kích thước ghi trong cột ảnh là viewport. [Manifest ảnh](baselines/manifest.json) ghi kích thước ảnh và SHA-256 của từng tệp. Lora, Be Vietnam Pro và minh họa sách/vườn dùng asset đã lưu cùng [khảo sát](../research/vuon-van-ca-nhan.pages.dev/INDEX.md). Tên, bài viết, lớp và thời gian trong mockup là dữ liệu tổng hợp cố định. Bộ mockup diễn tả bố cục, trạng thái và nội dung thao tác. Luồng lưu, phân quyền và thao tác thật sẽ được kiểm trên ứng dụng.

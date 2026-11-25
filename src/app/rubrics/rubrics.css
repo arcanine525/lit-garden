@@ -10,3 +10,12 @@
 .rubric-definition dl > div { display: grid; grid-template-columns: 84px minmax(0, 1fr); gap: 10px; margin-bottom: 10px; }
 .rubric-definition dt { font-weight: 600; }
 .rubric-definition dd { margin: 0; }
+.rubric-choices { margin-bottom: 20px; }
+.rubric-choices button { border-radius: 20px; padding: 8px 14px; }
+.rubric-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.rubric-heading h2 { margin: 0; font-size: 22px; }
+.app-panel.rubric-definition details { margin: 0 0 18px; padding: 0; border: 0; }
+.rubric-definition summary { padding: 13px 0; font-size: 12px; border-bottom: 1px solid var(--line); }
+.rubric-definition details p { margin: 12px 0 0; }
+.rubric-definition dl > div { grid-template-columns: minmax(40px,max-content) 1fr; gap: 12px; margin: 0; padding: 12px 0; font-size: 12px; border-bottom: 1px solid var(--line); }
+.rubric-definition dt { color: #496786; }

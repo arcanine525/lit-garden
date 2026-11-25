@@ -48,3 +48,5 @@
   width: min(260px, calc(100vw - 64px)); padding: 10px;
   background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
 }
+/* MDXEditor uses the hover border token for a select's placeholder text. */
+.garden-editor [data-toolbar-item][data-placeholder] { --baseBorderHover: var(--ink-muted); }

@@ -102,6 +102,7 @@ test('T35 captures every approved scene from running application routes', async 
 
     await a.page.goto('/assignments');
     await expect(a.page.getByRole('link',{ name:assignmentTitle,exact:true })).toBeVisible();
+    await expect(a.page.getByRole('link',{ name:'+ Giao bài mới',exact:true })).toHaveAttribute('href','/assignments?new=1');
     await capture('teacher-assignments',a.page,'Main assignment open, Giọt mưa đầu mùa closed');
     const draft = await fx.assignment(a,roomA,assignmentTitle,{ draft:true });
     await a.page.goto(draft.url);
@@ -148,7 +149,9 @@ test('T35 captures every approved scene from running application routes', async 
     await fx.completeScores(a,v1);
     const library = await fx.library(a,an,roomA);
     await a.page.goto('/');
-    await expect(a.page.getByText('1 bài viết đang chờ chấm.')).toBeVisible();
+    await expect(a.page.getByRole('heading',{ name:/Nâng niu ý tưởng/ })).toBeVisible();
+    await expect(a.page.getByRole('link',{ name:'Xem bài chờ chấm · 1',exact:true })).toHaveAttribute('href','/reviews?waiting=1');
+    await expect(a.page.getByRole('link',{ name:'+ Giao một bài mới',exact:true })).toHaveAttribute('href','/assignments?new=1');
     await capture('teacher-home',a.page,'Cô An with 10A1, one open assignment and latest submission awaiting review');
     await a.page.goto('/reviews');
     await expect(a.page.getByText(/An · 10A1 · Lần nộp 2/)).toBeVisible();
@@ -243,12 +246,22 @@ test('T35 captures every approved scene from running application routes', async 
     await mutate(cleanBinh,`/api/library/${library.id}`,{ action:'favorite',favorite:true });
     await cleanBinh.page.goto('/');
     await expect(cleanBinh.page.getByRole('link',{ name:`Mở tài liệu · ${documentTitle}`,exact:true })).toBeVisible();
+    await expect(cleanBinh.page.getByRole('link',{ name:'Thăm vườn',exact:true })).toHaveAttribute('href','/garden');
     await capture('student-home',cleanBinh.page,'Four assignments across Cô An and Cô Mai, plus featured library document');
     await cleanBinh.page.goto('/garden');
     await expect(cleanBinh.page.getByRole('list',{ name:'Các bài theo bộ lọc' }).getByRole('listitem')).toHaveCount(4);
     await capture('garden',cleanBinh.page,'One Mầm, one Hoa, one Quả and one closed unsubmitted across 10A1 and 10B1');
     await check('Garden filters work using keyboard and selected results use the same counts',async () => {
       const page = cleanBinh.page;
+      const flower = page.getByRole('region',{ name:'Hoa',exact:true }).getByRole('button');
+      await flower.focus();
+      await flower.press('Enter');
+      await expect(flower).toHaveAttribute('aria-pressed','true');
+      const list = page.getByRole('list',{ name:'Các bài theo bộ lọc' });
+      await expect(list.getByRole('listitem')).toHaveCount(1);
+      await page.getByRole('button',{ name:'Xem tất cả ↗',exact:true }).press('Enter');
+      await expect(list.getByRole('listitem')).toHaveCount(4);
+      await page.getByText('Lọc bài viết theo lớp và giáo viên',{ exact:true }).press('Enter');
       const filter = page.getByRole('combobox',{ name:'Giáo viên',exact:true });
       await filter.focus();
       await page.keyboard.press('c');

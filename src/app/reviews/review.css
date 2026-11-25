@@ -76,3 +76,13 @@
 .reply-list li .markdown-document > :not(p:first-child) { margin-block: 6px; }
 .reply-list li + li { padding-top: 7px; border-top: 1px solid var(--line); }
 @media (max-width: 1150px) { .review-columns { grid-template-columns: minmax(0,1fr); gap: 0; } }
+.review-table { width: 100%; border-collapse: collapse; margin-top: 16px; text-align: left; font-size: 12px; }
+.review-table :is(th,td) { padding: 13px 10px; vertical-align: top; border-bottom: 1px solid var(--line); }
+.review-table th { text-transform: uppercase; letter-spacing: .5px; font-size: 10px; color: var(--ink-muted); }
+.review-table p { margin: 4px 0 0; color: var(--ink-muted); }
+.review-table .review-queue-state { display: inline-block; }
+@media (min-width: 1151px) { .review-columns { grid-template-columns: minmax(0,1.2fr) minmax(320px,1fr); gap: 24px; align-items: stretch; } }
+@media (max-width: 600px) { .review-table :is(th,td) { padding-inline: 4px; } }
+.review-list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 24px; }
+.review-list-head p { margin: 0; color: var(--ink-muted); font-size: 13px; }
+.review-table { margin-top: 0; }

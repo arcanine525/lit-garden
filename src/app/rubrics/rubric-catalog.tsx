@@ -10,9 +10,18 @@ const newCriterion = (): RubricCriterion => ({
   id: crypto.randomUUID(), label: '', group: '', max: '', levels: [newLevel(), newLevel('0')]
 });
 
+const standardLabels = ['Đoạn nghị luận xã hội','Đoạn nghị luận văn học','Bài nghị luận xã hội','Bài nghị luận văn học'];
+function catalogOrder(a: Rubric, b: Rubric) {
+  const rank = (item: Rubric) => {
+    const index = standardLabels.indexOf(item.label);
+    return index < 0 ? standardLabels.length : index;
+  };
+  return rank(a) - rank(b) || a.label.localeCompare(b.label,'vi') || b.revision - a.revision;
+}
+
 export function RubricCatalog({ initial, editable }: { initial: Rubric[]; editable: boolean }) {
-  const [rubrics, setRubrics] = useState(initial);
-  const [selected, setSelected] = useState(initial[0] ? revisionKey(initial[0]) : '');
+  const [rubrics, setRubrics] = useState(() => [...initial].sort(catalogOrder));
+  const [selected, setSelected] = useState(rubrics[0] ? revisionKey(rubrics[0]) : '');
   const [draft, setDraft] = useState<Rubric | null>(null);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -43,7 +52,7 @@ export function RubricCatalog({ initial, editable }: { initial: Rubric[]; editab
       }
       const updated: Rubric = await response.json();
       setRubrics(items => [...items.filter(item => revisionKey(item) !== revisionKey(updated)), updated]
-        .sort((a,b) => a.label.localeCompare(b.label, 'vi') || b.revision - a.revision));
+        .sort(catalogOrder));
       setSelected(revisionKey(updated));
       setDraft(null);
       setMessage(action === 'retire' ? 'Đã ngừng dùng rubric.' : 'Đã lưu phiên bản rubric.');
@@ -76,8 +85,8 @@ export function RubricCatalog({ initial, editable }: { initial: Rubric[]; editab
     </div>
     {!rubrics.length && <p>Chưa có rubric.</p>}
     {rubric && <section className="app-panel rubric-definition" aria-labelledby="rubric-name" key={selected}>
-      <h2 id="rubric-name">{rubric.label}</h2>
-      <span className="rubric-scale">Thang chuẩn {point(rubric.definition.max)} điểm</span>
+      <header className="rubric-heading"><h2 id="rubric-name">{rubric.label}</h2>
+      <span className="rubric-scale">Thang chuẩn {point(rubric.definition.max)} điểm</span></header>
       {editable && <span className="rubric-revision">Phiên bản {rubric.revision}{rubric.retired ? ' · Đã ngừng dùng' : ''}</span>}
       {editable && current && <div className="app-actions rubric-controls">
         <button type="button" disabled={busy || !!draft} onClick={() => { setMessage(''); setDraft(rubric); }}>Tạo phiên bản mới</button>

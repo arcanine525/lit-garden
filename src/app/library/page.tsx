@@ -24,11 +24,13 @@ export default async function LibraryPage({ searchParams }: { searchParams: Prom
     [item.id,await librarySharing(user.id,item.id)] as const)) : []);
   if ((await currentSession())?.sessionDigest !== session.sessionDigest) redirect('/');
   return <AppShell user={user} current="/library" title="Thư viện">
+    {teacher && <section className="app-panel" aria-label="Quản lý thư viện">
+        <AddLibraryItem/>
+        {drafts.length > 0 && <ul>{drafts.map(item => <li key={item.id}><Link href={`/library/${item.id}/edit`}>Tiếp tục thêm tài liệu</Link></li>)}</ul>}
+    </section>}
     <section className="app-panel">
       <h2>Tài liệu</h2>
-      {teacher ? <><AddLibraryItem/>
-        {drafts.length > 0 && <ul>{drafts.map(item => <li key={item.id}><Link href={`/library/${item.id}/edit`}>Tiếp tục thêm tài liệu</Link></li>)}</ul>}
-      </> : <nav className="app-actions" aria-label="Bộ lọc thư viện">
+      {!teacher && <nav className="app-actions" aria-label="Bộ lọc thư viện">
         <Link className="app-button" href="/library" aria-current={!favorites ? 'page' : undefined}>Tất cả tài liệu</Link>
         <Link className="app-button" href="/library?favorites=1" aria-current={favorites ? 'page' : undefined}>Tài liệu yêu thích</Link>
       </nav>}

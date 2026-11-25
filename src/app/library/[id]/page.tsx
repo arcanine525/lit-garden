@@ -39,6 +39,8 @@ export default async function LibraryReader({ params }: { params: Promise<{ id: 
   } catch (error) {
     if (error instanceof DriveError && error.code === 'NOT_FOUND') notFound();
     return <AppShell user={user} current="/library" title="Thư viện"><p role="alert">Chưa đọc được tài liệu trên Drive.</p>
+      {user.role === 'teacher' && error instanceof DriveError && ['DRIVE_SETUP_REQUIRED','DRIVE_RECONNECT'].includes(error.code) &&
+        <p><Link className="app-button app-primary" href="/drive">Kết nối lại Google Drive</Link></p>}
       <Link href={`/library/${id}`}>Thử lại</Link></AppShell>;
   }
   const teacher = user.role === 'teacher';
@@ -51,6 +53,7 @@ export default async function LibraryReader({ params }: { params: Promise<{ id: 
     {manifest.excerpt && <p className="library-text">{manifest.excerpt}</p>}
     <section className="app-panel" aria-label="Nội dung tài liệu">
       <div className="app-actions library-reader-actions">
+        <Link className="app-button" href="/library">Về thư viện</Link>
         <a href={download} className="app-button">Tải tài liệu</a>
         {teacher && <Link className="app-button" href={`/library/${id}/edit`}>Sửa tài liệu</Link>}
         {!teacher && <FavoriteLibraryItem id={id} initial={favorite.saved} writable={favorite.writable}/>}

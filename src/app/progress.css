@@ -36,3 +36,48 @@
   .progress-stage.illustrated { display: grid; grid-template-columns: minmax(0, 115px) minmax(0, 1fr); align-items: center; }
   .progress-stage.illustrated img { height: 105px; }
 }
+
+.app-main > h1:has(+ .garden-intro) { font-size: 37px; line-height: 1.3; margin-bottom: 36px; }
+.garden-intro { margin: 0 0 14px; color: var(--ink-muted); }
+.garden-cards { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; margin: 0 0 28px; }
+button.garden-stage {
+  display: flex; flex-direction: column; text-align: left; padding: 0; width: 100%; height: 100%;
+  overflow: hidden; border: 1px solid #dce4d2; border-radius: 20px;
+  background: #fffef8; box-shadow: 0 3px 12px #324f3710;
+}
+.garden-card-art { display: block; width: 100%; height: auto; aspect-ratio: 4/5; object-fit: cover; }
+.garden-card-caption { width: 100%; position: relative; display: flex; flex-direction: column; gap: 9px; padding: 20px 21px 23px; }
+.garden-stage-name { font: 500 25px/1.3 var(--serif); color: #34543f; }
+.garden-stage-summary { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.garden-stage-count { font: 500 28px/1.25 var(--serif); color: #3d6549; }
+.flower .garden-stage-count { color: #915a70; }
+.fruit .garden-stage-count { color: #80611f; }
+.garden-stage-label, .garden-stage-unit { font: 400 12px/1.6 var(--sans); color: #52624d; }
+.garden-card-arrow { position: absolute; right: 18px; top: 22px; font-size: 20px; color: #586f48; }
+button.garden-stage:hover { border-color: #9fb58d; box-shadow: 0 7px 22px #324f3720; }
+button.garden-stage[aria-pressed=true] { border-color: #739b5e; box-shadow: 0 0 0 2px #739b5e; }
+button.garden-stage.flower[aria-pressed=true] { border-color: #c6889e; box-shadow: 0 0 0 2px #c6889e; }
+button.garden-stage.fruit[aria-pressed=true] { border-color: #c8a354; box-shadow: 0 0 0 2px #c8a354; }
+.garden-list .progress-rows, .home-disclosure .progress-rows { list-style: none; margin: 0; padding: 0; }
+.garden-list .progress-rows li, .home-disclosure .progress-rows li { border-top: 1px solid var(--line); padding-block: 14px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+@media (max-width: 900px) {
+  .garden-cards { gap: 12px; }
+  .garden-card-caption { padding: 15px; }
+  .garden-stage-name { font-size: 22px; }
+  .garden-stage-count { font-size: 25px; }
+  .garden-card-arrow { right: 12px; top: 15px; }
+}
+@media (max-width: 760px) {
+  .app-main > h1:has(+ .garden-intro) { font-size: 29px; }
+}
+@media (max-width: 600px) {
+  .garden-cards { grid-template-columns: minmax(0,1fr); gap: 16px; }
+  button.garden-stage { display: grid; grid-template-columns: 42% 58%; align-items: center; }
+  .garden-card-caption { padding: 20px; }
+  .garden-stage-name { font-size: 25px; }
+  .garden-card-arrow { top: 22px; right: 16px; }
+}
+
+.app-panel .student-assignment-list li { gap: 12px; border-top: 1px solid var(--line); }
+.student-assignment-list li > div:first-of-type { flex: 1 1 120px; }
+.student-assignment-list li:nth-child(odd) .assignment-book { background: #f6e9e4; border-color: #e9cec4; color: #88614f; }

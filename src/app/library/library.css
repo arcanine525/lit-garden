@@ -14,3 +14,11 @@
 .library-share-settings[open] > summary { margin-bottom: 8px; }
 .library-share-settings fieldset { margin-block: 8px; }
 .library-share-settings [role="status"]:empty { margin: 0; }
+.library-list li { padding-block: 18px; }
+.library-list li > div:first-child { flex: 1 1 120px; }
+.library-list li > div:first-child > a { color: var(--ink); font-weight: 600; }
+.library-list p { font-size: 12px; }
+.library-list li + li { margin-top: 0; }
+.library-editor fieldset > label > :is(input,select,textarea) { width: 100%; }
+.library-editor fieldset { border: 0; padding: 0; }
+.library-editor fieldset legend { margin-bottom: 12px; font: 600 22px var(--serif); }

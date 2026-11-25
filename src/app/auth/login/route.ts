@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const nonce = oidc.randomNonce();
     const authorize = oidc.buildAuthorizationUrl(config, {
       ...(request.cookies.has(sessionCookie) ? { prompt: 'login' } : {}),
+      ...(request.nextUrl.searchParams.get('action') === 'password' ? { kc_action: 'UPDATE_PASSWORD' } : {}),
       redirect_uri: callbackUrl(), scope: 'openid', state, nonce,
       code_challenge: await oidc.calculatePKCECodeChallenge(verifier),
       code_challenge_method: 'S256', max_age: '300', ui_locales: 'vi'

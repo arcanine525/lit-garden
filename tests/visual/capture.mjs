@@ -34,7 +34,7 @@ export async function prepareCaptures(browser) {
           mainPadding:main ? getComputedStyle(main).paddingTop : null
         };
       }),{ message:`${id}: wait for viewport styles` }).toEqual({
-        ...viewport,mainPadding:appScene ? viewport.width <= 760 ? '20px' : '28px' : null
+        ...viewport,mainPadding:appScene ? viewport.width <= 760 ? '18px' : viewport.width <= 1150 ? '25px' : '28px' : null
       });
       await page.evaluate(async () => {
         await document.fonts.ready;

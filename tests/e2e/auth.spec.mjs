@@ -33,6 +33,25 @@ test('T08 student without email changes temporary password before the API create
   }, 'student');
 });
 
+test('An authenticated teacher can change their password from the account bar', async ({ page }) => {
+  await fixture(async ({ username,password }) => {
+    await enter(page,username,password);
+    const permanent = key();
+    await setPassword(page,permanent);
+    await page.getByRole('link',{ name:'Đổi mật khẩu',exact:true }).click();
+    await page.getByLabel('Tên đăng nhập').fill(username);
+    await page.getByLabel('Mật khẩu',{ exact:true }).fill(permanent);
+    await page.getByRole('button',{ name:'Đăng nhập',exact:true }).click();
+    await expect(page.getByRole('heading',{ name:'Đổi mật khẩu',exact:true })).toBeVisible();
+    const replacement = key();
+    await page.getByLabel('Mật khẩu mới',{ exact:true }).fill(replacement);
+    await page.getByLabel('Nhập lại mật khẩu mới').fill(replacement);
+    await page.getByRole('button',{ name:'Đổi mật khẩu',exact:true }).click();
+    await expect(page.getByRole('button',{ name:'Đăng xuất' })).toBeVisible();
+    expect((await page.request.get('/api/me')).status()).toBe(200);
+  },'teacher');
+});
+
 test('T08 creates the admin from the operator secret and rejects expired teacher sessions', async ({ page, context }) => {
   await fixture(async ({ admin, username, password, db }) => {
     const [keycloakBootstrap] = await admin(`/users?username=${encodeURIComponent(process.env.APP_BOOTSTRAP_USER)}&exact=true`);

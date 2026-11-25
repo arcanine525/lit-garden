@@ -22,7 +22,7 @@ function pdfFixture() {
 test.use({ actionTimeout:10_000,navigationTimeout:15_000 });
 test('T27 library content, favorites and private images follow live class shares', async ({ browser }) => {
   test.setTimeout(120_000);
-  await withStudentWork(browser,async ({ student,teacher,admin,db,fake,classroom,provision }) => {
+  await withStudentWork(browser,async ({ student,teacher,admin,db,fake,classroom,provision,tag }) => {
     const owner = teacher.page;
     const list = async (page,favorites = false) => (await responseBody(await page.request.get('/api/library' + (favorites ? '?favorites=1' : '')))).items;
     const share = (id,classIds) => post(owner,`/api/library/${id}`,{ action:'share',classIds });
@@ -148,5 +148,17 @@ test('T27 library content, favorites and private images follow live class shares
     expect((await peer.page.request.get(download(id))).status()).toBe(404);
     await peer.page.goto(open(id));
     await expect(peer.page.getByRole('heading',{ name:'404',exact:true })).toBeVisible();
+
+    await fake('revoke');
+    await owner.goto(open(id)+'/edit');
+    await expect(owner.getByRole('main').getByRole('alert')).toContainText('Cần kết nối Drive');
+    await owner.getByRole('main').getByRole('link',{ name:'Kết nối Google Drive' }).click();
+    await owner.getByRole('button',{ name:'Kết nối lại Drive' }).click();
+    await owner.getByLabel('Danh tính Drive thử').fill('writing_' + tag);
+    await owner.getByRole('button',{ name:'Cho phép' }).click();
+    await owner.getByRole('button',{ name:'Xác minh thư mục' }).click();
+    await expect(owner.getByRole('status')).toContainText('Đã xác minh');
+    await owner.goto(open(id)+'/edit');
+    await expect(owner.getByLabel('Tên tài liệu')).toHaveValue('Ngữ liệu có ảnh riêng');
   });
 });

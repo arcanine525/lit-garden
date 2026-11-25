@@ -12,7 +12,7 @@
   <h1>Đổi mật khẩu</h1>
   <section>
     <h2>Đặt mật khẩu mới</h2>
-    <p class="notice">Em cần đổi mật khẩu tạm để tiếp tục.</p>
+    <p class="notice">Chọn mật khẩu mới và nhập lại để xác nhận.</p>
     <#if message?? && message.type == 'error'><p role="alert">Hai mật khẩu phải khớp và đáp ứng yêu cầu của hệ thống.</p></#if>
     <form action="${url.loginAction}" method="post">
       <label for="password-new">Mật khẩu mới</label>

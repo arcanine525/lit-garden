@@ -24,20 +24,28 @@ button {
 .login { display: grid; grid-template-columns: 1fr 1fr; min-height: 100vh; background: #f6f7e9; }
 .art { position: relative; min-height: 210px; background: #29493b; }
 .art img { position: absolute; width: 100%; height: 100%; object-fit: cover; }
+.art::after { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg,#254c4266,transparent); }
 .art p {
-  position: absolute; bottom: 20px; left: 28px; margin-bottom: 14px; padding: 9px 13px; border-radius: 8px;
-  background: #29493b; color: white; font: 30px/1.27 'Lora', Georgia, serif;
+  position: absolute; z-index: 1; left: 40px; bottom: 35px; max-width: 400px; margin: 0 0 12px;
+  color: white; font: 700 45px/1.3 'Lora', Georgia, serif; letter-spacing: -1px;
 }
-.login-content { align-self: center; justify-self: center; width: 100%; max-width: 445px; padding: 34px; }
-.login-content .wordmark { margin-bottom: 12px; }
-.login-content h1 { margin: 0 0 23px; letter-spacing: -.025em; }
-.muted { margin-top: 17px; color: #536753; font-size: 12px; }
+.login-content { align-self: center; width: 100%; max-width: 430px; margin: auto; padding: 40px; }
+.brand { padding-bottom: 30px; }
+.flower { color: #567bba; font-size: 35px; line-height: 1; }
+.brand .wordmark { margin: 9px 0; line-height: normal; }
+.brand small { display: block; font-size: 10px; letter-spacing: .1px; color: #526753; }
+.login-content h1 { font-size: 24px; line-height: 1.3; margin: 0 0 12px; }
+.login-content input { font-size: 13px; font-weight: 600; padding: 11px 12px; }
+.login-content button { padding: 10px 17px; }
+.muted, .help { color: #536753; font-size: 11px; line-height: 1.8; }
+.muted { margin: 20px 0 8px; }
+.help { margin: 0; }
 .password-gate { max-width: 590px; padding: 44px 20px; margin: auto; }
 .password-gate section { border: 1px solid #d6dfcf; border-radius: 16px; background: #fffef9; padding: 23px; }
 .notice { background: #edf2e6; padding: 11px 13px; border-radius: 10px; }
 [role=alert] { color: #773f35; }
 @media (max-width: 760px) {
   .login { display: block; }
-  .art p { font-size: 23px; bottom: 6px; left: 16px; }
-  .login-content { margin: auto; padding: 26px; }
+  .art p { font-size: 30px; bottom: 20px; left: 25px; }
+  .login-content { padding: 30px; }
 }

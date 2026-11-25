@@ -85,6 +85,7 @@ test('T29 home and garden filter current memberships and count each latest submi
       await form.getByRole('combobox',{ name,exact:true }).selectOption(value);
     }
     await page.goto('/');
+    await page.getByText('Tiến độ bài viết và bộ lọc',{ exact:true }).click();
     await counts(page,1,1,1,4);
     await expect(assignment('Giọt sương sớm')).toContainText('Chờ chấm');
     await expect(assignment('Giọt sương sớm').getByRole('link',{ name:'Xem nhận xét' })).toHaveCount(0);
@@ -98,11 +99,19 @@ test('T29 home and garden filter current memberships and count each latest submi
     await filter('Giáo viên',teacher.id);
     await counts(page,1,1,0,2);
     await expect(page.getByRole('link',{ name:'Hạt mầm và trang viết' })).toBeVisible();
-    await page.getByRole('link',{ name:'Mở khu vườn' }).click();
+    await page.getByRole('link',{ name:'Thăm vườn' }).click();
     await expect(page).toHaveURL(/\/garden\?teacher=/);
     await counts(page,1,1,0,2);
     await page.setViewportSize({ width:390,height:844 });
     await filter('Giáo viên','');
+    await counts(page,1,1,1,4);
+    const hoa = card(page,'Hoa').getByRole('button');
+    await hoa.click();
+    await expect(hoa).toHaveAttribute('aria-pressed','true');
+    await expect(page.getByRole('heading',{ name:'Hoa · bài chờ góp ý' })).toBeVisible();
+    await expect(rows(page).getByRole('listitem')).toHaveCount(1);
+    await expect(assignment('Giọt sương sớm')).toBeVisible();
+    await page.getByRole('button',{ name:'Xem tất cả ↗' }).click();
     await counts(page,1,1,1,4);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
 
@@ -132,6 +141,7 @@ test('T29 home and garden filter current memberships and count each latest submi
     await expect(page.getByRole('link',{ name:'Hạt mầm và trang viết' })).toHaveCount(0);
     await responseBody(await post(other.page,'/api/classes',{ action:'archive_class',classId:roomB.classId }));
     await page.reload();
+    await page.getByText('Tiến độ bài viết và bộ lọc',{ exact:true }).click();
     await counts(page,1,1,0,2);
     const active = await responseBody(await page.request.get('/api/assignments?scope=current'));
     expect(active.assignments.map(entry => entry.id).sort()).toEqual([sprout.id,flower.id].sort());

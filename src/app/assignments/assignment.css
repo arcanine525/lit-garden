@@ -21,3 +21,19 @@
 .markdown-table { max-width: 100%; overflow-x: auto; }
 .markdown-table table { border-collapse: collapse; }
 .markdown-table td, .markdown-table th { padding: 5px 12px; border: 1px solid var(--line); }
+.assignment-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-block: 0 24px; }
+.assignment-heading p { margin: 0; color: var(--ink-muted); font-size: 13px; }
+.assignment-heading .app-button { flex-shrink: 0; }
+.app-panel .assignment-list { list-style: none; padding: 0; margin: 0; }
+.app-panel .assignment-list li { display: flex; align-items: center; gap: 16px; padding: 18px 0; margin: 0; border-top: 1px solid var(--line); }
+.assignment-list a { font-weight: 600; color: var(--ink); }
+.assignment-list p { font-size: 12px; margin: 5px 0 0; color: var(--ink-muted); }
+.assignment-book { flex: none; display: grid; place-items: center; width: 44px; height: 51px; color: #526c93; background: #e7eef8; border-left: 4px solid #c4d4e9; border-radius: 6px 12px 12px 6px; font: 20px var(--serif); }
+.assignment-list li:nth-child(odd) .assignment-book { background: #f6e9e4; border-color: #e9cec4; color: #88614f; }
+@media (max-width: 760px) { .assignment-inputs { grid-template-columns: 1fr; } }
+.assignment-prompt-section { margin: 14px 0 20px; }
+.assignment-inputs { column-gap: 20px; }
+.assignment-reference { min-height: 110px; }
+.assignment-list-body { flex: 1; min-width: 0; }
+.assignment-list .app-button { flex: none; }
+.assignment-list-body > a { font-size: 13px; }
