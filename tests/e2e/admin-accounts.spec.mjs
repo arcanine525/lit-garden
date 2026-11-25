@@ -80,7 +80,7 @@ test('T09 provisions accounts, revokes a reset session, and reconciles a Keycloa
     const search = operator.page.getByRole('searchbox', { name:'Tên hoặc tên đăng nhập' });
     await search.fill(student.username);
     await search.press('Enter');
-    await expect(operator.page.getByRole('heading',{ name:'Tài khoản đã tìm thấy' })).toBeVisible();
+    await expect(operator.page.getByRole('heading',{ name:'Tài khoản đã tìm thấy' })).toBeFocused();
     const studentRow = operator.page.getByRole('listitem').filter({ hasText:student.username });
     const resetButton = studentRow.getByRole('button',{ name:'Đặt lại mật khẩu' });
     const resetDialog = operator.page.getByRole('dialog',{ name:/Đặt lại mật khẩu của/ });

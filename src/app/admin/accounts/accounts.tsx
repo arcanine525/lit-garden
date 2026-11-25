@@ -102,7 +102,7 @@ export function Accounts({ editable, role }: { editable: boolean; role: Account[
           <form onSubmit={event => {
             event.preventDefault();
             setQuery(search.trim().toLocaleLowerCase('vi'));
-            requestAnimationFrame(() => resultsHeading.current?.focus());
+            resultsHeading.current?.focus();
           }}>
             <label>Tên hoặc tên đăng nhập <input type="search" value={search} onChange={event => setSearch(event.target.value)}/></label>{' '}
             <button type="submit">Tìm</button>
