@@ -26,8 +26,7 @@ test('T08 student without email changes temporary password before the API create
     await page.getByRole('button', { name: 'Đăng xuất' }).click();
     const confirm = page.getByRole('button', { name: /sign out|log out|logout|đăng xuất/i });
     if (new URL(page.url()).origin !== origin) await confirm.click();
-    await expect(page).toHaveURL(origin + '/');
-    await expect(page.getByRole('link', { name: 'Đăng nhập' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vào khu vườn của mình' })).toBeVisible();
     expect((await page.request.get('/api/me', { headers: { Cookie: `garden_session=${cookie.value}` } })).status()).toBe(401);
     const stored = await db.query('SELECT count(*) FROM garden.app_sessions WHERE handle_digest=$1', [sessionHash(cookie.value)]);
     expect(stored.rows[0].count).toBe('0');
@@ -51,7 +50,7 @@ test('T08 creates the admin from the operator secret and rejects expired teacher
     expect(expired.rowCount).toBe(1);
     expect((await page.request.get('/api/me')).status()).toBe(401);
     await page.reload();
-    await expect(page.getByRole('link', { name: 'Đăng nhập' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Vào khu vườn của mình' })).toBeVisible();
   }, 'teacher');
 });
 
@@ -64,4 +63,11 @@ test('T08 an administrator receives the admin role from the linked Keycloak iden
     expect(me.status()).toBe(200);
     expect((await me.json()).user.role).toBe('admin');
   }, 'admin');
+});
+
+test('An invalid callback shows a retry link that starts a fresh login', async ({ page }) => {
+  await page.goto('/auth/callback');
+  await expect(page.getByText('Chưa đăng nhập được. Hãy thử lại.')).toBeVisible();
+  await page.getByRole('link', { name: 'Đăng nhập', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Vào khu vườn của mình' })).toBeVisible();
 });

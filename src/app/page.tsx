@@ -61,10 +61,10 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
       </section>}
     </AppShell>;
   }
+  if (!auth) redirect('/auth/login');
   return <main className="app-standalone">
     <h1>Vườn Văn</h1>
-    <p>Không gian dạy và học viết.</p>
-    {auth && <p className="app-error" role="alert">{auth === 'denied' ? 'Tài khoản này chưa được cấp quyền vào Vườn Văn.' : 'Chưa đăng nhập được. Hãy thử lại.'}</p>}
+    <p className="app-error" role="alert">{auth === 'denied' ? 'Tài khoản này chưa được cấp quyền vào Vườn Văn.' : 'Chưa đăng nhập được. Hãy thử lại.'}</p>
     <a className="app-button app-primary" href="/auth/login">Đăng nhập</a>
   </main>;
 }

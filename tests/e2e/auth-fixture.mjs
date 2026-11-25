@@ -9,7 +9,6 @@ export const origin = 'http://127.0.0.1:3000';
 
 export async function enter(page, username, password) {
   await page.goto('/');
-  await page.getByRole('link', { name: 'Đăng nhập', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Vào khu vườn của mình' })).toBeVisible();
   await expect(page.getByText(/trải nghiệm|demo/i)).toHaveCount(0);
   await page.getByLabel('Tên đăng nhập').fill(username);

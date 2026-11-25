@@ -14,7 +14,6 @@ test('T35 captures every approved scene from running application routes', async 
   try {
     const login = await fx.page();
     await login.goto('/');
-    await login.getByRole('link',{ name:'Đăng nhập',exact:true }).click();
     await expect(login.getByRole('heading',{ name:'Vào khu vườn của mình' })).toBeVisible();
     await capture('login',login,'Keycloak login with empty username and password');
     const binh = await fx.actor('student','Bình','binh',false);
